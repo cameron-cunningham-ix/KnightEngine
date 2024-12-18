@@ -1,0 +1,52 @@
+# Ignore everything
+*
+
+# But not these files...
+!.gitignore
+!CMakeLists.txt
+!src/
+!src/**
+!test/
+!test/**
+
+# Ignore build directories anywhere
+**/build/
+**/debug/
+**/release/
+**/x64/
+**/x86/
+
+# Ignore CMake generated files
+CMakeCache.txt
+CMakeFiles/
+*.cmake
+Makefile
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+
+# Ignore compiled binaries and libraries
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.o
+*.obj
+
+# Ignore IDE specific files
+.vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore OS specific files
+.DS_Store
+Thumbs.db
+
+# Ignore testing artifacts
+Testing/
+test/chess_tests
