@@ -72,8 +72,12 @@ void ChessClock::makeMove() {
         }
     }
     
-    // Switch players
-    switchPlayer();
+    // Apply increment to the current player
+    applyIncrement(activeColor);
+    
+    // Switch active player
+    activeColor = (activeColor == WHITE) ? BLACK : WHITE;
+    lastUpdateTime = std::chrono::steady_clock::now();
 }
 
 void ChessClock::updateTime() {
@@ -123,48 +127,57 @@ void ChessClock::applyIncrement(Color color) {
 
 std::chrono::milliseconds ChessClock::getWhiteTime() const {
     std::lock_guard<std::mutex> lock(clockMutex);
-    if (isRunning && activeColor == WHITE && !timeControl.isInfinite) {
-        auto now = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-            now - lastUpdateTime);
-        
-        // Only subtract elapsed time if we're not in delay period
-        if (!isInDelay()) {
-            return std::max(whiteTimeRemaining - elapsed, std::chrono::milliseconds(0));
-        }
+    if (!isRunning || timeControl.isInfinite || activeColor != WHITE) {
+        return whiteTimeRemaining;
     }
-    return whiteTimeRemaining;
+
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        now - lastUpdateTime);
+    
+    // Check delay period
+    if (timeControl.delay > std::chrono::milliseconds(0) && 
+        elapsed < timeControl.delay) {
+        return whiteTimeRemaining;
+    }
+
+    return std::max(whiteTimeRemaining - elapsed, std::chrono::milliseconds(0));
 }
 
 std::chrono::milliseconds ChessClock::getBlackTime() const {
     std::lock_guard<std::mutex> lock(clockMutex);
-    if (isRunning && activeColor == BLACK && !timeControl.isInfinite) {
-        auto now = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-            now - lastUpdateTime);
-
-        // Only subtract elapsed time if we're not in delay period
-        if (!isInDelay()) {
-            return std::max(blackTimeRemaining - elapsed, std::chrono::milliseconds(0));
-        }
+    if (!isRunning || timeControl.isInfinite || activeColor != BLACK) {
+        return blackTimeRemaining;
     }
-    return blackTimeRemaining;
+
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        now - lastUpdateTime);
+    
+    // Check delay period
+    if (timeControl.delay > std::chrono::milliseconds(0) && 
+        elapsed < timeControl.delay) {
+        return blackTimeRemaining;
+    }
+
+    return std::max(blackTimeRemaining - elapsed, std::chrono::milliseconds(0));
 }
 
 bool ChessClock::isTimeUp() const {
-    return isWhiteTimeUp() || isBlackTimeUp();
+    if (timeControl.isInfinite) return false;
+    std::lock_guard<std::mutex> lock(clockMutex);
+    return getWhiteTimeNoLock() <= std::chrono::milliseconds(0) ||
+           getBlackTimeNoLock() <= std::chrono::milliseconds(0);
 }
 
 bool ChessClock::isWhiteTimeUp() const {
     if (timeControl.isInfinite) return false;
-    std::lock_guard<std::mutex> lock(clockMutex);
-    return getWhiteTime() <= std::chrono::milliseconds(0);
+    return getWhiteTimeNoLock() <= std::chrono::milliseconds(0);
 }
 
 bool ChessClock::isBlackTimeUp() const {
     if (timeControl.isInfinite) return false;
-    std::lock_guard<std::mutex> lock(clockMutex);
-    return getBlackTime() <= std::chrono::milliseconds(0);
+    return getBlackTimeNoLock() <= std::chrono::milliseconds(0);
 }
 
 bool ChessClock::isClockRunning() const {

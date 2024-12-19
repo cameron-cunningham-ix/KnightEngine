@@ -2,11 +2,10 @@
 #ifndef CHESS_CLOCK_H
 #define CHESS_CLOCK_H
 
-#include "types.hpp"
 #include <chrono>
 #include <mutex>
 #include <atomic>
-
+#include "types.hpp"
 
 // Time control structure to define various types of time controls
 struct TimeControl {
@@ -50,6 +49,43 @@ private:
     bool isInDelay() const;
     void applyIncrement(Color color);
 
+    // Private unlocked versions for internal use
+    std::chrono::milliseconds getWhiteTimeNoLock() const {
+        if (!isRunning || timeControl.isInfinite || activeColor != WHITE) {
+            return whiteTimeRemaining;
+        }
+
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            now - lastUpdateTime);
+        
+        // Check delay period
+        if (timeControl.delay > std::chrono::milliseconds(0) && 
+            elapsed < timeControl.delay) {
+            return whiteTimeRemaining;
+        }
+
+        return std::max(whiteTimeRemaining - elapsed, std::chrono::milliseconds(0));
+    }
+
+    std::chrono::milliseconds getBlackTimeNoLock() const {
+        if (!isRunning || timeControl.isInfinite || activeColor != BLACK) {
+            return blackTimeRemaining;
+        }
+
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            now - lastUpdateTime);
+        
+        // Check delay period
+        if (timeControl.delay > std::chrono::milliseconds(0) && 
+            elapsed < timeControl.delay) {
+            return blackTimeRemaining;
+        }
+
+        return std::max(blackTimeRemaining - elapsed, std::chrono::milliseconds(0));
+    }
+
 public:
     // Constructor
     explicit ChessClock(const TimeControl& tc);
@@ -82,4 +118,4 @@ public:
     void setTime(Color color, std::chrono::milliseconds amount);
 };
 
-#endif
+#endif // CHESS_CLOCK_H
