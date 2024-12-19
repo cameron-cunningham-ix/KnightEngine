@@ -136,7 +136,7 @@ bool MoveValidator::isCheckmate(Color color) {
         std::cout << "not in check\n";
         return false;
     }
-    std::cout << "in check\n";
+    std::cout << "in check, checking mate\n";
     // Generate all possible moves for this color
     std::vector<Move> possibleMoves = generatePsuedoMoves(board, state);
     std::cout << "possible moves: " << possibleMoves.size() << "\n";
@@ -221,9 +221,11 @@ void MoveValidator::updateGameState(const Move& move) {
     if (move.piece == W_KING) {
         state->canCastleWhiteKingside = false;
         state->canCastleWhiteQueenside = false;
+        std::cout << "white king moved\n";
     } else if (move.piece == B_KING) {
         state->canCastleBlackKingside = false;
         state->canCastleBlackQueenside = false;
+        std::cout << "black king moved\n";
     }
     
     // Check if rooks moved or were captured
@@ -242,37 +244,61 @@ void MoveValidator::updateGameState(const Move& move) {
     
     // Switch side to move
     state->sideToMove = (state->sideToMove == WHITE) ? BLACK : WHITE;
+    std::cout << "side to move: " << state->sideToMove << "\n";
 }
 
 // Helper function to update bitboards for a piece movement
 void movePiece(ChessBoard& board, int from, int to, PieceType piece) {
     // Clear bit at 'from' square and set bit at 'to' square for the piece's bitboard
+    std::cout << "moving piece\n";
     U64 fromToBB = (1ULL << from) | (1ULL << to);  // Bitboard with both squares set
+    printBBLine(fromToBB);
 
+    // Clear bit at 'from' square and set bit at 'to' square for the piece's bitboard
     // Get color and piece type
     bool isWhite = piece <= W_KING;
+    std::cout << "piece: " << piece << "\n";
     int pieceType = pieceCode(piece);
+    std::cout << "piece type: " << pieceType << "\n";
 
     // Update color bitboard (white or black)
+    std::cout << "before\n";
+    printBBLine(board.pieceBB[isWhite ? 0 : 1]);
     board.pieceBB[isWhite ? 0 : 1] ^= fromToBB;
+    std::cout << "after\n";
+    printBBLine(board.pieceBB[isWhite ? 0 : 1]);
 
     // Update piece type bitboard (pawn, knight, etc.)
     board.pieceBB[pieceType] ^= fromToBB;
+    printBBLine(board.pieceBB[pieceType]);
 }
 
 // Helper function to remove a piece from the board
 void removePiece(ChessBoard& board, int square, PieceType piece) {
     U64 squareBB = 1ULL << square;
+    std::cout << "removing piece\n";
+    printBBLine(squareBB);
 
     // Get color and piece type
     bool isWhite = piece <= W_KING;
+    std::cout << "piece color to remove: " << piece << "\n";
     int pieceType = pieceCode(piece);
+    std::cout << "piece type to remove: " << pieceType << "\n";
 
     // Clear bit in color bitboard
+    std::cout << "before removal (color)\n";
+    printBBLine(board.pieceBB[isWhite ? 0 : 1]);
     board.pieceBB[isWhite ? 0 : 1] &= ~squareBB;
+    std::cout << "after removal (color)\n";
+    printBBLine(board.pieceBB[isWhite ? 0 : 1]);
+
 
     // Clear bit in piece type bitboard
+    std::cout << "before removal (piece type)\n";
+    printBBLine(board.pieceBB[pieceType]);
     board.pieceBB[pieceType] &= ~squareBB;
+    std::cout << "after removal (piece type)\n";
+    printBBLine(board.pieceBB[pieceType]);
 }
 
 // Helper function to add a piece to the board
@@ -297,13 +323,12 @@ PieceType getPieceOnSquare(const ChessBoard& board, int square) {
 
 void makeMove(ChessBoard& board, const Move& move) {
     // Handle captures first (except en passant)
-    std::cout << "making move\n";
+    //std::cout << "making move\n";
     
     if (move.isCapture && !move.isEnPassant) {
         // Remove captured piece
         PieceType capturedPiece = board.getPieceAt(move.to);
         std::cout << "piece captured: " << capturedPiece << "\n";
-        //std::cout << "piece captured: " << capturedPiece;
         removePiece(board, move.to, capturedPiece);
         std::cout << "piece removed\n";
     }

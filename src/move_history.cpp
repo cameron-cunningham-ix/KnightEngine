@@ -85,6 +85,7 @@ std::string MoveHistory::generateSAN(const Move& move, const ChessBoard& board, 
         auto it = pieceToSAN.find(move.piece);
         if (it != pieceToSAN.end()) {
             san << it->second[0];
+            std::cout << "Piece letter added " << it->second[0] << std::endl;
         } else {
             throw std::runtime_error("Invalid piece type in generateSAN");
         }
@@ -159,11 +160,11 @@ std::string MoveHistory::generateSAN(const Move& move, const ChessBoard& board, 
         // Always show file of origin for pawn captures
         if (move.piece == W_PAWN || move.piece == B_PAWN) {
             san << (char)('a' + (move.from % 8));
+            std::cout << "Pawn capture file added" << std::endl;
         }
         san << "x";
+        std::cout << "Capture symbol added" << std::endl;
     }
-
-    std::cout << "Capture symbol added" << std::endl;
 
     // Add destination square
     san << (char)('a' + (move.to % 8)) << (char)('1' + (move.to / 8));
@@ -180,14 +181,16 @@ std::string MoveHistory::generateSAN(const Move& move, const ChessBoard& board, 
     MoveValidator tempValidator(tempBoard, &tempState);
     tempValidator.updateGameState(move);
     
-    std::cout << "Made move" << std::endl;
+    std::cout << "Made move, update game state" << std::endl;
 
-    if (tempValidator.isCheckmate(tempState.sideToMove)) {
-        std::cout << "Checkmate" << std::endl;
-        san << "#";
-    } else if (tempValidator.isInCheck(tempState.sideToMove)) {
-        std::cout << "Check" << std::endl;
-        san << "+";
+    if (tempValidator.isInCheck(tempState.sideToMove)) {
+        std::cout << "In check" << std::endl;
+        if (tempValidator.isCheckmate(tempState.sideToMove)) {
+            std::cout << "Checkmate" << std::endl;
+            san << "#";
+        } else {
+            san << "+";
+        }
     }
 
     return san.str();
