@@ -62,6 +62,14 @@ const std::map<PieceType, std::string> pieceToFEN = {
     {B_ROOK, "r"}, {B_QUEEN, "q"}, {B_KING, "k"},
 };
 
+// Map to convert PieceType to SAN piece character strings
+const std::map<PieceType, std::string> pieceToSAN = {
+    {W_KNIGHT, "N"}, {W_BISHOP, "B"},
+    {W_ROOK, "R"}, {W_QUEEN, "Q"}, {W_KING, "K"},
+    {B_KNIGHT, "N"}, {B_BISHOP, "B"},
+    {B_ROOK, "R"}, {B_QUEEN, "Q"}, {B_KING, "K"},
+};
+
 int pieceCode(PieceType ps);
 int colorCode(PieceType ps);
 void printBitboard(U64 bitb);

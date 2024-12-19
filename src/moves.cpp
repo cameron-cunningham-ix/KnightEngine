@@ -121,7 +121,9 @@ bool MoveValidator::isSquareUnderAttack(int square, Color attackingColor) {
 // Check if a specific color is in check
 bool MoveValidator::isInCheck(Color color) const {
     // Find king's square
+    std::cout << "checking if color in check\n";
     int kingSquare = findKingSquare(color);
+    std::cout << "king square: " << kingSquare << "\n";
     
     // Check if king's square is under attack by opposite color
     return board.attacksToSquare(kingSquare, color);
@@ -131,24 +133,31 @@ bool MoveValidator::isInCheck(Color color) const {
 bool MoveValidator::isCheckmate(Color color) {
     // First check if the player is in check
     if (!isInCheck(color)) {
+        std::cout << "not in check\n";
         return false;
     }
-
+    std::cout << "in check\n";
     // Generate all possible moves for this color
     std::vector<Move> possibleMoves = generatePsuedoMoves(board, state);
+    std::cout << "possible moves: " << possibleMoves.size() << "\n";
     
     // Try each move to see if it gets out of check
     for (Move& move : possibleMoves) {
+        std::cout << "move: " << move.from << " " << move.to << " " << move.piece << "\n";
         // Skip moves of the wrong color
         if ((color == WHITE && move.piece >= B_PAWN) ||
             (color == BLACK && move.piece <= W_KING)) {
+            std::cout << "skipping\n";
             continue;
         }
+
+        std::cout << "not skipping\n";
 
         // If any legal move exists, not checkmate
         if (canMakeMove(move, color)) {
             return false;
         }
+        std::cout << "can't make move\n";
     }
 
     // No legal moves found, it's checkmate
@@ -288,11 +297,15 @@ PieceType getPieceOnSquare(const ChessBoard& board, int square) {
 
 void makeMove(ChessBoard& board, const Move& move) {
     // Handle captures first (except en passant)
+    std::cout << "making move\n";
+    
     if (move.isCapture && !move.isEnPassant) {
         // Remove captured piece
         PieceType capturedPiece = board.getPieceAt(move.to);
+        std::cout << "piece captured: " << capturedPiece << "\n";
         //std::cout << "piece captured: " << capturedPiece;
         removePiece(board, move.to, capturedPiece);
+        std::cout << "piece removed\n";
     }
 
     if (move.isCastle) {

@@ -122,15 +122,16 @@ void setupPosition(ChessBoard& board, GameState& state, const std::string& fen) 
     std::from_chars(fullTurns.data(), fullTurns.data()+fullTurns.size(), state.fullMoveNumber);
 }
 
+
+
 void printFEN(ChessBoard board, GameState state) {
     std::string fen;
-    ChessBoard tempBoard = board;
     
     int square = 56;        // Start at a8
     int emptyCount = 0;
     // Loop through all squares for position portion of FEN
     for (square; square >= 0; square++) {
-        PieceType current = tempBoard.getPieceAt(square);
+        PieceType current = board.getPieceAt(square);
         //std::cout << "square: " << square << " piece: " << current << std::endl;
         // Empty square
         if (current == -1) {

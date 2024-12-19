@@ -19,6 +19,8 @@ add_executable(chess_tests
     utility_tests.cpp
     execution_time_tests.cpp
     chess_clock_tests.cpp
+    pgn_tests.cpp
+    san_generation_tests.cpp
 )
 
 # Link against GoogleTest and chess engine library

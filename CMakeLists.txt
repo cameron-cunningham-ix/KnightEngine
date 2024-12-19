@@ -21,6 +21,8 @@ add_library(KnightEngine
     src/utility.hpp
     src/chess_clock.cpp
     src/chess_clock.hpp
+    src/move_history.cpp
+    src/move_history.hpp
 )
 
 # Include directories
