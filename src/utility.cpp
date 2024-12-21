@@ -80,9 +80,12 @@ void setupPosition(ChessBoard& board, GameState& state, const std::string& fen) 
     int square = 56;  // Start from 8th rank (a8 is 56)
     
     // Parse position of FEN
-    // std::cout << std::format("\n(setupPosition) FEN: {} {} {} {} {} {}\n",
-    //     position, playerToMove, castlingRights, enPassant, halfTurns, fullTurns);
     for (char c : position) {
+        // square should only be zero when the FEN is invalid; set to default position
+        if (square < 0) {
+            setupPosition(board, state, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+            return;
+        }
         if (c == '/') {
             square -= 16;  // Move down one rank and back to a-file
         } else if (isdigit(c)) {
@@ -132,7 +135,6 @@ void printFEN(ChessBoard board, GameState state) {
     // Loop through all squares for position portion of FEN
     for (square; square >= 0; square++) {
         PieceType current = board.getPieceAt(square);
-        //std::cout << "square: " << square << " piece: " << current << std::endl;
         // Empty square
         if (current == -1) {
             emptyCount++;
@@ -186,6 +188,57 @@ void printFEN(ChessBoard board, GameState state) {
     fen.append(std::to_string(state.fullMoveNumber));
 
     std::cout << std::format("\n(printFEN) {}\n", fen);
+}
+
+bool isValidFEN(const std::string& fen) {
+    
+    std::stringstream ss(fen);
+    std::string position, playerToMove, castlingRights, enPassant, halfTurns, fullTurns;
+    ss >> position >> playerToMove >> castlingRights >> enPassant >> halfTurns >> fullTurns;  // Get parts of FEN notation
+    
+    int square = 56;  // Start from 8th rank (a8 is 56)
+    
+    // Check positions of FEN
+    for (char c : position) {
+        // square should only be zero when the FEN is invalid
+        if (square < 0) {
+            return false;
+        }
+        if (c == '/') {
+            square -= 16;  // Move down one rank and back to a-file
+            continue;
+        }
+        // Check if piece is valid
+        if (!isdigit(c) && fenToPiece.at(c) == -1) return false;
+        else if (isdigit(c)) {
+            square += (c - '0');  // Skip empty squares
+            continue;
+        } else if (fenToPiece.count(c)) {
+            PieceType piece = fenToPiece.at(c);
+            if (piece == -1) return false;
+            square++;
+        }
+    }
+
+    // Check whose turn it is
+    if (playerToMove != "w" && playerToMove != "b") return false;
+
+    // Check castling rights
+    for (char c : castlingRights) {
+        if (c == '-' && castlingRights.size() > 1) return false;
+        if (c != 'K' && c != 'Q' && c != 'k' && c != 'q' && c != '-') return false;
+    }
+
+    // Check enpassant
+    if (enPassant != "-" && (algebraicToIndex(enPassant) < 16 || algebraicToIndex(enPassant) > 47)) return false;
+
+    // Check half turns
+    if (halfTurns.find_first_not_of("0123456789") != std::string::npos) return false;
+    // Check full turns
+    if (fullTurns.find_first_not_of("0123456789") != std::string::npos) return false;
+
+    // FEN is valid
+    return true;
 }
 
 // Count legal moves in a position
@@ -270,18 +323,13 @@ uint64_t perft(ChessBoard& board, GameState* state, int depth) {
     
     // Get all possible moves from current position
     std::vector<Move> moves = generatePsuedoMoves(board, state);
-    //std::cout << "(perft) # of moves at depth " << depth << ": " << moves.size() << "\n";
-    //printFEN(board, *state);
     // Create validator for this position
     MoveValidator validator(board, state);
     
     // Try each move
     for (const Move& move : moves) {
-        //std::cout << "(perft foreach move) depth: " << depth;
-        //printMove(move);
         // Skip illegal moves
         if (!validator.isMoveLegal(move)) {
-            //std::cout << "invalid move\n\n";
             continue;
         }
         
@@ -295,8 +343,6 @@ uint64_t perft(ChessBoard& board, GameState* state, int depth) {
         // Update temporary game state for this move
         MoveValidator tempValidator(tempBoard, &tempState);
         tempValidator.updateGameState(move);
-        
-        //std::cout << "\n";
         
         // Recurse with temporary position and updated state
         nodes += perft(tempBoard, &tempState, depth - 1);
@@ -351,7 +397,7 @@ PerftMetrics calcPerftMetrics(ChessBoard& board, GameState* state, int depth) {
         if (move.isPromotion)   perftM.promotions = 1;
 
         if (tempValidator.isInCheck(tempState.sideToMove))     perftM.checks++;
-        if (tempValidator.isCheckmate(tempState.sideToMove))   perftM.checkmates++;
+        if (tempValidator.isCheckmate())   perftM.checkmates++;
         
         std::cout << "\n";
         // Recurse with temporary position and updated state

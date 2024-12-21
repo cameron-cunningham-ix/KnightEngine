@@ -7,8 +7,6 @@
 #include <string>
 #include <math.h>
 
-
-
 // Forward declarations
 std::vector<Move> generatePsuedoMoves(const ChessBoard &cboard, const GameState* state);
 
@@ -16,10 +14,7 @@ std::vector<Move> generatePsuedoMoves(const ChessBoard &cboard, const GameState*
 bool MoveValidator::moveLeavesKingInCheck(const Move& move) {
     // Create a backup board to hold original 
     ChessBoard keepBoard = board;
-    // GameState state = GameState();
-    //printFEN(board, *state);
     makeMove(board, move);
-    //printFEN(board, *state);
     // Find king's position
     int kingPos = std::countr_zero(state->sideToMove == WHITE ? 
                     board.getWhiteKings() : board.getBlackKings());
@@ -28,7 +23,6 @@ bool MoveValidator::moveLeavesKingInCheck(const Move& move) {
     bool attacked = isSquareUnderAttack(kingPos, state->sideToMove == WHITE ? BLACK : WHITE);
     // Restore board before returning
     board = keepBoard;
-    //std::cout << "attacked: " << attacked << "\n";
     return attacked;
 }
 
@@ -121,47 +115,38 @@ bool MoveValidator::isSquareUnderAttack(int square, Color attackingColor) {
 // Check if a specific color is in check
 bool MoveValidator::isInCheck(Color color) const {
     // Find king's square
-    std::cout << "checking if color in check\n";
     int kingSquare = findKingSquare(color);
-    std::cout << "king square: " << kingSquare << "\n";
     
     // Check if king's square is under attack by opposite color
     return board.attacksToSquare(kingSquare, color);
 }
 
 // Check if a specific color is in checkmate
-bool MoveValidator::isCheckmate(Color color) {
+bool MoveValidator::isCheckmate() {
     // First check if the player is in check
-    if (!isInCheck(color)) {
-        std::cout << "not in check\n";
+    if (!isInCheck(state->sideToMove)) {
         return false;
     }
-    std::cout << "in check, checking mate\n";
-    // Generate all possible moves for this color
-    std::vector<Move> possibleMoves = generatePsuedoMoves(board, state);
-    std::cout << "possible moves: " << possibleMoves.size() << "\n";
+    // Find king's position
+    U64 kingBB = state->sideToMove == WHITE ? board.getWhiteKings() : board.getBlackKings();
+    int kingPos = std::countr_zero(kingBB);
     
-    // Try each move to see if it gets out of check
-    for (Move& move : possibleMoves) {
-        std::cout << "move: " << move.from << " " << move.to << " " << move.piece << "\n";
-        // Skip moves of the wrong color
-        if ((color == WHITE && move.piece >= B_PAWN) ||
-            (color == BLACK && move.piece <= W_KING)) {
-            std::cout << "skipping\n";
-            continue;
-        }
-
-        std::cout << "not skipping\n";
-
-        // If any legal move exists, not checkmate
-        if (canMakeMove(move, color)) {
+    // Check if king is in check
+    if (!isSquareUnderAttack(kingPos, state->sideToMove == WHITE ? BLACK : WHITE)) {
+        return false;  // Not even in check
+    }
+    
+    // Generate all possible moves
+    std::vector<Move> moves = generatePsuedoMoves(board, state);
+    
+    // If any legal move exists, it's not checkmate
+    for (const Move& move : moves) {
+        if (isMoveLegal(move)) {
             return false;
         }
-        std::cout << "can't make move\n";
     }
-
-    // No legal moves found, it's checkmate
-    return true;
+    
+    return true;  // No legal moves and king is in check = checkmate
 }
 
 // Check if a specific color is in stalemate
@@ -183,8 +168,7 @@ bool MoveValidator::isStalemate(Color color) {
         }
 
         // If any legal move exists, not stalemate
-        if (canMakeMove(move, color)) {
-            std::cout << "can make move: " << move.from << " " << move.to << " " << move.piece << "\n";
+        if (isMoveLegal(move)) {
             return false;
         }
     }
@@ -221,11 +205,9 @@ void MoveValidator::updateGameState(const Move& move) {
     if (move.piece == W_KING) {
         state->canCastleWhiteKingside = false;
         state->canCastleWhiteQueenside = false;
-        std::cout << "white king moved\n";
     } else if (move.piece == B_KING) {
         state->canCastleBlackKingside = false;
         state->canCastleBlackQueenside = false;
-        std::cout << "black king moved\n";
     }
     
     // Check if rooks moved or were captured
@@ -244,61 +226,38 @@ void MoveValidator::updateGameState(const Move& move) {
     
     // Switch side to move
     state->sideToMove = (state->sideToMove == WHITE) ? BLACK : WHITE;
-    std::cout << "side to move: " << state->sideToMove << "\n";
 }
 
 // Helper function to update bitboards for a piece movement
 void movePiece(ChessBoard& board, int from, int to, PieceType piece) {
     // Clear bit at 'from' square and set bit at 'to' square for the piece's bitboard
-    std::cout << "moving piece\n";
     U64 fromToBB = (1ULL << from) | (1ULL << to);  // Bitboard with both squares set
-    printBBLine(fromToBB);
 
     // Clear bit at 'from' square and set bit at 'to' square for the piece's bitboard
     // Get color and piece type
     bool isWhite = piece <= W_KING;
-    std::cout << "piece: " << piece << "\n";
     int pieceType = pieceCode(piece);
-    std::cout << "piece type: " << pieceType << "\n";
 
     // Update color bitboard (white or black)
-    std::cout << "before\n";
-    printBBLine(board.pieceBB[isWhite ? 0 : 1]);
     board.pieceBB[isWhite ? 0 : 1] ^= fromToBB;
-    std::cout << "after\n";
-    printBBLine(board.pieceBB[isWhite ? 0 : 1]);
 
     // Update piece type bitboard (pawn, knight, etc.)
     board.pieceBB[pieceType] ^= fromToBB;
-    printBBLine(board.pieceBB[pieceType]);
 }
 
 // Helper function to remove a piece from the board
 void removePiece(ChessBoard& board, int square, PieceType piece) {
     U64 squareBB = 1ULL << square;
-    std::cout << "removing piece\n";
-    printBBLine(squareBB);
 
     // Get color and piece type
     bool isWhite = piece <= W_KING;
-    std::cout << "piece color to remove: " << piece << "\n";
     int pieceType = pieceCode(piece);
-    std::cout << "piece type to remove: " << pieceType << "\n";
 
     // Clear bit in color bitboard
-    std::cout << "before removal (color)\n";
-    printBBLine(board.pieceBB[isWhite ? 0 : 1]);
     board.pieceBB[isWhite ? 0 : 1] &= ~squareBB;
-    std::cout << "after removal (color)\n";
-    printBBLine(board.pieceBB[isWhite ? 0 : 1]);
-
 
     // Clear bit in piece type bitboard
-    std::cout << "before removal (piece type)\n";
-    printBBLine(board.pieceBB[pieceType]);
     board.pieceBB[pieceType] &= ~squareBB;
-    std::cout << "after removal (piece type)\n";
-    printBBLine(board.pieceBB[pieceType]);
 }
 
 // Helper function to add a piece to the board
@@ -323,14 +282,11 @@ PieceType getPieceOnSquare(const ChessBoard& board, int square) {
 
 void makeMove(ChessBoard& board, const Move& move) {
     // Handle captures first (except en passant)
-    //std::cout << "making move\n";
     
     if (move.isCapture && !move.isEnPassant) {
         // Remove captured piece
         PieceType capturedPiece = board.getPieceAt(move.to);
-        std::cout << "piece captured: " << capturedPiece << "\n";
         removePiece(board, move.to, capturedPiece);
-        std::cout << "piece removed\n";
     }
 
     if (move.isCastle) {
@@ -374,7 +330,6 @@ void makeMove(ChessBoard& board, const Move& move) {
 
 
 void initializePawnAttacksWhite() {
-    //std::cout << "init pawn attacks...\n";
     for (int i = 0; i < 64; i++) {
         U64 attacks = 0ULL;
         if (i % 8 != 0) attacks |= (1ULL << (i + 7));   // Left diagonal
@@ -384,7 +339,6 @@ void initializePawnAttacksWhite() {
 }
 
 void initializePawnAttacksBlack() {
-    //std::cout << "init pawn attacks...\n";
     for (int i = 0; i < 64; i++) {
         U64 attacks = 0ULL;
         if (i % 8 != 0) attacks |= (1ULL << (i - 9));   // Left diagonal
@@ -394,7 +348,6 @@ void initializePawnAttacksBlack() {
 }
 
 void initializeKnightAttacks() {
-    //std::cout << "init knight attacks...\n";
     for (int i = 0; i < 64; i++) {
         U64 attacks = 0ULL;
         if (i % 8 != 0) {    // center left
@@ -418,7 +371,6 @@ void initializeKnightAttacks() {
 }
 
 void initializeBishopAttacks() {
-    //std::cout << "init bishop attacks...\n";
     for (int i = 0; i < 64; i++) {
         U64 attacks = 0ULL;
         // Top right diagonal
@@ -450,7 +402,6 @@ void initializeBishopAttacks() {
 }
 
 void initializeRookAttacks() {
-    //std::cout << "init rook attacks...\n";
     for (int i = 0; i < 64; i++) {
         U64 attacks = 0ULL;
         // Rank mask: all squares on the same rank (horizontal)
@@ -466,14 +417,12 @@ void initializeRookAttacks() {
 }
 
 void initializeQueenAttacks() {
-    //std::cout << "init queen attacks...\n";
     for (int i = 0; i < 64; i++) {
         queenAttacks[i] = bishopAttacks[i] | rookAttacks[i];
     }
 }
 
 void initializeKingAttacks() {
-    //std::cout << "init king attacks...\n";
     for (int i = 0; i < 64; i++) {
         U64 attacks = 0ULL;
         if (i % 8 != 7) {
@@ -497,7 +446,6 @@ void initializeKingAttacks() {
 }
 
 void initializeAllAttacks() {
-    //std::cout << "initializing...\n";
     initializePawnAttacksWhite();
     initializePawnAttacksBlack();
     initializeKnightAttacks();
@@ -505,7 +453,6 @@ void initializeAllAttacks() {
     initializeRookAttacks();
     initializeQueenAttacks();
     initializeKingAttacks();
-    //std::cout << "initialized...\n";
 }
 
 bool isWithinBoard(int index) {
@@ -834,7 +781,6 @@ void generatePieceMoves(const ChessBoard &cboard, std::vector<Move> &moves, Piec
             case W_KNIGHT:
             case B_KNIGHT:
                 attackMask = knightAttacks[index];
-                //printBitboard(attackMask);
                 break;
             case W_BISHOP:
             case B_BISHOP:
@@ -877,10 +823,6 @@ void generatePieceMoves(const ChessBoard &cboard, std::vector<Move> &moves, Piec
             U64 blocked = getQueenAttacks(index, ~emptySquares);
             attacks &= blocked;
             freeSpace &= blocked;
-            // std::cout << "piece attacks (post-blocking): " << piece << "\n";
-            // printBitboard(attacks);
-            // std::cout << "piece free spaces (post-blocking): " << piece << "\n";
-            // printBitboard(freeSpace);
         }
         
 
@@ -933,17 +875,11 @@ std::vector<Move> generatePsuedoMoves(const ChessBoard &cboard, const GameState*
 U64 getRookAttacks(int square, U64 blockers) {
     U64 attacks = rookAttacks[square];
 
-    // std::cout << "initial rook attack bb: \n";
-    // printBitboard(attacks);
-    // std::cout << "blockers: \n";
-    // printBitboard(blockers);
-
     // Check each direction (N, S, E, W) for blockers
     // South
     for (int sq = square - 8; sq >= 0; sq -= 8) {
         if (blockers & (1ULL << sq)) {
             U64 file = 0ULL;
-            //file |= (1ULL * pow(2, sq - 1));
             for (int sSq = sq - 8; sSq >= 0; sSq -= 8) {
                 file |= 1ULL << sSq;
             }
@@ -952,13 +888,9 @@ U64 getRookAttacks(int square, U64 blockers) {
         }
     }
 
-    // std::cout << "rook attack southed: \n";
-    // printBitboard(attacks);
-
     // West
     for (int sq = square - 1; sq % 8 != 7 && sq >= 0; sq--) {
         if (blockers & (1ULL << sq)) {
-            //attacks &= ~(((1ULL << sq) << 1) - 1);
             U64 rank = 0ULL;
             for (int rankSq = sq - 1; rankSq % 8 != 7 && rankSq >= 0; rankSq--) {
                 rank |= 1ULL << rankSq;
@@ -968,13 +900,9 @@ U64 getRookAttacks(int square, U64 blockers) {
         }
     }
 
-    // std::cout << "rook attack wested: \n";
-    // printBitboard(attacks);
-
     // East
     for (int sq = square + 1; sq % 8 != 0 && sq < 64; sq++) {
         if (blockers & (1ULL << sq)) {
-            //attacks &= ((1ULL << (sq + 1)) - 1);
             U64 rank = 0ULL;
             for (int rankSq = sq + 1; rankSq % 8 != 0 && rankSq < 64; rankSq++) {
                 rank |= 1ULL << rankSq;
@@ -983,9 +911,6 @@ U64 getRookAttacks(int square, U64 blockers) {
             break;
         }
     }
-
-    // std::cout << "rook attack easted: \n";
-    // printBitboard(attacks);
 
     // North
     for (int sq = square + 8; sq < 64; sq += 8) {
@@ -998,9 +923,6 @@ U64 getRookAttacks(int square, U64 blockers) {
             break;
         }
     }
-
-    // std::cout << "rook attack northed: \n";
-    // printBitboard(attacks);
     
     return attacks;
 }
@@ -1008,16 +930,10 @@ U64 getRookAttacks(int square, U64 blockers) {
 U64 getBishopAttacks(int square, U64 blockers) {
     U64 attacks = bishopAttacks[square];
 
-    // std::cout << "initial bishop attack bb: \n";
-    // printBitboard(attacks);
-    // std::cout << "blockers: \n";
-    // printBitboard(blockers);
-
     // Check each diagonal direction (NE, SE, SW, NW) for blockers
     // Northeast
     for (int sq = square + 9; sq % 8 != 0 && sq < 64; sq += 9) {
         if (blockers & (1ULL << sq)) {
-            //attacks &= ~((1ULL << sq) - 1);
             U64 diagonal = 0ULL;
             for (int diagSq = sq + 9; diagSq % 8 != 0 && diagSq < 64; diagSq += 9) {
                 diagonal |= 1ULL << diagSq;
@@ -1027,13 +943,9 @@ U64 getBishopAttacks(int square, U64 blockers) {
         }
     }
 
-    // std::cout << "bishop attack NEd: \n";
-    // printBitboard(attacks);
-
     // Southeast
     for (int sq = square - 7; sq % 8 != 0 && sq >= 0; sq -= 7) {
         if (blockers & (1ULL << sq)) {
-            //attacks &= ~(((1ULL << sq) << 1) - 1);
             U64 diagonal = 0ULL;
             for (int diagSq = sq - 7; diagSq % 8 != 0 && diagSq >= 0; diagSq -= 7) {
                 diagonal |= 1ULL << diagSq;
@@ -1043,13 +955,9 @@ U64 getBishopAttacks(int square, U64 blockers) {
         }
     }
 
-    // std::cout << "bishop attack SEd: \n";
-    // printBitboard(attacks);
-
     // Southwest
     for (int sq = square - 9; sq % 8 != 7 && sq >= 0; sq -= 9) {
         if (blockers & (1ULL << sq)) {
-            //attacks &= ~(((1ULL << sq) << 1) - 1);
             U64 diagonal = 0ULL;
             for (int diagSq = sq - 9; diagSq % 8 != 7 && diagSq >= 0; diagSq -= 9) {
                 diagonal |= 1ULL << diagSq;
@@ -1059,13 +967,9 @@ U64 getBishopAttacks(int square, U64 blockers) {
         }
     }
 
-    // std::cout << "bishop attack SWd: \n";
-    // printBitboard(attacks);
-
     // Northwest
     for (int sq = square + 7; sq % 8 != 7 && sq < 64; sq += 7) {
         if (blockers & (1ULL << sq)) {
-            //attacks &= ~((1ULL << sq) - 1);
             U64 diagonal = 0ULL;
             for (int diagSq = sq + 7; diagSq % 8 != 7 && diagSq < 64; diagSq += 7) {
                 diagonal |= 1ULL << diagSq;
@@ -1074,9 +978,6 @@ U64 getBishopAttacks(int square, U64 blockers) {
             break;
         }
     }
-
-    // std::cout << "bishop attack NWd: \n";
-    // printBitboard(attacks);
 
     return attacks;
 }
@@ -1084,16 +985,11 @@ U64 getBishopAttacks(int square, U64 blockers) {
 
 U64 getQueenAttacks(int square, U64 blockers) {
     U64 attacks = queenAttacks[square];
-    // std::cout << "initial queen attack bb: \n";
-    // printBitboard(attacks);
-    // std::cout << "blockers: \n";
-    // printBitboard(blockers);
 
     // Check each diagonal direction (NE, SE, SW, NW) for blockers
     // Northeast
     for (int sq = square + 9; sq % 8 != 0 && sq < 64; sq += 9) {
         if (blockers & (1ULL << sq)) {
-            //attacks &= ~((1ULL << sq) - 1);
             U64 diagonal = 0ULL;
             for (int diagSq = sq + 9; diagSq % 8 != 0 && diagSq < 64; diagSq += 9) {
                 diagonal |= 1ULL << diagSq;
@@ -1103,13 +999,9 @@ U64 getQueenAttacks(int square, U64 blockers) {
         }
     }
 
-    // std::cout << "bishop attack NEd: \n";
-    // printBitboard(attacks);
-
     // Southeast
     for (int sq = square - 7; sq % 8 != 0 && sq >= 0; sq -= 7) {
         if (blockers & (1ULL << sq)) {
-            //attacks &= ~(((1ULL << sq) << 1) - 1);
             U64 diagonal = 0ULL;
             for (int diagSq = sq - 7; diagSq % 8 != 0 && diagSq >= 0; diagSq -= 7) {
                 diagonal |= 1ULL << diagSq;
@@ -1119,13 +1011,9 @@ U64 getQueenAttacks(int square, U64 blockers) {
         }
     }
 
-    // std::cout << "bishop attack SEd: \n";
-    // printBitboard(attacks);
-
     // Southwest
     for (int sq = square - 9; sq % 8 != 7 && sq >= 0; sq -= 9) {
         if (blockers & (1ULL << sq)) {
-            //attacks &= ~(((1ULL << sq) << 1) - 1);
             U64 diagonal = 0ULL;
             for (int diagSq = sq - 9; diagSq % 8 != 7 && diagSq >= 0; diagSq -= 9) {
                 diagonal |= 1ULL << diagSq;
@@ -1135,13 +1023,9 @@ U64 getQueenAttacks(int square, U64 blockers) {
         }
     }
 
-    // std::cout << "bishop attack SWd: \n";
-    // printBitboard(attacks);
-
     // Northwest
     for (int sq = square + 7; sq % 8 != 7 && sq < 64; sq += 7) {
         if (blockers & (1ULL << sq)) {
-            //attacks &= ~((1ULL << sq) - 1);
             U64 diagonal = 0ULL;
             for (int diagSq = sq + 7; diagSq % 8 != 7 && diagSq < 64; diagSq += 7) {
                 diagonal |= 1ULL << diagSq;
@@ -1150,9 +1034,6 @@ U64 getQueenAttacks(int square, U64 blockers) {
             break;
         }
     }
-
-    // std::cout << "queen diagonal blocked:\n";
-    // printBitboard(attacks);
 
     // Check each direction (N, S, E, W) for blockers
     // South
@@ -1167,13 +1048,9 @@ U64 getQueenAttacks(int square, U64 blockers) {
         }
     }
 
-    // std::cout << "queen attack southed: \n";
-    // printBitboard(attacks);
-
     // West
     for (int sq = square - 1; sq % 8 != 7 && sq >= 0; sq--) {
         if (blockers & (1ULL << sq)) {
-            //attacks &= ~(((1ULL << sq) << 1) - 1);
             U64 rank = 0ULL;
             for (int rankSq = sq - 1; rankSq % 8 != 7 && rankSq >= 0; rankSq--) {
                 rank |= 1ULL << rankSq;
@@ -1183,13 +1060,9 @@ U64 getQueenAttacks(int square, U64 blockers) {
         }
     }
 
-    // std::cout << "queen attack wested: \n";
-    // printBitboard(attacks);
-
     // East
     for (int sq = square + 1; sq % 8 != 0 && sq < 64; sq++) {
         if (blockers & (1ULL << sq)) {
-            //attacks &= ((1ULL << (sq + 1)) - 1);
             U64 rank = 0ULL;
             for (int rankSq = sq + 1; rankSq % 8 != 0 && rankSq < 64; rankSq++) {
                 rank |= 1ULL << rankSq;
@@ -1198,9 +1071,6 @@ U64 getQueenAttacks(int square, U64 blockers) {
             break;
         }
     }
-
-    // std::cout << "queen attack easted: \n";
-    // printBitboard(attacks);
 
     // North
     for (int sq = square + 8; sq < 64; sq += 8) {
@@ -1213,9 +1083,6 @@ U64 getQueenAttacks(int square, U64 blockers) {
             break;
         }
     }
-
-    // std::cout << "queen attack rooked: \n";
-    // printBitboard(attacks);
 
     return attacks;
 }

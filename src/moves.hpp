@@ -37,7 +37,7 @@ public:
     MoveValidator(ChessBoard& b, GameState* s);
     bool isSquareUnderAttack(int square, Color attackingColor);
     bool isInCheck(Color color) const;
-    bool isCheckmate(Color color);
+    bool isCheckmate();
     bool isStalemate(Color color);
     bool isMoveLegal(const Move& move);
     void updateGameState(const Move& move);

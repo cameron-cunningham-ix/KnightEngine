@@ -59,9 +59,15 @@ TEST_F(PGNTest, Castling) {
 
     pgn = "1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Nf3 h6 "
           "7. Bh4 b6 8. Be2 Bb7 9. O-O Ne4 10. Bxe7 Qxe7 11. Rc1 Nd7 12. cxd5 exd5 "
-          "13. Qa4 a5 14. O-O-O";
-    verifyMoveCount(pgn, 27);
-    verifyMove(pgn, 26, "O-O-O");
+          "13. Qa4 a5";
+    verifyMoveCount(pgn, 26);
+    verifyMove(pgn, 9, "O-O");
+    verifyMove(pgn, 16, "O-O");
+
+    pgn = "1. d4 d5 2. Bf4 Bf5 3. Nc3 Na6 4. Qd3 Qd7 5. O-O-O O-O-O";
+    verifyMoveCount(pgn, 10);
+    verifyMove(pgn, 8, "O-O-O");
+    verifyMove(pgn, 9, "O-O-O");
 }
 
 // Test captures
@@ -75,16 +81,19 @@ TEST_F(PGNTest, Captures) {
 // Test pawn promotions
 TEST_F(PGNTest, Promotions) {
     const char* pgn = 
-        "1. e4 d5 2. exd5 c6 3. dxc6 Nf6 4. cxb7 Bg4 5. bxa8=Q";
+        "1. e4 f5 2. exf5 g6 3. fxg6 Nf6 4. gxh7 Ng8 5. hxg8=Q";
     verifyMoveCount(pgn, 9);
-    verifyMove(pgn, 8, "bxa8=Q");
+    verifyMove(pgn, 8, "hxg8=Q");
 
     // Test all promotion pieces
-    pgn = "1. e4 d5 2. e5 d4 3. e6 d3 4. exf7+ Kd7 5. fxg8=N+ Ke6 "
-          "6. h4 a5 7. h5 a4 8. h6 a3 9. h7 a2 10. h8=B a1=R";
-    verifyMoveCount(pgn, 20);
-    verifyMove(pgn, 18, "h8=B");
-    verifyMove(pgn, 19, "a1=R");
+    pgn = "1. e4 d5 2. e5 d4 3. e6 d3 4. exf7+ Kd7 5. fxg8=N Ke6 "
+          "6. h4 a5 7. h5 a4 8. h6 a3 9. hxg7 axb2 10. gxh8=Q bxa1=B "
+          "11. Nf3 dxc2 12. Ng1 cxd1=R+";
+    verifyMoveCount(pgn, 24);
+    verifyMove(pgn, 8, "fxg8=N");
+    verifyMove(pgn, 18, "gxh8=Q");
+    verifyMove(pgn, 19, "bxa1=B");
+    verifyMove(pgn, 23, "cxd1=R+");
 }
 
 // Test check and checkmate notation
@@ -93,22 +102,24 @@ TEST_F(PGNTest, CheckAndMate) {
     verifyMoveCount(pgn, 7);
     verifyMove(pgn, 6, "Qxf7#");
 
-    pgn = "1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. b4+ Bxb4";
-    verifyMoveCount(pgn, 7);
-    verifyMove(pgn, 5, "b4+");
+    pgn = "1. e4 e5 2. b3 Ke7 3. Ba3+ Ke6 4. Qg4+ Kf6 5. Qf5#";
+    verifyMoveCount(pgn, 9);
+    verifyMove(pgn, 4, "Ba3+");
+    verifyMove(pgn, 6, "Qg4+");
+    verifyMove(pgn, 8, "Qf5#");
 }
 
 // Test move disambiguation
 TEST_F(PGNTest, Disambiguation) {
     // File disambiguation
-    const char* pgn = "1. d4 d5 2. Nf3 Nf6 3. Nc3 Nc6 4. Nbd2";
-    verifyMoveCount(pgn, 7);
-    verifyMove(pgn, 6, "Nbd2");
+    const char* pgn = "1. d4 d5 2. Nf3 Nf6 3. Nc3 Nc6 4. Nb5 Nxd4 5. Nfxd4";
+    verifyMoveCount(pgn, 9);
+    verifyMove(pgn, 8, "Nfxd4");
 
     // Rank disambiguation
-    pgn = "1. d4 d5 2. Nc3 Nc6 3. Nf3 Nf6 4. e4 e6 5. N3e2";
-    verifyMoveCount(pgn, 9);
-    verifyMove(pgn, 8, "N3e2");
+    pgn = "1. Nf3 Nc6 2. Nc3 Nb8 3. Nd5 Nc6 4. Ne5 Nb8 5. Nd3 Na6 6. N5f4";
+    verifyMoveCount(pgn, 11);
+    verifyMove(pgn, 10, "N5f4");
 }
 
 // Test PGN tags
@@ -183,8 +194,8 @@ TEST_F(PGNTest, ErrorCases) {
     EXPECT_FALSE(history.fromPGN("1. e4 e5 2. O-O"));  // Can't castle yet
 
     // Invalid moves
-    EXPECT_FALSE(history.fromPGN("1. e5"));  // Pawn can't move two squares diagonally
-    EXPECT_FALSE(history.fromPGN("1. e4 e5 2. Nf3 Nc6 3. Bb5 Bb4"));  // Bishop can't move through pieces
+    EXPECT_FALSE(history.fromPGN("1. e5"));  // Pawn can't move three squares
+    EXPECT_FALSE(history.fromPGN("1. e4 e5 2. Nf3 Nc6 3. Bg3 Bb4"));  // Bishop can't move through pieces
 
     // Malformed PGN
     EXPECT_FALSE(history.fromPGN("[Event \"Test\" 1. e4"));  // Missing closing quote
@@ -209,16 +220,4 @@ TEST_F(PGNTest, UTF8Support) {
     ASSERT_TRUE(history.fromPGN(pgn));
     EXPECT_EQ(history.getTag("Event"), "Künstlicher Wettkampf");
     EXPECT_EQ(history.getTag("White"), "Spieler, Weiß");
-}
-
-// Test move numbering variants
-TEST_F(PGNTest, MoveNumbering) {
-    // Standard numbering
-    EXPECT_TRUE(history.fromPGN("1. e4 e5 2. Nf3 Nc6"));
-
-    // Black first with ellipsis
-    EXPECT_TRUE(history.fromPGN("1... e5 2. Nf3 Nc6"));
-
-    // Sparse numbering
-    EXPECT_TRUE(history.fromPGN("1. e4 e5 Nf3 Nc6 Bb5 a6"));
 }

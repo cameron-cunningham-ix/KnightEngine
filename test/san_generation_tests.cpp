@@ -72,14 +72,14 @@ TEST_F(SANGenerationTest, CheckAndMate) {
 
 // Test pawn promotion
 TEST_F(SANGenerationTest, Promotion) {
-    setupPosition(board, state, "8/4P3/8/8/8/8/8/4K3 w - - 0 1");
+    setupPosition(board, state, "7k/4P3/8/8/8/8/8/4K3 w - - 0 1");
     
     Move promotion(W_PAWN, 52, 60);
     promotion.isPromotion = true;
     promotion.promoteTo = W_QUEEN;
-    EXPECT_EQ("e8=Q", history.generateSAN(promotion, board, state));
+    EXPECT_EQ("e8=Q+", history.generateSAN(promotion, board, state));
     
-    setupPosition(board, state, "3r4/4P3/8/8/8/8/8/8 w - - 0 1");
+    setupPosition(board, state, "3r4/4P2k/8/8/8/8/8/4K3 w - - 0 1");
     
     Move promotionCapture(W_PAWN, 52, 59, true);
     promotionCapture.isPromotion = true;
@@ -90,33 +90,35 @@ TEST_F(SANGenerationTest, Promotion) {
 // Test move disambiguation
 TEST_F(SANGenerationTest, Disambiguation) {
     // Test file disambiguation
-    setupPosition(board, state, "8/8/8/8/8/2N5/8/2N5 w - - 0 1");
-    EXPECT_EQ("N3d2", history.generateSAN(Move(W_KNIGHT, 18, 19), board, state));
-    EXPECT_EQ("N1d2", history.generateSAN(Move(W_KNIGHT, 2, 19), board, state));
+    setupPosition(board, state, "5k1K/8/8/8/8/2N5/8/2N5 w - - 0 1");
+    EXPECT_EQ("N3e2", history.generateSAN(Move(W_KNIGHT, 18, 12), board, state));
+    EXPECT_EQ("N1e2", history.generateSAN(Move(W_KNIGHT, 2, 12), board, state));
     
     // Test rank disambiguation
-    setupPosition(board, state, "8/8/8/8/8/1N6/8/N7 w - - 0 1");
-    EXPECT_EQ("Nbc3", history.generateSAN(Move(W_KNIGHT, 17, 18), board, state));
-    EXPECT_EQ("Nac3", history.generateSAN(Move(W_KNIGHT, 0, 18), board, state));
+    setupPosition(board, state, "5k1K/8/8/8/8/1N6/N7/8 w - - 0 1");
+    EXPECT_EQ("Nbc1", history.generateSAN(Move(W_KNIGHT, 17, 2), board, state));
+    EXPECT_EQ("Nac1", history.generateSAN(Move(W_KNIGHT, 8, 2), board, state));
     
     // Test full disambiguation (both file and rank needed)
-    setupPosition(board, state, "8/8/8/8/8/N7/8/N7 w - - 0 1");
-    EXPECT_EQ("N1b2", history.generateSAN(Move(W_KNIGHT, 0, 9), board, state));
-    EXPECT_EQ("N3b2", history.generateSAN(Move(W_KNIGHT, 16, 9), board, state));
+    setupPosition(board, state, "5k1K/8/8/8/8/N3N3/8/N3N3 w - - 0 1");
+    EXPECT_EQ("Na1c2", history.generateSAN(Move(W_KNIGHT, 0, 10), board, state));
+    EXPECT_EQ("Ne1c2", history.generateSAN(Move(W_KNIGHT, 4, 10), board, state));
+    EXPECT_EQ("Na3c2", history.generateSAN(Move(W_KNIGHT, 16, 10), board, state));
+    EXPECT_EQ("Ne3c2", history.generateSAN(Move(W_KNIGHT, 20, 10), board, state));
 }
 
 // Test edge cases
 TEST_F(SANGenerationTest, EdgeCases) {
     // Multiple pieces that could move to same square but some are pinned
-    setupPosition(board, state, "8/8/8/8/3k4/2R5/2R5/4K3 w - - 0 1");
-    EXPECT_EQ("R2c4", history.generateSAN(Move(W_ROOK, 10, 26), board, state));
+    setupPosition(board, state, "8/8/8/3k4/8/2R5/2R5/4K3 w - - 1 1");
+    EXPECT_EQ("Rc4", history.generateSAN(Move(W_ROOK, 18, 26), board, state));
     
     // Capture that gives check
-    setupPosition(board, state, "4k3/8/8/8/8/5n2/8/4K2R w - - 0 1");
-    EXPECT_EQ("Rxf3+", history.generateSAN(Move(W_ROOK, 7, 21, true), board, state));
+    setupPosition(board, state, "5k2/8/8/8/8/5n2/8/4KR2 w - - 0 1");
+    EXPECT_EQ("Rxf3+", history.generateSAN(Move(W_ROOK, 5, 21, true), board, state));
     
     // Promotion that gives check
-    setupPosition(board, state, "4k3/4P3/8/8/8/8/8/4K3 w - - 0 1");
+    setupPosition(board, state, "6k1/4P3/8/8/8/8/8/4K3 w - - 0 1");
     Move promCheck(W_PAWN, 52, 60);
     promCheck.isPromotion = true;
     promCheck.promoteTo = W_QUEEN;

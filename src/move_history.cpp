@@ -5,7 +5,6 @@
 #include <iomanip>
 #include <algorithm>
 
-
 // Constructor for standard starting position
 MoveHistory::MoveHistory() 
     : startingFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"),
@@ -43,15 +42,17 @@ void MoveHistory::addMove(const Move& move, const ChessBoard& board, const GameS
                          std::chrono::milliseconds timeStamp) {
     // Generate SAN notation for the move
     std::string san = generateSAN(move, board, state);
-    
+
     // Get FEN of position after move
     ChessBoard newBoard = board;
     GameState newState = state;
+
     makeMove(newBoard, move);
     MoveValidator validator(newBoard, &newState);
     validator.updateGameState(move);
-    
-    std::string fen = getFEN(newBoard, newState); // TODO: Implement getFEN() function
+
+
+    std::string fen = getFEN(newBoard, newState);
     
     // Create and add history entry
     moves.emplace_back(move, san, fen, timeStamp);
@@ -61,14 +62,6 @@ void MoveHistory::addMove(const Move& move, const ChessBoard& board, const GameS
 std::string MoveHistory::generateSAN(const Move& move, const ChessBoard& board, const GameState& state) const {
     std::stringstream san;
     
-    // Debugging: Print move details
-    std::cout << "Move: from " << move.from << " to " << move.to << std::endl;
-    std::cout << "Piece: " << move.piece << std::endl;
-    std::cout << "Is Capture: " << move.isCapture << std::endl;
-    std::cout << "Is Promotion: " << move.isPromotion << std::endl;
-    std::cout << "Promote To: " << move.promoteTo << std::endl;
-    std::cout << "Is Castle: " << move.isCastle << std::endl;
-
     // Handle castling first
     if (move.isCastle) {
         if (move.to % 8 > move.from % 8) {
@@ -78,20 +71,15 @@ std::string MoveHistory::generateSAN(const Move& move, const ChessBoard& board, 
         }
     }
 
-    std::cout << "Move is not a castle" << std::endl;
-
     // Add piece letter (except for pawns)
     if (move.piece != W_PAWN && move.piece != B_PAWN) {
         auto it = pieceToSAN.find(move.piece);
         if (it != pieceToSAN.end()) {
             san << it->second[0];
-            std::cout << "Piece letter added " << it->second[0] << std::endl;
         } else {
             throw std::runtime_error("Invalid piece type in generateSAN");
         }
     }
-
-    std::cout << "Piece letter added" << std::endl;
 
     // Check for move ambiguity
     std::vector<Move> legalMoves;
@@ -103,8 +91,6 @@ std::string MoveHistory::generateSAN(const Move& move, const ChessBoard& board, 
     GameState tempState = state;
     MoveValidator validator(tempBoard, &tempState);
 
-    std::cout << "Generated pseudo moves" << std::endl;
-    
     // Filter to only legal moves of the same piece type going to the same square
     for (const Move& candidateMove : pseudoMoves) {
         if (candidateMove.piece != move.piece || candidateMove.to != move.to) {
@@ -116,10 +102,12 @@ std::string MoveHistory::generateSAN(const Move& move, const ChessBoard& board, 
         if (candidateMove.from == move.from) {
             continue;
         }
+        // Pawn captures are always unambiguous since we add the file later
+        if (move.piece == W_PAWN || move.piece == B_PAWN) {
+            continue;
+        }
         ambiguousMoves.push_back(candidateMove);
     }
-
-    std::cout << "Filtered ambiguous moves" << std::endl;
     
     // If we found ambiguous moves, determine what disambiguation is needed
     if (!ambiguousMoves.empty()) {
@@ -153,17 +141,13 @@ std::string MoveHistory::generateSAN(const Move& move, const ChessBoard& board, 
         }
     }
 
-    std::cout << "Disambiguation added" << std::endl;
-
     // Add capture symbol if it's a capture
     if (move.isCapture) {
         // Always show file of origin for pawn captures
         if (move.piece == W_PAWN || move.piece == B_PAWN) {
             san << (char)('a' + (move.from % 8));
-            std::cout << "Pawn capture file added" << std::endl;
         }
         san << "x";
-        std::cout << "Capture symbol added" << std::endl;
     }
 
     // Add destination square
@@ -171,28 +155,21 @@ std::string MoveHistory::generateSAN(const Move& move, const ChessBoard& board, 
 
     // Add promotion piece
     if (move.isPromotion) {
-        san << "=" << pieceToFEN.at(move.promoteTo)[0];
+        san << "=" << pieceToSAN.at(move.promoteTo);
     }
-
-    std::cout << "Destination square and promotion piece added" << std::endl;
 
     // Check for check and checkmate
     makeMove(tempBoard, move);
     MoveValidator tempValidator(tempBoard, &tempState);
     tempValidator.updateGameState(move);
-    
-    std::cout << "Made move, update game state" << std::endl;
 
     if (tempValidator.isInCheck(tempState.sideToMove)) {
-        std::cout << "In check" << std::endl;
-        if (tempValidator.isCheckmate(tempState.sideToMove)) {
-            std::cout << "Checkmate" << std::endl;
+        if (tempValidator.isCheckmate()) {
             san << "#";
         } else {
             san << "+";
         }
     }
-
     return san.str();
 }
 
@@ -277,6 +254,7 @@ std::string MoveHistory::moveToPGN(const HistoryEntry& entry, int moveNumber, bo
 }
 
 // Convert Standard Algebraic Notation (SAN) to a Move object
+// This function is pretty ugly but it works.
 Move MoveHistory::sanToMove(const std::string& san, const ChessBoard& board, const GameState& state) {
     try {
         // Handle castling moves
@@ -306,60 +284,73 @@ Move MoveHistory::sanToMove(const std::string& san, const ChessBoard& board, con
         // Parse move components
         PieceType pieceType;
         int fromFile = -1, fromRank = -1;
-        bool isCapture = false;
         int toFile = -1, toRank = -1;
-        PieceType promoteTo = static_cast<PieceType>(-1);
-
-        size_t idx = 0;
+        bool isCapture = false;
+        bool isPromotion = false;
+        PieceType promoteTo = static_cast<PieceType>(-1);        
 
         // Get piece type
-        if (std::isupper(s[idx])) {
-            char piece = s[idx++];
+        if (std::isupper(s[0])) {
+            char piece = s[0];
             pieceType = state.sideToMove == WHITE ? 
                 fenToPiece.at(piece) : static_cast<PieceType>(fenToPiece.at(piece) + 6);
         } else {
             pieceType = state.sideToMove == WHITE ? W_PAWN : B_PAWN;
+            toFile = s[0] - 'a';    // This will be updated if need be by the loop below
         }
 
-        // Parse disambiguation and/or source square
-        while (idx < s.length() && (std::isdigit(s[idx]) || std::islower(s[idx]))) {
-            if (std::isdigit(s[idx])) {
-                fromRank = s[idx] - '1';
-            } else if (std::islower(s[idx])) {
-                // Could be source file or destination file for pawn capture
-                if (idx + 1 < s.length() && s[idx + 1] == 'x') {
-                    fromFile = s[idx] - 'a';
-                    isCapture = true;
-                    idx++;  // Skip 'x'
-                } else {
-                    fromFile = s[idx] - 'a';
+        // Already got piece type, skip first char
+        size_t idx = 1;
+        while (idx < s.length()) {
+            // Possible lowercase chars: a to h for file, x for capture
+            if (std::islower(s[idx]) && s[idx] != 'x') {
+                // This char is the first file indicator found
+                if (toFile == -1) {
+                    toFile = s[idx] - 'a';
                 }
+                // This char is another file indicator for disambiguation
+                else {
+                    fromFile = toFile;
+                    toFile = s[idx] - 'a';
+                }
+                idx++;
+                continue;
             }
-            idx++;
-        }
 
-        // Handle capture symbol if present
-        if (idx < s.length() && s[idx] == 'x') {
-            isCapture = true;
-            idx++;
-        }
-
-        // Get destination square
-        if (idx + 1 >= s.length() || !std::islower(s[idx]) || !std::isdigit(s[idx + 1])) {
-            throw std::runtime_error("Invalid destination square in SAN: " + san);
-        }
-        toFile = s[idx] - 'a';
-        toRank = s[idx + 1] - '1';
-        idx += 2;
-
-        // Handle promotion if present
-        if (idx < s.length() && s[idx] == '=') {
-            if (++idx >= s.length() || !std::isupper(s[idx])) {
-                throw std::runtime_error("Invalid promotion piece in SAN: " + san);
+            if (s[idx] == 'x') {
+                isCapture = true;
+                idx++;
+                continue;
             }
-            char promoPiece = s[idx];
-            promoteTo = state.sideToMove == WHITE ? 
-                fenToPiece.at(promoPiece) : static_cast<PieceType>(fenToPiece.at(promoPiece) + 6);
+
+            // Ranks
+            if (std::isdigit(s[idx])) {
+                // This char is the first rank indicator found
+                if (toRank == -1) {
+                    toRank = s[idx] - '1';
+                }
+                // This char is another rank indicator for disambiguation
+                else {
+                    fromRank = toRank;
+                    toRank = s[idx] - '1';
+                }
+                idx++;
+                continue;
+            }
+
+            // Promotion
+            if (s[idx] = '=') {
+                isPromotion = true;
+                if (s[idx + 1] == 'Q') 
+                    state.sideToMove == WHITE ? promoteTo = W_QUEEN : promoteTo = B_QUEEN;
+                else if (s[idx + 1] == 'R') 
+                    state.sideToMove == WHITE ? promoteTo = W_ROOK : promoteTo = B_ROOK;
+                else if (s[idx + 1] == 'B') 
+                    state.sideToMove == WHITE ? promoteTo = W_BISHOP : promoteTo = B_BISHOP;
+                else if (s[idx + 1] == 'K') 
+                    state.sideToMove == WHITE ? promoteTo = W_KNIGHT : promoteTo = B_KNIGHT;
+                idx+=2;     // Skip the '=' and the promoted piece
+            }
         }
 
         // Find matching legal move
@@ -387,10 +378,8 @@ Move MoveHistory::sanToMove(const std::string& san, const ChessBoard& board, con
             }
 
             // Handle promotion
-            if (candidate.isPromotion) {
-                if (promoteTo == static_cast<PieceType>(-1)) continue;
-                candidate.promoteTo = promoteTo;
-            }
+            if (candidate.isPromotion != isPromotion) continue;
+            if (promoteTo != -1 && candidate.promoteTo != promoteTo) continue;
 
             return candidate;
         }
@@ -399,6 +388,7 @@ Move MoveHistory::sanToMove(const std::string& san, const ChessBoard& board, con
     } catch (const std::exception& e) {
         throw std::runtime_error(std::string("Error parsing SAN: ") + san + " - " + e.what());
     }
+    
 }
 
 // Parse a PGN (Portable Game Notation) string into the move history
@@ -438,7 +428,7 @@ bool MoveHistory::fromPGN(const std::string& pgn) {
             std::string tagName = line.substr(1, firstSpace - 1);
             std::string tagValue = line.substr(firstQuote + 1, lastQuote - firstQuote - 1);
             setTag(tagName, tagValue);
-            
+
             // Special handling for FEN tag
             if (tagName == "FEN") {
                 startingFen = tagValue;
@@ -450,7 +440,11 @@ bool MoveHistory::fromPGN(const std::string& pgn) {
         ChessBoard board;
         GameState state;
         if (!isStandardStart) {
-            setupPosition(board, state, startingFen);
+            if (isValidFEN(startingFen)) {
+                setupPosition(board, state, startingFen);
+            }
+            else 
+                return false;
         }
         
         // Second pass: Parse moves section
@@ -542,7 +536,7 @@ bool MoveHistory::fromPGN(const std::string& pgn) {
                             
                             // Add move to history
                             addMove(move, board, state);
-                            
+
                             // Update board position
                             makeMove(board, move);
                             validator.updateGameState(move);
@@ -562,10 +556,24 @@ bool MoveHistory::fromPGN(const std::string& pgn) {
         // Handle last move if any
         if (!currentMove.empty()) {
             try {
-                Move move = sanToMove(currentMove, board, state);
-                MoveValidator validator(board, &state);
-                if (validator.isMoveLegal(move)) {
+                // Handle game termination markers
+                if (currentMove == "1-0" || currentMove == "0-1" || 
+                    currentMove == "1/2-1/2" || currentMove == "*") {
+                    setTag("Result", currentMove);
+                }
+                else {
+                    Move move = sanToMove(currentMove, board, state);
+
+                    MoveValidator validator(board, &state);
+                    if (!validator.isMoveLegal(move)) {
+                        throw std::runtime_error("Illegal move: " + currentMove);
+                    }
+                    // Add move to history
                     addMove(move, board, state);
+
+                    // Update board position
+                    makeMove(board, move);
+                    validator.updateGameState(move);
                 }
             } catch (const std::exception& e) {
                 return false;
@@ -580,7 +588,7 @@ bool MoveHistory::fromPGN(const std::string& pgn) {
         return true;
         
     } catch (const std::exception& e) {
-        std::cerr << "PGN parsing error: " << e.what() << std::endl;
+        std::cout << "PGN parsing error: " << e.what() << std::endl;
         return false;
     }
 }
@@ -636,7 +644,6 @@ std::string MoveHistory::getFEN(ChessBoard board, GameState state) {
     // Loop through all squares for position portion of FEN
     for (square; square >= 0; square++) {
         PieceType current = board.getPieceAt(square);
-        //std::cout << "square: " << square << " piece: " << current << std::endl;
         // Empty square
         if (current == -1) {
             emptyCount++;

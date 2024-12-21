@@ -185,6 +185,7 @@ bool ChessBoard::isBitSet(U64 bb, int index) {
 /// @param indexOfSquare 
 /// @param colorOfKing 
 /// @return 
+/// @note This function does not take into account king attackts to the square
 U64 ChessBoard::attacksToSquare(int indexOfSquare, Color colorOfKing) const {
     // Get opposing pieces based on king's color
     U64 opPawns, opKnights, opQ, opB, opR, occupancy;

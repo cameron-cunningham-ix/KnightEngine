@@ -468,11 +468,11 @@ TEST_F(MoveValidationTest, PawnPromotion) {
 // Test checkmate detection
 TEST_F(MoveValidationTest, CheckmateDetection) {
     // Setup: Scholar's mate position
-    setupPosition(board, state, "rnbqkbnr/1ppp1Qpp/p7/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 0 1");
+    setupPosition(board, state, "rnbqkbnr/1ppp1Qpp/p7/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 1");
     setBoard(board, state);
     
     EXPECT_TRUE(validator->isInCheck(BLACK));
-    EXPECT_TRUE(validator->isCheckmate(BLACK));
+    EXPECT_TRUE(validator->isCheckmate());
 }
 
 // Test stalemate detection

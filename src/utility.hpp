@@ -78,6 +78,7 @@ int algebraicToIndex(const std::string& square);
 std::string indexToAlgebraic(int index);
 void setupPosition(ChessBoard& board, GameState& state, const std::string& fen);
 void printFEN(ChessBoard board, GameState state);
+bool isValidFEN(const std::string& fen);
 int countLegalMoves(ChessBoard& board, GameState* state);
 bool isCheckmate(ChessBoard& board, GameState* state);
 bool isStalemate(ChessBoard& board, GameState* state);
