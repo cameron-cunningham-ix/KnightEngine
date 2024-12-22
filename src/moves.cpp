@@ -122,17 +122,17 @@ bool MoveValidator::isInCheck(Color color) const {
 }
 
 // Check if a specific color is in checkmate
-bool MoveValidator::isCheckmate() {
+bool MoveValidator::isCheckmate(Color color) {
     // First check if the player is in check
-    if (!isInCheck(state->sideToMove)) {
+    if (!isInCheck(color)) {
         return false;
     }
     // Find king's position
-    U64 kingBB = state->sideToMove == WHITE ? board.getWhiteKings() : board.getBlackKings();
+    U64 kingBB = color == WHITE ? board.getWhiteKings() : board.getBlackKings();
     int kingPos = std::countr_zero(kingBB);
     
     // Check if king is in check
-    if (!isSquareUnderAttack(kingPos, state->sideToMove == WHITE ? BLACK : WHITE)) {
+    if (!isSquareUnderAttack(kingPos, color == WHITE ? BLACK : WHITE)) {
         return false;  // Not even in check
     }
     

@@ -472,7 +472,7 @@ TEST_F(MoveValidationTest, CheckmateDetection) {
     setBoard(board, state);
     
     EXPECT_TRUE(validator->isInCheck(BLACK));
-    EXPECT_TRUE(validator->isCheckmate());
+    EXPECT_TRUE(validator->isCheckmate(BLACK));
 }
 
 // Test stalemate detection

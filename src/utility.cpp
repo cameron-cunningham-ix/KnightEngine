@@ -401,7 +401,7 @@ PerftMetrics calcPerftMetrics(ChessBoard& board, GameState* state, int depth) {
         if (move.isPromotion)   perftM.promotions = 1;
 
         if (tempValidator.isInCheck(tempState.sideToMove))     perftM.checks++;
-        if (tempValidator.isCheckmate())   perftM.checkmates++;
+        if (tempValidator.isCheckmate(tempState.sideToMove))   perftM.checkmates++;
         
         std::cout << "\n";
         // Recurse with temporary position and updated state

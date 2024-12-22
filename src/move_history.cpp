@@ -43,16 +43,8 @@ void MoveHistory::addMove(const Move& move, const ChessBoard& board, const GameS
     // Generate SAN notation for the move
     std::string san = generateSAN(move, board, state);
 
-    // Get FEN of position after move
-    ChessBoard newBoard = board;
-    GameState newState = state;
-
-    makeMove(newBoard, move);
-    MoveValidator validator(newBoard, &newState);
-    validator.updateGameState(move);
-
     // Create and add FEN entry
-    std::string fen = getFEN(newBoard, newState);
+    std::string fen = getFEN(board, state);
     fens.emplace_back(fen);
     
     // Create and add history entry
@@ -165,7 +157,7 @@ std::string MoveHistory::generateSAN(const Move& move, const ChessBoard& board, 
     tempValidator.updateGameState(move);
 
     if (tempValidator.isInCheck(tempState.sideToMove)) {
-        if (tempValidator.isCheckmate()) {
+        if (tempValidator.isCheckmate(tempState.sideToMove)) {
             san << "#";
         } else {
             san << "+";

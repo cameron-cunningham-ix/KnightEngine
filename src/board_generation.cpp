@@ -188,7 +188,7 @@ bool ChessBoard::isBitSet(U64 bb, int index) {
 /// @note This function does not take into account king attackts to the square
 U64 ChessBoard::attacksToSquare(int indexOfSquare, Color colorOfKing) const {
     // Get opposing pieces based on king's color
-    U64 opPawns, opKnights, opQ, opB, opR, occupancy;
+    U64 opPawns, opKnights, opQ, opB, opR, opK, occupancy;
     if (colorOfKing == WHITE) {
         // Get all black pieces that could attack white king
         opPawns = getBlackPawns();
@@ -196,6 +196,7 @@ U64 ChessBoard::attacksToSquare(int indexOfSquare, Color colorOfKing) const {
         opQ = getBlackQueens();    // Queens can move like rooks and bishops
         opR = getBlackRooks();           // Add rooks to rook+queen attack mask
         opB = getBlackBishops();         // Add bishops to bishop+queen attack mask
+        opK = getBlackKings();
     } else {
         // Get all white pieces that could attack black king
         opPawns = getWhitePawns();
@@ -203,6 +204,7 @@ U64 ChessBoard::attacksToSquare(int indexOfSquare, Color colorOfKing) const {
         opQ = getWhiteQueens();    // Queens can move like rooks and bishops
         opR = getWhiteRooks();           // Add rooks to rook+queen attack mask
         opB = getWhiteBishops();         // Add bishops to bishop+queen attack mask
+        opK = getWhiteKings();
     }
 
     // Get occupancy of all pieces for blocking calculations
@@ -212,7 +214,8 @@ U64 ChessBoard::attacksToSquare(int indexOfSquare, Color colorOfKing) const {
             knightAttacks[indexOfSquare] & opKnights |
             getRookAttacks(indexOfSquare, occupancy) & opR |
             getBishopAttacks(indexOfSquare, occupancy) & opB |
-            getQueenAttacks(indexOfSquare, occupancy) & opQ;
+            getQueenAttacks(indexOfSquare, occupancy) & opQ |
+            kingAttacks[indexOfSquare] & opK;
 }
 
 // Prints the bitboard to the console 

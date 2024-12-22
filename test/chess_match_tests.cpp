@@ -253,29 +253,43 @@ TEST_F(ChessMatchTest, PGNExport1) {
 
 // Test PGN export with game result
 TEST_F(ChessMatchTest, PGNExport2) {
-    // Setup a match that ends in a draw
+    // Setup a match that ends in checkmate
     std::vector<Move> whiteMoves = {
         Move(W_PAWN, 12, 28),      // 1. e4
-        Move(W_KNIGHT, 6, 21)      // 2. Nf3
+        Move(W_KNIGHT, 6, 21),     // 2. Nf3
+        Move(W_KNIGHT, 21, 36, true),    // 3. Nxe5
+        Move(W_KNIGHT, 36, 42, true),     // 4. Nxc6
+        Move(W_KNIGHT, 42, 48, true),     // 5. Nxa7
+        Move(W_KNIGHT, 48, 58, true),     // 6. Nxc8
+        Move(W_KNIGHT, 58, 43),           // 7. Nd6+
+        Move(W_KNIGHT, 43, 58),           // 8. Nc8+
+        Move(W_BISHOP, 5, 26),           // 9. Bc4+
+        Move(W_PAWN, 11, 27),           // 10. d4+
+        Move(W_QUEEN, 3, 19),           // 11. Qd3#
     };
     std::vector<Move> blackMoves = {
         Move(B_PAWN, 52, 36),      // 1... e5
-        Move(B_KNIGHT, 62, 45)     // 2... Nf6
+        Move(B_KNIGHT, 62, 45),    // 2... Nf6
+        Move(B_PAWN, 50, 42),      // 3... c6 
+        Move(B_ROOK, 63, 62),      // 4... Rb7
+        Move(B_ROOK, 62, 63),      // 5... Rb8
+        Move(B_ROOK, 63, 62),       // 6... Rb7
+        Move(B_KING, 60, 52),       // 7... Ke7
+        Move(B_KING, 52, 44),        // 8... Ke6
+        Move(B_KING, 44, 36),        // 9... Ke5
+        Move(B_KING, 36, 28, true)        // 10... Kxe4
     };
     
     setupMatchWithMoves(whiteMoves, blackMoves);
     match->start();
     
-    // Offer a draw
-    match->offerDraw(WHITE);
-    match->acceptDraw(BLACK);
-    
     std::string pgn = match->getPGN();
     std::cout << "PGN:\n" << pgn << std::endl;
     
     // Verify PGN contains essential elements
-    EXPECT_TRUE(pgn.find("[Result \"1/2-1/2\"]") != std::string::npos);
-    EXPECT_TRUE(pgn.find("{Draw by mutual agreement}") != std::string::npos);
+    EXPECT_TRUE(pgn.find("[Result \"1-0\"]") != std::string::npos);
+    EXPECT_TRUE(pgn.find("1. e4 e5 2. Nf3 Nf6 3. Nxe5 c6 4. Nxc6 Rg8 5. Nxa7 Rh8 6. Nxc8 Rg8 7. Nd6+ Ke7 "
+                         "8. Nc8+ Ke6 9. Bc4+ Ke5 10. d4+ Kxe4 11. Qd3#") != std::string::npos);
 }
 
 

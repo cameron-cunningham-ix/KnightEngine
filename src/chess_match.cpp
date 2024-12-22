@@ -31,6 +31,7 @@ void ChessMatch::start() {
         try {
             // Get move from current player
             Move move = currentPlayer->getMove(board, state, clock);
+            history.addMove(move, board, state, clock.getWhiteTime());
             
             // Make the move
             makeMove(board, move);
@@ -38,7 +39,6 @@ void ChessMatch::start() {
             // Update game state and history
             MoveValidator validator(board, &state);
             validator.updateGameState(move);
-            history.addMove(move, board, state, clock.getWhiteTime());
             
             // Update clock
             clock.makeMove();
@@ -78,7 +78,7 @@ bool ChessMatch::checkForGameEnd() {
     MoveValidator validator(board, &state);
     
     // Check for checkmate
-    if (validator.isCheckmate()) {
+    if (validator.isCheckmate(state.sideToMove)) {
         isMatchOver = true;
         result = (state.sideToMove == WHITE) ? 
                  MatchResult::BlackWin : MatchResult::WhiteWin;
