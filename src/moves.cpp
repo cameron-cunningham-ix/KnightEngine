@@ -172,15 +172,21 @@ bool MoveValidator::isStalemate(Color color) {
             return false;
         }
     }
-
     // No legal moves found but not in check, it's stalemate
     return true;
 }
 
+// NOTE: This function assumes the move is valid in terms of piece movement
 bool MoveValidator::isMoveLegal(const Move& move) {
     // Check if it's the correct side's turn
     bool isWhitePiece = move.piece <= W_KING;
     if ((state->sideToMove == WHITE) != isWhitePiece) return false;
+
+    // Check if the piece is on the square
+    if (getPieceOnSquare(board, move.from) != move.piece) return false;
+
+    // Check if the destination square is valid
+    if (move.to < 0 || move.to > 63) return false;
     
     // Handle special moves
     if (move.isCastle && !isValidCastling(move)) return false;
@@ -226,6 +232,18 @@ void MoveValidator::updateGameState(const Move& move) {
     
     // Switch side to move
     state->sideToMove = (state->sideToMove == WHITE) ? BLACK : WHITE;
+
+    // Check if halfmove clock should be reset or incremented
+    if (move.isCapture || move.piece == W_PAWN || move.piece == B_PAWN) {
+        state->halfMoveClock = 0;
+    } else {
+        state->halfMoveClock++;
+    }
+
+    // Increment fullmove number if black just moved
+    if (state->sideToMove == WHITE) {
+        state->fullMoveNumber++;
+    }
 }
 
 // Helper function to update bitboards for a piece movement
@@ -281,8 +299,15 @@ PieceType getPieceOnSquare(const ChessBoard& board, int square) {
 }
 
 void makeMove(ChessBoard& board, const Move& move) {
+    // Handle invalid move
+    if (move == Move()) {
+        std::string errorMsg = std::format("Invalid move: {} to {}, {}", 
+            (move.from), (move.to), 
+            move.isCapture ? " (capture)" : "");
+        throw std::runtime_error(errorMsg);
+    }
+
     // Handle captures first (except en passant)
-    
     if (move.isCapture && !move.isEnPassant) {
         // Remove captured piece
         PieceType capturedPiece = board.getPieceAt(move.to);

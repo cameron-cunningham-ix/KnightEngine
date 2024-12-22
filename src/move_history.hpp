@@ -27,6 +27,7 @@ struct HistoryEntry {
 class MoveHistory {
 private:
     std::vector<HistoryEntry> moves;        // Sequential list of moves
+    std::vector<std::string> fens;          // Sequential list of FEN for easy threefold repetition calculation
     std::vector<std::pair<std::string, std::string>> tags;  // PGN tags (e.g., [Event "..."])
     std::string startingFen;                // Starting position FEN if not standard
     bool isStandardStart;                   // Whether game started from standard position
@@ -34,7 +35,6 @@ private:
     // Helper methods
     
     std::string moveToPGN(const HistoryEntry& entry, int moveNumber, bool isWhite) const;
-    Move sanToMove(const std::string &san, const ChessBoard &board, const GameState &state);
     void parseNAG(const std::string &nag, HistoryEntry &entry);
 
 public:
@@ -66,6 +66,7 @@ public:
     // Accessors
     const std::vector<HistoryEntry>& getMoves() const { return moves; }
     const std::string& getStartingFEN() const { return startingFen; }
+    const std::vector<std::string>& getAllFEN() const { return fens; }
     bool isStartStandard() const { return isStandardStart; }
     size_t length() const { return moves.size(); }
     

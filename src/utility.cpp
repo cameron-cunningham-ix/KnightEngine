@@ -128,6 +128,10 @@ void setupPosition(ChessBoard& board, GameState& state, const std::string& fen) 
 
 
 void printFEN(ChessBoard board, GameState state) {
+    std::cout << std::format("\n(printFEN) {}\n", getFEN(board, state));
+}
+
+std::string getFEN(ChessBoard board, GameState state) {
     std::string fen;
     
     int square = 56;        // Start at a8
@@ -187,7 +191,7 @@ void printFEN(ChessBoard board, GameState state) {
     fen.append(" ");
     fen.append(std::to_string(state.fullMoveNumber));
 
-    std::cout << std::format("\n(printFEN) {}\n", fen);
+    return fen;
 }
 
 bool isValidFEN(const std::string& fen) {
@@ -455,4 +459,214 @@ bool verifyAttackPattern(const ChessBoard& board, int square,
     }
     
     return attacks == expectedBB;
+}
+
+// Convert Standard Algebraic Notation (SAN) to a Move object
+// Returns a default Move() if the SAN is invalid or no matching legal move is found
+Move sanToMove(const std::string& san, const ChessBoard& board, const GameState& state) {
+    // If string is empty, return default move
+    if (san.empty()) {
+        std::cout << "Empty SAN\n";
+        return Move();
+    }
+    
+    // Handle castling moves
+    if (san == "O-O") {  // Kingside castle
+        int from = state.sideToMove == WHITE ? 4 : 60;   // e1 or e8
+        int to = state.sideToMove == WHITE ? 6 : 62;     // g1 or g8
+        Move move(state.sideToMove == WHITE ? W_KING : B_KING, from, to);
+        move.isCastle = true;
+        ChessBoard tempBoard = board;
+        GameState tempState = state;
+        MoveValidator validator(tempBoard, &tempState);
+        if (!validator.isMoveLegal(move)) {
+            return Move();  // Return default move if castle is illegal
+        }
+        return move;
+    }
+    if (san == "O-O-O") {  // Queenside castle
+        int from = state.sideToMove == WHITE ? 4 : 60;   // e1 or e8
+        int to = state.sideToMove == WHITE ? 2 : 58;     // c1 or c8
+        Move move(state.sideToMove == WHITE ? W_KING : B_KING, from, to);
+        move.isCastle = true;
+        ChessBoard tempBoard = board;
+        GameState tempState = state;
+        MoveValidator validator(tempBoard, &tempState);
+        if (!validator.isMoveLegal(move)) {
+            return Move();  // Return default move if castle is illegal
+        }
+        return move;
+    }
+
+    // Remove check/mate symbols for parsing
+    std::string s = san;
+    bool isCheck = (s.back() == '+');
+    bool isMate = (s.back() == '#');
+    if (isCheck || isMate) {
+        s.pop_back();
+    }
+
+    // Initialize move components
+    PieceType pieceType;
+    int fromFile = -1, fromRank = -1;
+    int toFile = -1, toRank = -1;
+    bool isCapture = false;
+    bool isPromotion = false;
+    PieceType promoteTo = static_cast<PieceType>(-1);        
+
+    // Get piece type from first character if uppercase, otherwise assume pawn
+    if (std::isupper(s[0])) {
+        char piece = s[0];
+        if (fenToPiece.find(piece) == fenToPiece.end()) {
+            return Move();  // Invalid piece character
+        }
+        pieceType = state.sideToMove == WHITE ? 
+            fenToPiece.at(piece) : static_cast<PieceType>(fenToPiece.at(piece) + 6);
+    } else {
+        pieceType = state.sideToMove == WHITE ? W_PAWN : B_PAWN;
+        toFile = s[0] - 'a';    // Will be updated if needed by the parsing loop
+        if (toFile < 0 || toFile > 7) {
+            return Move();  // Invalid file
+        }
+    }
+
+    // Parse the rest of the move string
+    size_t idx = 1;
+    while (idx < s.length()) {
+        char c = s[idx];
+        
+        // Parse files (a-h)
+        if (std::islower(c) && c >= 'a' && c <= 'h' && c != 'x') {
+            if (toFile == -1) {
+                toFile = c - 'a';
+            } else {
+                fromFile = toFile;
+                toFile = c - 'a';
+            }
+        }
+        // Parse capture symbol
+        else if (c == 'x') {
+            isCapture = true;
+        }
+        // Parse ranks (1-8)
+        else if (std::isdigit(c) && c >= '1' && c <= '8') {
+            if (toRank == -1) {
+                toRank = c - '1';
+            } else {
+                fromRank = toRank;
+                toRank = c - '1';
+            }
+        }
+        // Parse promotion
+        else if (c == '=') {
+            if (idx + 1 >= s.length()) {
+                return Move();  // Missing promotion piece
+            }
+            isPromotion = true;
+            char promPiece = s[idx + 1];
+            switch (promPiece) {
+                case 'Q':
+                    promoteTo = state.sideToMove == WHITE ? W_QUEEN : B_QUEEN;
+                    break;
+                case 'R':
+                    promoteTo = state.sideToMove == WHITE ? W_ROOK : B_ROOK;
+                    break;
+                case 'B':
+                    promoteTo = state.sideToMove == WHITE ? W_BISHOP : B_BISHOP;
+                    break;
+                case 'N':
+                    promoteTo = state.sideToMove == WHITE ? W_KNIGHT : B_KNIGHT;
+                    break;
+                default:
+                    return Move();  // Invalid promotion piece
+            }
+            idx++;  // Skip the promotion piece character
+        }
+        idx++;
+    }
+
+    // Validate parsed coordinates
+    if (toFile == -1 || toRank == -1) {
+        return Move();  // Missing destination square
+    }
+
+    // Find matching legal move
+    std::vector<Move> candidates = generatePsuedoMoves(board, &state);
+    ChessBoard tempBoard = board;
+    GameState tempState = state;
+    MoveValidator validator(tempBoard, &tempState);
+
+    for (Move candidate : candidates) {
+        if (!validator.isMoveLegal(candidate)) {
+            continue;
+        }
+
+        // Check basic move properties
+        if (candidate.piece != pieceType || 
+            candidate.to != toFile + toRank * 8 ||
+            candidate.isCapture != isCapture) {
+            continue;
+        }
+
+        // Check source square constraints if specified
+        int candidateFile = candidate.from % 8;
+        int candidateRank = candidate.from / 8;
+        if ((fromFile != -1 && candidateFile != fromFile) ||
+            (fromRank != -1 && candidateRank != fromRank)) {
+            continue;
+        }
+
+        // Check promotion
+        if (candidate.isPromotion != isPromotion) {
+            continue;
+        }
+        if (isPromotion && promoteTo != candidate.promoteTo) {
+            continue;
+        }
+
+        return candidate;  // Found matching legal move
+    }
+
+    return Move();  // No matching legal move found
+}
+
+// Helper function to visualize the chess board in terminal
+void printBoard(const ChessBoard& board) {
+    // Print column labels
+    std::cout << "\n   a b c d e f g h\n";
+    std::cout << "   ---------------\n";
+    
+    // Print rows from top to bottom (8 to 1)
+    for (int rank = 7; rank >= 0; rank--) {
+        // Print rank number
+        std::cout << rank + 1 << "| ";
+        
+        // Print squares in this rank
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            PieceType piece = board.getPieceAt(square);
+            
+            // Convert piece type to character
+            char pieceChar = ' ';
+            switch (piece) {
+                case W_PAWN: pieceChar = 'P'; break;
+                case W_KNIGHT: pieceChar = 'N'; break;
+                case W_BISHOP: pieceChar = 'B'; break;
+                case W_ROOK: pieceChar = 'R'; break;
+                case W_QUEEN: pieceChar = 'Q'; break;
+                case W_KING: pieceChar = 'K'; break;
+                case B_PAWN: pieceChar = 'p'; break;
+                case B_KNIGHT: pieceChar = 'n'; break;
+                case B_BISHOP: pieceChar = 'b'; break;
+                case B_ROOK: pieceChar = 'r'; break;
+                case B_QUEEN: pieceChar = 'q'; break;
+                case B_KING: pieceChar = 'k'; break;
+                default: pieceChar = '.'; break;
+            }
+            std::cout << pieceChar << ' ';
+        }
+        std::cout << "| " << rank + 1 << "\n";
+    }
+    std::cout << "   ---------------\n";
+    std::cout << "   a b c d e f g h\n\n";
 }

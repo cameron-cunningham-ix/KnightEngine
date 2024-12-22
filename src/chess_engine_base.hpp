@@ -1,0 +1,67 @@
+// src/chess_engine_base.hpp
+#ifndef CHESS_ENGINE_BASE_H
+#define CHESS_ENGINE_BASE_H
+
+#include "types.hpp"
+#include "moves.hpp"
+#include <string>
+#include <map>
+#include <atomic>
+
+// Base class for all chess engine implementations
+class ChessEngineBase {
+protected:
+    std::string engineName;                // Name of the engine implementation
+    std::string engineVersion;             // Version of the engine
+    std::string engineAuthor;              // Author of the engine
+    std::atomic<bool> isSearching;         // Whether engine is currently searching
+    Move bestMove;                         // Best move found in last search
+    int searchDepth;                       // Current search depth
+    
+    // Engine options with their current values
+    std::map<std::string, std::string> options;
+
+public:
+    // Constructor takes basic engine information
+    ChessEngineBase(const std::string& name, 
+                    const std::string& version, 
+                    const std::string& author,
+                    int defaultDepth = 4)
+        : engineName(name)
+        , engineVersion(version)
+        , engineAuthor(author)
+        , isSearching(false)
+        , searchDepth(defaultDepth) {}
+    
+    virtual ~ChessEngineBase() = default;
+
+    // Core engine interface that must be implemented by all engines
+    virtual Move findBestMove(const ChessBoard& board, 
+                            const GameState& state,
+                            int maxDepth = -1) = 0;
+
+    // Optional evaluation function that engines can override
+    virtual int evaluatePosition(const ChessBoard& board, 
+                               const GameState& state) = 0;
+
+    // Common functionality that engines might want to override
+    virtual void stopSearch() { isSearching = false; }
+    virtual void setSearchDepth(int depth) { searchDepth = depth; }
+    virtual bool setOption(const std::string& name, const std::string& value);
+
+    // Getters
+    std::string getName() const { return engineName; }
+    std::string getVersion() const { return engineVersion; }
+    std::string getAuthor() const { return engineAuthor; }
+    bool isThinking() const { return isSearching; }
+    Move getBestMove() const { return bestMove; }
+    int getSearchDepth() const { return searchDepth; }
+
+protected:
+    // Utility methods for derived classes
+    virtual void startSearch() { isSearching = true; }
+    virtual void endSearch() { isSearching = false; }
+    virtual void setBestMove(const Move& move) { bestMove = move; }
+};
+
+#endif

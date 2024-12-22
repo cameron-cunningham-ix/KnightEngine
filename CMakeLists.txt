@@ -14,15 +14,28 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_library(KnightEngine
     src/board_generation.cpp
     src/board_generation.hpp
+    src/chess_clock.cpp
+    src/chess_clock.hpp
+    src/chess_engine_base.cpp
+    src/chess_engine_base.hpp
+    src/chess_match.cpp
+    src/chess_match.hpp
+    src/engine_player.cpp
+    src/engine_player.hpp
+    src/human_player.cpp
+    src/human_player.hpp
+    src/i_chess_engine.hpp
+    src/material_engine.hpp
+    src/move_history.cpp
+    src/move_history.hpp
     src/moves.cpp
     src/moves.hpp
+    src/player.hpp
+    src/random_engine.hpp
     src/types.hpp
     src/utility.cpp
     src/utility.hpp
-    src/chess_clock.cpp
-    src/chess_clock.hpp
-    src/move_history.cpp
-    src/move_history.hpp
+    
 )
 
 # Include directories
@@ -30,6 +43,22 @@ target_include_directories(KnightEngine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+# Add the executable
+add_executable(KnightEngineApp
+    src/main.cpp
+)
+
+# Link the library
+target_link_libraries(KnightEngineApp PRIVATE KnightEngine)
+
 # Enable testing
 enable_testing()
 add_subdirectory(test)
+
+include(FetchContent)
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG release-1.12.1  # or another stable release
+)
+FetchContent_MakeAvailable(googletest)

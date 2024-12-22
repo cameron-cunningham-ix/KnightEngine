@@ -78,6 +78,7 @@ int algebraicToIndex(const std::string& square);
 std::string indexToAlgebraic(int index);
 void setupPosition(ChessBoard& board, GameState& state, const std::string& fen);
 void printFEN(ChessBoard board, GameState state);
+std::string getFEN(ChessBoard board, GameState state);
 bool isValidFEN(const std::string& fen);
 int countLegalMoves(ChessBoard& board, GameState* state);
 bool isCheckmate(ChessBoard& board, GameState* state);
@@ -87,6 +88,7 @@ PerftMetrics calcPerftMetrics(ChessBoard& board, GameState* state, int depth);
 void setupTestPosition(ChessBoard& board, GameState& state, const std::string& positionName);
 bool verifyAttackPattern(const ChessBoard& board, int square, 
                         const std::vector<std::string>& expectedAttacks);
-
+Move sanToMove(const std::string &san, const ChessBoard &board, const GameState &state);
+void printBoard(const ChessBoard& board);
 
 #endif

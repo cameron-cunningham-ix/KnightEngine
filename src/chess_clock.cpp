@@ -217,3 +217,26 @@ void ChessClock::setTime(Color color, std::chrono::milliseconds amount) {
         blackTimeRemaining = amount;
     }
 }
+
+std::string TimeControl::toString() const {
+    if (isInfinite) return "-";
+
+    std::stringstream ss;
+    // Format: initial/increment
+    // Example: "300+2" for 5 minutes + 2 seconds increment
+    ss << std::chrono::duration_cast<std::chrono::seconds>(initialTime).count();
+    
+    if (increment > std::chrono::milliseconds(0)) {
+        ss << "+" << std::chrono::duration_cast<std::chrono::seconds>(increment).count();
+    }
+    
+    if (delay > std::chrono::milliseconds(0)) {
+        ss << "d" << std::chrono::duration_cast<std::chrono::seconds>(delay).count();
+    }
+    
+    if (movesUntilTimeControl > 0) {
+        ss << "/" << movesUntilTimeControl;
+    }
+    
+    return ss.str();
+}

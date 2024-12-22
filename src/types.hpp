@@ -40,6 +40,17 @@ struct Move {
     Move(PieceType p, int f, int t, bool cap = false, bool prom = false) :
         piece(p), from(f), to(t), isCapture(cap), isPromotion(prom),
         isCastle(false), isEnPassant(false), promoteTo(W_QUEEN) {}
+
+    // Default constructor
+    Move() : piece(W_PAWN), from(-1), to(-1), isCapture(false), isPromotion(false),
+             isCastle(false), isEnPassant(false), promoteTo(W_QUEEN) {}
+
+    bool operator==(const Move& other) const {
+        return piece == other.piece && from == other.from && to == other.to &&
+               isCapture == other.isCapture && isPromotion == other.isPromotion &&
+               isCastle == other.isCastle && isEnPassant == other.isEnPassant &&
+               promoteTo == other.promoteTo;
+    }
 };
 
 struct GameState {

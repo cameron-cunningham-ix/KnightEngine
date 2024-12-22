@@ -22,10 +22,13 @@ struct TimeControl {
                bool infinite = false)
         : initialTime(initial), increment(inc), delay(del),
           movesUntilTimeControl(moves), isInfinite(infinite) {}
+    std::string toString() const;
 };
 
 class ChessClock {
 private:
+    
+
     // Time remaining for each player
     std::chrono::milliseconds whiteTimeRemaining;
     std::chrono::milliseconds blackTimeRemaining;
@@ -89,6 +92,19 @@ private:
 public:
     // Constructor
     explicit ChessClock(const TimeControl& tc);
+
+    ChessClock& operator=(const ChessClock& other) {
+        if (this != &other) {
+            timeControl = other.timeControl;
+            whiteTimeRemaining = other.whiteTimeRemaining;
+            blackTimeRemaining = other.blackTimeRemaining;
+            isRunning.store(other.isRunning.load());
+            activeColor.store(other.activeColor.load());
+            moveCount.store(other.moveCount.load());
+            lastUpdateTime = other.lastUpdateTime;
+        }
+        return *this;
+    }
     
     // Clock control methods
     void start();
@@ -111,6 +127,7 @@ public:
     bool isClockRunning() const;
     Color getActiveColor() const;
     int getMoveCount() const;
+    TimeControl getTimeControl() const { return timeControl; }
     
     // Time control methods
     void setTimeControl(const TimeControl& tc);

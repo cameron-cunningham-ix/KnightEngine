@@ -1,0 +1,51 @@
+// src/i_chess_engine.hpp
+#ifndef ICHESS_ENGINE_H
+#define ICHESS_ENGINE_H
+
+#include <string>
+#include <vector>
+#include <map>
+#include "types.hpp"
+
+// Interface for chess engines implementing the UCI protocol
+class IChessEngine {
+public:
+    virtual ~IChessEngine() = default;
+    
+    // Core UCI commands
+    virtual void uci() = 0;                    // Switch to UCI mode
+    virtual void isReady() = 0;                // Check if engine is ready
+    virtual void setOption(const std::string& name, const std::string& value) = 0;  // Set engine option
+    virtual void uciNewGame() = 0;             // Start a new game
+    virtual void position(const std::string& fen, const std::vector<Move>& moves) = 0;  // Set position
+    virtual void go(const std::map<std::string, std::string>& searchParams) = 0;    // Start calculating
+    virtual void stop() = 0;                   // Stop calculating
+    virtual void quit() = 0;                   // Quit the program
+    
+    // Engine status queries
+    virtual bool isInitialized() const = 0;    // Check if engine is initialized
+    virtual bool isThinking() const = 0;       // Check if engine is calculating
+    virtual bool hasOption(const std::string& name) const = 0;  // Check if option exists
+    
+    // Getters for engine information
+    virtual std::string getName() const = 0;   // Get engine name
+    virtual std::string getAuthor() const = 0; // Get engine author
+    virtual Move getBestMove() const = 0;      // Get best move from last search
+    virtual Move getPonderMove() const = 0;    // Get ponder move from last search
+    
+    // Engine option management
+    struct Option {
+        enum class Type { Check, Spin, Combo, Button, String };
+        Type type;
+        std::string name;
+        std::string defaultValue;
+        std::string currentValue;
+        int minValue;     // For spin options
+        int maxValue;     // For spin options
+        std::vector<std::string> comboValues;  // For combo options
+    };
+    
+    virtual const std::map<std::string, Option>& getOptions() const = 0;  // Get all engine options
+};
+
+#endif
