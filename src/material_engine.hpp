@@ -85,23 +85,23 @@ private:
 
         // Pawns
         pieces = color == WHITE ? board.getWhitePawns() : board.getBlackPawns();
-        score += __builtin_popcountll(pieces) * PAWN_VALUE;
+        score += popcount(pieces) * PAWN_VALUE;
 
         // Knights
         pieces = color == WHITE ? board.getWhiteKnights() : board.getBlackKnights();
-        score += __builtin_popcountll(pieces) * KNIGHT_VALUE;
+        score += popcount(pieces) * KNIGHT_VALUE;
 
         // Bishops
         pieces = color == WHITE ? board.getWhiteBishops() : board.getBlackBishops();
-        score += __builtin_popcountll(pieces) * BISHOP_VALUE;
+        score += popcount(pieces) * BISHOP_VALUE;
 
         // Rooks
         pieces = color == WHITE ? board.getWhiteRooks() : board.getBlackRooks();
-        score += __builtin_popcountll(pieces) * ROOK_VALUE;
+        score += popcount(pieces) * ROOK_VALUE;
 
         // Queens
         pieces = color == WHITE ? board.getWhiteQueens() : board.getBlackQueens();
-        score += __builtin_popcountll(pieces) * QUEEN_VALUE;
+        score += popcount(pieces) * QUEEN_VALUE;
 
         return score;
     }
@@ -111,19 +111,19 @@ private:
 
         // Bishop pair bonus
         U64 bishops = color == WHITE ? board.getWhiteBishops() : board.getBlackBishops();
-        if (__builtin_popcountll(bishops) >= 2) {
+        if (popcount(bishops) >= 2) {
             score += BISHOP_PAIR_BONUS;
         }
 
         // Evaluate pawn structure
         U64 pawns = color == WHITE ? board.getWhitePawns() : board.getBlackPawns();
         while (pawns) {
-            int square = __builtin_ctzll(pawns);
+            int square = std::countr_zero(pawns);
             
             // Check for doubled pawns
             int file = square % 8;
             U64 fileMask = 0x0101010101010101ULL << file;
-            if (__builtin_popcountll(fileMask & pawns) > 1) {
+            if (popcount(fileMask & pawns) > 1) {
                 score += DOUBLED_PAWN_PENALTY;
             }
 

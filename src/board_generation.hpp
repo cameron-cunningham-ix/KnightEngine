@@ -39,8 +39,6 @@ public:
     friend void setupPosition(ChessBoard& board, GameState& state, const std::string& fen);
 
     // Bitboard access methods
-    U64& getPieceBitboard(PieceType pt);
-    U64& getColorBitboard(PieceType pt);
     U64 getPieceSet(PieceType pt) const;
 
     // Piece position getters

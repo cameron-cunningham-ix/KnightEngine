@@ -34,7 +34,7 @@ public:
 
         // Select random move
         if (!legalMoves.empty()) {
-            std::uniform_int_distribution<> dist(0, legalMoves.size() - 1);
+            std::uniform_int_distribution<size_t> dist(0, legalMoves.size() - 1);
             bestMove = legalMoves[dist(rng)];
         }
 

@@ -22,6 +22,7 @@ add_executable(chess_tests
     san_generation_tests.cpp
     pgn_tests.cpp
     human_player_tests.cpp
+    engine_player_tests.cpp
     chess_match_tests.cpp
 )
 

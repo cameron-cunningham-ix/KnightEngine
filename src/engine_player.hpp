@@ -33,6 +33,16 @@ private:
     std::queue<std::string> commandQueue;    // Queue of UCI commands to process
     bool shouldQuit;                         // Whether engine should quit
 
+    // Calculate appropriate search depth based on remaining time
+    int calculateSearchDepth(const ChessClock& clock) const;
+    
+    // UCI helper methods
+    void uciLoop();
+    void processCommand(const std::string& cmd);
+    void sendResponse(const std::string& response);
+    std::string moveToUCI(const Move& move) const;
+    Move uciToMove(const std::string& uciMove, const ChessBoard& board, const GameState& state) const;
+
 public:
     // Constructor takes ownership of an engine implementation
     explicit EnginePlayer(std::unique_ptr<ChessEngineBase> engineImpl, 
@@ -69,6 +79,7 @@ public:
     std::string getAuthor() const override { return engine->getAuthor(); }
     Move getBestMove() const override { return bestMove; }
     Move getPonderMove() const override { return ponderMove; }
+    ChessEngineBase* getEngineForTesting() { return engine.get(); }
     
     const std::map<std::string, Option>& getOptions() const override { return options; }
     
@@ -78,17 +89,6 @@ public:
         minTime = min;
         maxTime = max;
     }
-
-private:
-    // Calculate appropriate search depth based on remaining time
-    int calculateSearchDepth(const ChessClock& clock) const;
-    
-    // UCI helper methods
-    void uciLoop();
-    void processCommand(const std::string& cmd);
-    void sendResponse(const std::string& response);
-    std::string moveToUCI(const Move& move) const;
-    Move uciToMove(const std::string& uciMove, const ChessBoard& board, const GameState& state) const;
 };
 
 #endif

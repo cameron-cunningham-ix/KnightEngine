@@ -21,16 +21,6 @@ ChessBoard::ChessBoard(){
     //initializeAllAttacks();
 }
 
-// Get a reference to a piece's bitboard that can be modified
-U64& ChessBoard::getPieceBitboard(PieceType pt) {
-    return pieceBB[pieceCode(pt)];
-}
-
-// Get a reference to a color's bitboard that can be modified
-U64& ChessBoard::getColorBitboard(PieceType pt) {
-    return pieceBB[colorCode(pt)];
-}
-
 U64 ChessBoard::getPieceSet(PieceType pt) const {
     return pieceBB[pieceCode(pt)] & pieceBB[colorCode(pt)];
 }

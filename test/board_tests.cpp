@@ -145,8 +145,8 @@ TEST_F(ChessBoardTest, GetPieceAt) {
     EXPECT_EQ(board.getPieceAt(55), B_PAWN);
 }
 
-// Test attacksToSquare
-TEST_F(ChessBoardTest, AttacksToSquare) {
+// Test basic attacksToSquare
+TEST_F(ChessBoardTest, AttacksToSquare1) {
     // Initial position, white king - no attacks
     EXPECT_EQ(board.attacksToSquare(4, WHITE), 0x0ULL);
     GameState state;
@@ -154,4 +154,13 @@ TEST_F(ChessBoardTest, AttacksToSquare) {
     setupPosition(board, state, "8/2p5/3p4/KP5r/1R3p1k/4P3/6P1/8 w - - 0 1");
     printBitboard(board.attacksToSquare(33, WHITE));
     EXPECT_EQ(board.attacksToSquare(33, WHITE), 0b0000000000000000000000001000000000000000000000000000000000000000);
+}
+
+// Test more attacksToSquare
+TEST_F(ChessBoardTest, AttacksToSquare2) {
+    GameState state;
+    // Test position, white pawn on b5
+    setupPosition(board, state, "1r6/2p5/3n4/KP5r/1R3p1k/4P3/6P1/8 w - - 0 1");
+    printBitboard(board.attacksToSquare(33, WHITE));
+    EXPECT_EQ(board.attacksToSquare(33, WHITE), 0b0000001000000000000010001000000000000000000000000000000000000000);
 }

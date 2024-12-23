@@ -1,5 +1,6 @@
 // chess_clock.cpp
 #include "chess_clock.hpp"
+#include <iostream>
 
 ChessClock::ChessClock(const TimeControl& tc)
     : timeControl(tc),
@@ -62,12 +63,11 @@ void ChessClock::makeMove() {
     moveCount++;
     
     // Check if we've reached time control
-    if (timeControl.movesUntilTimeControl > 0 && 
-        moveCount % timeControl.movesUntilTimeControl == 0) {
+    if (timeControl.movesUntilTimeControl > 0 ) {
         // Add time for new time control period
-        if (activeColor == WHITE) {
+        if (moveCount % timeControl.movesUntilTimeControl == timeControl.movesUntilTimeControl - 1 && activeColor == WHITE) {
             whiteTimeRemaining += timeControl.initialTime;
-        } else {
+        } else if (moveCount % timeControl.movesUntilTimeControl == 0 && activeColor == BLACK) {
             blackTimeRemaining += timeControl.initialTime;
         }
     }

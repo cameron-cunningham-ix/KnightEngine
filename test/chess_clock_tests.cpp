@@ -150,11 +150,11 @@ TEST_F(ChessClockTest, MultipleTimePeriods) {
 
     clock.start();
     waitFor(std::chrono::seconds(1));
-    clock.makeMove();  // Move 1
-    clock.makeMove();  // Move 2 - should trigger new time control
+    clock.makeMove();  // Move 1 - should trigger new time control for white
+    clock.makeMove();  // Move 2 - should trigger new time control for black
 
     // After 2 moves, white should get another 5 minutes
-    EXPECT_GT(clock.getWhiteTime(), std::chrono::minutes(4));
+    EXPECT_GT(clock.getWhiteTime(), std::chrono::minutes(6));
 }
 
 // Test pause and resume
