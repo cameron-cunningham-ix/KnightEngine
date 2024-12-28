@@ -1,6 +1,4 @@
-// src/board_generation.hpp
-#ifndef BOARD_GENERATION_H
-#define BOARD_GENERATION_H
+#pragma once
 
 #include "types.hpp"
 #include <iostream>
@@ -23,7 +21,7 @@ enum enumPiece
 class ChessBoard 
 {
 private:
-    // Array of 64-bit bitboards; corresponds to enumPiece
+    // Array of 64-bit bitboards; corresponds to enumPieces
     U64 pieceBB[8];
 
 public:
@@ -83,5 +81,3 @@ public:
     void printBB(int i);
     void printBB(U64 bitb);
 };
-
-#endif // BOARD_GENERATION_H

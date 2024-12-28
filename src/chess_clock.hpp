@@ -1,6 +1,4 @@
-// chess_clock.hpp
-#ifndef CHESS_CLOCK_H
-#define CHESS_CLOCK_H
+#pragma once
 
 #include <chrono>
 #include <mutex>
@@ -134,5 +132,3 @@ public:
     void addTime(Color color, std::chrono::milliseconds amount);
     void setTime(Color color, std::chrono::milliseconds amount);
 };
-
-#endif // CHESS_CLOCK_H

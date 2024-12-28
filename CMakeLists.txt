@@ -1,5 +1,12 @@
 # KnightEngine/CMakeLists.txt (root)
 cmake_minimum_required(VERSION 3.10)
+
+# To use vcpkg
+if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        CACHE STRING "")
+endif()
+
 project(KnightEngine)
 
 # Add this section to force consistent runtime library settings
@@ -9,6 +16,7 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 
 # Create the chess engine library
 add_library(KnightEngine
@@ -35,12 +43,15 @@ add_library(KnightEngine
     src/types.hpp
     src/utility.cpp
     src/utility.hpp
-    
 )
 
 # Include directories
 target_include_directories(KnightEngine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+# Link libraries
+target_link_libraries(KnightEngine PRIVATE
 )
 
 # Add the executable
@@ -49,7 +60,9 @@ add_executable(KnightEngineApp
 )
 
 # Link the library
-target_link_libraries(KnightEngineApp PRIVATE KnightEngine)
+target_link_libraries(KnightEngineApp PRIVATE 
+    KnightEngine
+)
 
 # Enable testing
 enable_testing()

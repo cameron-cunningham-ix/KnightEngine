@@ -1,6 +1,4 @@
-// src/human_player.hpp
-#ifndef HUMAN_PLAYER_H
-#define HUMAN_PLAYER_H
+#pragma once
 
 #include "player.hpp"
 #include <iostream>
@@ -32,5 +30,3 @@ public:
     void offerDraw();
     void resign();
 };
-
-#endif

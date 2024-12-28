@@ -1,6 +1,4 @@
-// src/types.hpp
-#ifndef TYPES_H
-#define TYPES_H
+#pragma once
 
 #include <array>
 #include <bitset>
@@ -80,5 +78,3 @@ struct GameState {
         halfMoveClock(0),
         fullMoveNumber(1) {}
 };
-
-#endif

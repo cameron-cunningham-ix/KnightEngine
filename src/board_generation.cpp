@@ -1,4 +1,3 @@
-// src/board_generation.cpp
 #include "board_generation.hpp"
 #include "types.hpp"
 #include "moves.hpp"

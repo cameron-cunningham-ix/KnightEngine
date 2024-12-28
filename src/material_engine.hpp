@@ -1,6 +1,4 @@
-// src/material_engine.hpp
-#ifndef MATERIAL_ENGINE_H
-#define MATERIAL_ENGINE_H
+#pragma once
 
 #include "chess_engine_base.hpp"
 #include <algorithm>
@@ -187,5 +185,3 @@ private:
         }
     }
 };
-
-#endif

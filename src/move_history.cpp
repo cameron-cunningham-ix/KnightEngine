@@ -1,4 +1,3 @@
-// src/move_history.cpp
 #include "move_history.hpp"
 #include "moves.hpp"
 #include <sstream>

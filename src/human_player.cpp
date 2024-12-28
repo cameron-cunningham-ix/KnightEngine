@@ -1,4 +1,3 @@
-// src/human_player.cpp
 #include "human_player.hpp"
 #include "moves.hpp"
 #include <sstream>

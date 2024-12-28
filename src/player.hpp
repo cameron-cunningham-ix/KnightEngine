@@ -1,6 +1,4 @@
-// src/player.hpp
-#ifndef PLAYER_H
-#define PLAYER_H
+#pragma once
 
 #include "types.hpp"
 #include "board_generation.hpp"
@@ -45,5 +43,3 @@ public:
     // Optional UCI support
     virtual bool supportsUCI() const { return false; }
 };
-
-#endif

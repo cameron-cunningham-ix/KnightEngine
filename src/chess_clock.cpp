@@ -1,4 +1,3 @@
-// chess_clock.cpp
 #include "chess_clock.hpp"
 #include <iostream>
 

@@ -1,6 +1,4 @@
-// src/utility.hpp
-#ifndef UTILITY_H
-#define UTILITY_H
+#pragma once
 
 #include "types.hpp"
 #include "board_generation.hpp"
@@ -102,5 +100,3 @@ inline int popcount(U64 x) {
         return (x * 0x0101010101010101) >> 56;
     #endif
 }
-
-#endif

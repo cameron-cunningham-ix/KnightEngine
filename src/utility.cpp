@@ -1,4 +1,3 @@
-// src/utility.cpp
 #include "utility.hpp"
 
 // Return the corresponding enumPiece for PieceType value

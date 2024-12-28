@@ -1,6 +1,4 @@
-// src/move_history.hpp
-#ifndef MOVE_HISTORY_H
-#define MOVE_HISTORY_H
+#pragma once
 
 #include "types.hpp"
 #include "board_generation.hpp"
@@ -80,5 +78,3 @@ public:
     auto begin() const { return moves.begin(); }
     auto end() const { return moves.end(); }
 };
-
-#endif // MOVE_HISTORY_H

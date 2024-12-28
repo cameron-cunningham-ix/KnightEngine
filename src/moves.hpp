@@ -1,6 +1,4 @@
-// src/moves.hpp
-#ifndef MOVES_H
-#define MOVES_H
+#pragma once
 
 #include "types.hpp"
 #include "board_generation.hpp"
@@ -75,5 +73,3 @@ void initializeRookAttacks();
 void initializeQueenAttacks();
 void initializeKingAttacks();
 void initializeAllAttacks();
-
-#endif

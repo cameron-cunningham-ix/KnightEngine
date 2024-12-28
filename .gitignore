@@ -1,7 +1,7 @@
 # Ignore everything
 *
 
-# But not these files...
+# Keep
 !.gitignore
 !CMakeLists.txt
 !src/

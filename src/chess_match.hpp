@@ -1,6 +1,4 @@
-// src/chess_match.hpp
-#ifndef CHESS_MATCH_H
-#define CHESS_MATCH_H
+#pragma once
 
 #include "board_generation.hpp"
 #include "moves.hpp"
@@ -91,5 +89,3 @@ public:
     // PGN export
     std::string getPGN() const;
 };
-
-#endif

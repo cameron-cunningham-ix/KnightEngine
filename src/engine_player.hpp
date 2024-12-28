@@ -1,6 +1,4 @@
-// src/engine_player.hpp
-#ifndef ENGINE_PLAYER_H
-#define ENGINE_PLAYER_H
+#pragma once
 
 #include "player.hpp"
 #include "i_chess_engine.hpp"
@@ -90,5 +88,3 @@ public:
         maxTime = max;
     }
 };
-
-#endif

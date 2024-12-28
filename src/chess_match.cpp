@@ -1,4 +1,3 @@
-// src/chess_match.cpp
 #include "chess_match.hpp"
 #include <chrono>
 #include <ctime>

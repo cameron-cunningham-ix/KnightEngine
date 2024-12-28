@@ -1,4 +1,3 @@
-// src/moves.cpp
 #include "moves.hpp"
 #include <bit>
 #include <vector>

@@ -1,6 +1,4 @@
-// src/random_engine.hpp
-#ifndef RANDOM_ENGINE_H
-#define RANDOM_ENGINE_H
+#pragma once
 
 #include "chess_engine_base.hpp"
 #include <random>
@@ -52,5 +50,3 @@ public:
         return false;
     }
 };
-
-#endif

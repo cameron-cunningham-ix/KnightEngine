@@ -1,6 +1,4 @@
-// src/chess_engine_base.hpp
-#ifndef CHESS_ENGINE_BASE_H
-#define CHESS_ENGINE_BASE_H
+#pragma once
 
 #include "types.hpp"
 #include "moves.hpp"
@@ -63,5 +61,3 @@ protected:
     virtual void endSearch() { isSearching = false; }
     virtual void setBestMove(const Move& move) { bestMove = move; }
 };
-
-#endif

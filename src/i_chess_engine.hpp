@@ -1,6 +1,4 @@
-// src/i_chess_engine.hpp
-#ifndef ICHESS_ENGINE_H
-#define ICHESS_ENGINE_H
+#pragma once
 
 #include <string>
 #include <vector>
@@ -47,5 +45,3 @@ public:
     
     virtual const std::map<std::string, Option>& getOptions() const = 0;  // Get all engine options
 };
-
-#endif

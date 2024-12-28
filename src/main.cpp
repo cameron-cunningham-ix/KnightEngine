@@ -1,4 +1,3 @@
-// src/main.cpp
 #include "chess_match.hpp"
 #include "human_player.hpp"
 #include "engine_player.hpp"
