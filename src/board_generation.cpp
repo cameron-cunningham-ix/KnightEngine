@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 
-// Default constructor
+// Default constructor; initialize all bitboards
 ChessBoard::ChessBoard(){
     initializeWhiteBB();
     initializeBlackBB();
@@ -17,13 +17,15 @@ ChessBoard::ChessBoard(){
     initializeRooksBB();
     initializeQueensBB();
     initializeKingsBB();
-    //initializeAllAttacks();
 }
 
+// Get the bitboard of a specific piece type, i.e. white pawns, black knights, etc. 
 U64 ChessBoard::getPieceSet(PieceType pt) const {
     return pieceBB[pieceCode(pt)] & pieceBB[colorCode(pt)];
 }
 
+// Get the bitboard of white pawns
+// Note: I could use getPieceSet(W_PAWN), but A. these should never change and B. doing it this way 
 U64 ChessBoard::getWhitePawns() const {
     return pieceBB[nWhite] & pieceBB[nPawn];
 }
@@ -118,35 +120,35 @@ PieceType ChessBoard::getPieceAt(int index) const {
 }
 
 void ChessBoard::initializeWhiteBB() {
-    pieceBB[nWhite] = 0b0000000000000000000000000000000000000000000000001111111111111111;
+    pieceBB[nWhite] = 0xFFFF;
 }
 
 void ChessBoard::initializeBlackBB() {
-    pieceBB[nBlack] = 0b1111111111111111000000000000000000000000000000000000000000000000;
+    pieceBB[nBlack] = 0xFFFF000000000000;
 }
 
 void ChessBoard::initializePawnsBB() {
-    pieceBB[nPawn] = 0b0000000011111111000000000000000000000000000000001111111100000000;
+    pieceBB[nPawn] = 0x00FF00000000FF00;
 }
 
 void ChessBoard::initializeKnightsBB() {
-    pieceBB[nKnight] = 0b0100001000000000000000000000000000000000000000000000000001000010;
+    pieceBB[nKnight] = 0x4200000000000042;
 }
 
 void ChessBoard::initializeBishopsBB() {
-    pieceBB[nBishop] = 0b0010010000000000000000000000000000000000000000000000000000100100;
+    pieceBB[nBishop] = 0x2400000000000024;
 }
 
 void ChessBoard::initializeRooksBB() {
-    pieceBB[nRook] = 0b1000000100000000000000000000000000000000000000000000000010000001;
+    pieceBB[nRook] = 0x8100000000000081;
 }
 
 void ChessBoard::initializeQueensBB() {
-    pieceBB[nQueen] = 0b0000100000000000000000000000000000000000000000000000000000001000;
+    pieceBB[nQueen] = 0x800000000000008;
 }
 
 void ChessBoard::initializeKingsBB() {
-    pieceBB[nKing] = 0b0001000000000000000000000000000000000000000000000000000000010000;
+    pieceBB[nKing] = 0x1000000000000010;
 }
 
 // Set a bit at a given index
@@ -170,11 +172,7 @@ bool ChessBoard::isBitSet(U64 bb, int index) {
     return bb & (1ULL << index);
 }
 
-/// @brief Returns a bitboard of all opposite color pieces that are attacking indexOfSquare
-/// @param indexOfSquare 
-/// @param colorOfKing 
-/// @return 
-/// @note This function does not take into account king attackts to the square
+
 U64 ChessBoard::attacksToSquare(int indexOfSquare, Color colorOfKing) const {
     // Get opposing pieces based on king's color
     U64 opPawns, opKnights, opQ, opB, opR, opK, occupancy;

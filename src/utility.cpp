@@ -1,16 +1,17 @@
 #include "utility.hpp"
 
 // Return the corresponding enumPiece for PieceType value
-int pieceCode(PieceType ps){
+inline int pieceCode(PieceType ps){
     // Plus 2 to account for white and black values in enumPiece
     return (ps % 6) + 2;
 }
 
 // Return the corresponding enumPiece for PieceType value
-int colorCode(PieceType ps){
+inline int colorCode(PieceType ps){
     return ps / 6;
 }
 
+// Print a bitboard to std out in 8x8 grid format
 void printBitboard(U64 bitb) {
     std::bitset<64> bb (bitb);
     std::cout << "\n";
@@ -23,6 +24,7 @@ void printBitboard(U64 bitb) {
     std::cout << "\n";
 }
 
+// Print a bitboard to std out in one line
 void printBBLine(U64 bitb) {
     std::bitset<64> bb (bitb);
     std::cout << bb << "\n";
@@ -53,8 +55,6 @@ std::string indexToAlgebraic(int index) {
     return std::string(1, file) + std::string(1, rank);
 }
 
-
-
 // Setup a chess position from FEN notation
 void setupPosition(ChessBoard& board, GameState& state, const std::string& fen) {
     // Create a new empty board
@@ -83,6 +83,7 @@ void setupPosition(ChessBoard& board, GameState& state, const std::string& fen) 
         // square should only be zero when the FEN is invalid; set to default position
         if (square < 0) {
             setupPosition(board, state, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+            std::cerr << "Invalid FEN\nSet to default position\n";
             return;
         }
         if (c == '/') {
@@ -124,12 +125,12 @@ void setupPosition(ChessBoard& board, GameState& state, const std::string& fen) 
     std::from_chars(fullTurns.data(), fullTurns.data()+fullTurns.size(), state.fullMoveNumber);
 }
 
-
-
+// Print FEN notation of a position to std out
 void printFEN(ChessBoard board, GameState state) {
     std::cout << std::format("\n(printFEN) {}\n", getFEN(board, state));
 }
 
+// Get FEN notation of a position
 std::string getFEN(ChessBoard board, GameState state) {
     std::string fen;
     

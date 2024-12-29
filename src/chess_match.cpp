@@ -340,7 +340,7 @@ bool ChessMatch::hasInsufficientMaterial() const {
                 }
             }
         }
-
+        
         // If both sides have a bishop, check if they're on same colored squares
         if (whiteBishopSquares.size() == 1 && blackBishopSquares.size() == 1) {
             if (squareColor(whiteBishopSquares[0]) != 

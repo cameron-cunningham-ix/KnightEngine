@@ -14,17 +14,17 @@
 #include <bit>
 
 struct PerftMetrics {
-    uint64_t nodes;      // Number of 'leaf' nodes
-    uint64_t captures;
-    uint64_t enPassants;
-    uint64_t castles;
-    uint64_t promotions;
-    uint64_t checks;
-    uint64_t checkmates;
+    U64 nodes;      // Number of 'leaf' nodes
+    U64 captures;
+    U64 enPassants;
+    U64 castles;
+    U64 promotions;
+    U64 checks;
+    U64 checkmates;
 
-    PerftMetrics(uint64_t node = 0, uint64_t capture = 0, uint64_t enPassant = 0,
-                 uint64_t castle = 0, uint64_t promotion = 0, uint64_t check = 0,
-                 uint64_t checkmate = 0) : 
+    PerftMetrics(U64 node = 0, U64 capture = 0, U64 enPassant = 0,
+                 U64 castle = 0, U64 promotion = 0, U64 check = 0,
+                 U64 checkmate = 0) : 
                  nodes(node), captures(capture), enPassants(enPassant), castles(castle),
                  promotions(promotion), checks(check), checkmates(checkmate) {};
 
@@ -68,8 +68,8 @@ const std::map<PieceType, std::string> pieceToSAN = {
     {B_ROOK, "R"}, {B_QUEEN, "Q"}, {B_KING, "K"},
 };
 
-int pieceCode(PieceType ps);
-int colorCode(PieceType ps);
+inline int pieceCode(PieceType ps);
+inline int colorCode(PieceType ps);
 void printBitboard(U64 bitb);
 void printBBLine(U64 bitb);
 int algebraicToIndex(const std::string& square);
@@ -81,7 +81,7 @@ bool isValidFEN(const std::string& fen);
 int countLegalMoves(ChessBoard& board, GameState* state);
 bool isCheckmate(ChessBoard& board, GameState* state);
 bool isStalemate(ChessBoard& board, GameState* state);
-uint64_t perft(ChessBoard& board, GameState* state, int depth);
+U64 perft(ChessBoard& board, GameState* state, int depth);
 PerftMetrics calcPerftMetrics(ChessBoard& board, GameState* state, int depth);
 void setupTestPosition(ChessBoard& board, GameState& state, const std::string& positionName);
 bool verifyAttackPattern(const ChessBoard& board, int square, 

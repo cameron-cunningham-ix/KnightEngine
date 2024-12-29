@@ -17,12 +17,22 @@ enum enumPiece
     nKing       // all kings
 };
 
-// Main ChessBoard class declaration
+
 class ChessBoard 
 {
 private:
-    // Array of 64-bit bitboards; corresponds to enumPieces
-    U64 pieceBB[8];
+    
+    U64 pieceBB[8];       // Array of 64-bit bitboards; corresponds to enumPieces
+    U64 whiteAttacksBB;   // Bitboard of all squares white attacks
+    U64 blackAttacksBB;   // Bitboard of all squares black attacks
+    
+    // Array of bitboards of all attacks to kings
+    // Index 0: Direct attacks
+    // Index 1: Pin attacks, i.e. attacks that are blocked by one piece
+    //          and would be a check if the blocking piece were removed
+    // Used for move generation and move validation
+    U64 attacksToWhiteKing[2];
+    U64 attacksToBlackKing[2];
 
 public:
 
