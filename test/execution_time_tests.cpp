@@ -122,27 +122,27 @@ TEST_F(ExecutionTimeTest, GetQueenAttacksMulti) {
     std::cout << "\nGetQueenAttacksSingle Elapsed time: " << duration.count() << " micros\n\n";
 }
 
-// Test execution time of ChessBoard::attacksToSquare
+// Test execution time of ChessBoard::OppAttacksToSquare
 TEST_F(ExecutionTimeTest, ChessBoardAttacksToSquareSingle) {
     setupTestPosition(board, state, "kiwipete");
     
     auto start = std::chrono::high_resolution_clock::now();
     
-    U64 attacks = board.attacksToSquare(28, WHITE);
+    U64 attacks = board.OppAttacksToSquare(28, WHITE);
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
     std::cout << "\nChessBoardAttacksToSquareSingle Elapsed time: " << duration.count() << " nanos\n\n";
 }
 
-// Test execution time of ChessBoard::attacksToSquare
+// Test execution time of ChessBoard::OppAttacksToSquare
 TEST_F(ExecutionTimeTest, ChessBoardAttacksToSquareMulti) {
     setupTestPosition(board, state, "kiwipete");
     
     auto start = std::chrono::high_resolution_clock::now();
     // 100 calls
     for (int i = 0; i < 100; i++) {
-        U64 attacks = board.attacksToSquare(i%64, WHITE);
+        U64 attacks = board.OppAttacksToSquare(i%64, WHITE);
     }
     
     auto end = std::chrono::high_resolution_clock::now();

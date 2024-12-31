@@ -1,14 +1,17 @@
 #include "utility.hpp"
 
-// Return the corresponding enumPiece for PieceType value
-inline int pieceCode(PieceType ps){
-    // Plus 2 to account for white and black values in enumPiece
-    return (ps % 6) + 2;
+bool IsWithinBoard(int index) {
+    return index >= 0 && index < 64;
 }
 
-// Return the corresponding enumPiece for PieceType value
-inline int colorCode(PieceType ps){
-    return ps / 6;
+// Return the corresponding piece value for PieceType
+int pieceCode(PieceType ps){
+    return (ps & 7);
+}
+
+// Return the corresponding color value for PieceType
+int colorCode(PieceType ps){
+    return (ps >> 3);
 }
 
 // Print a bitboard to std out in 8x8 grid format
@@ -61,9 +64,11 @@ void setupPosition(ChessBoard& board, GameState& state, const std::string& fen) 
     board = ChessBoard();
     
     // Clear all bitboards
-    for (int i = 0; i < 8; i++) {
-        board.pieceBB[i] = 0ULL;
+    for (int i = 0; i < 7; i++) {
+        //board.pieceBB[i] = 0ULL;
     }
+    //board.colorBB[WHITE] = 0ULL;
+    //board.colorBB[BLACK] = 0ULL;
 
     // Clear castling rights
     state.canCastleBlackKingside = false;
@@ -96,10 +101,10 @@ void setupPosition(ChessBoard& board, GameState& state, const std::string& fen) 
             U64 squareBB = 1ULL << square;
             
             // Set color bitboard
-            board.pieceBB[piece <= W_KING ? 0 : 1] |= squareBB;
+            //board.colorBB[piece <= W_KING ? 0 : 1] |= squareBB;
             
             // Set piece type bitboard
-            board.pieceBB[pieceCode(piece)] |= squareBB;
+            //board.pieceBB[pieceCode(piece)] |= squareBB;
             
             square++;
         }
@@ -140,7 +145,7 @@ std::string getFEN(ChessBoard board, GameState state) {
     for (square; square >= 0; square++) {
         PieceType current = board.getPieceAt(square);
         // Empty square
-        if (current == -1) {
+        if (current == PieceType::EMPTY) {
             emptyCount++;
             // Entire rank empty or end of the rank
             if (emptyCount >= 8 || square % 8 == 7) {
@@ -434,17 +439,17 @@ bool verifyAttackPattern(const ChessBoard& board, int square,
                         const std::vector<std::string>& expectedAttacks) {
     U64 attacks;
     if (board.getPieceSet(W_PAWN) & (1ULL << square)) {
-        attacks = pawnAttacksWhite[square];
+        attacks = ATKMASK_WPAWN[square];
     } else if (board.getPieceSet(W_KNIGHT) & (1ULL << square)) {
-        attacks = knightAttacks[square];
+        attacks = ATKMASK_KNIGHT[square];
     } else if (board.getPieceSet(W_BISHOP) & (1ULL << square)) {
-        attacks = bishopAttacks[square];
+        attacks = ATKMASK_BISHOP[square];
     } else if (board.getPieceSet(W_ROOK) & (1ULL << square)) {
-        attacks = rookAttacks[square];
+        attacks = ATKMASK_ROOK[square];
     } else if (board.getPieceSet(W_QUEEN) & (1ULL << square)) {
-        attacks = queenAttacks[square];
+        attacks = ATKMASK_QUEEN[square];
     } else if (board.getPieceSet(W_KING) & (1ULL << square)) {
-        attacks = kingAttacks[square];
+        attacks = ATKMASK_KING[square];
     } else {
         return false;  // No piece on square
     }
@@ -670,3 +675,4 @@ void printBoard(const ChessBoard& board) {
     std::cout << "   ---------------\n";
     std::cout << "   a b c d e f g h\n\n";
 }
+

@@ -48,18 +48,18 @@ TEST_F(UtilityTest, PieceToFENMap) {
 
 // Test pieceCode
 TEST_F(UtilityTest, PieceCodes) {
-    EXPECT_EQ(pieceCode(W_PAWN), nPawn);
-    EXPECT_EQ(pieceCode(B_PAWN), nPawn);
-    EXPECT_EQ(pieceCode(W_KNIGHT), nKnight);
-    EXPECT_EQ(pieceCode(B_KNIGHT), nKnight);
-    EXPECT_EQ(pieceCode(W_BISHOP), nBishop);
-    EXPECT_EQ(pieceCode(B_BISHOP), nBishop);
-    EXPECT_EQ(pieceCode(W_ROOK), nRook);
-    EXPECT_EQ(pieceCode(B_ROOK), nRook);
-    EXPECT_EQ(pieceCode(W_QUEEN), nQueen);
-    EXPECT_EQ(pieceCode(B_QUEEN), nQueen);
-    EXPECT_EQ(pieceCode(W_KING), nKing);
-    EXPECT_EQ(pieceCode(B_KING), nKing);
+    EXPECT_EQ(pieceCode(W_PAWN), D_PAWN);
+    EXPECT_EQ(pieceCode(B_PAWN), D_PAWN);
+    EXPECT_EQ(pieceCode(W_KNIGHT), D_KNIGHT);
+    EXPECT_EQ(pieceCode(B_KNIGHT), D_KNIGHT);
+    EXPECT_EQ(pieceCode(W_BISHOP), D_BISHOP);
+    EXPECT_EQ(pieceCode(B_BISHOP), D_BISHOP);
+    EXPECT_EQ(pieceCode(W_ROOK), D_ROOK);
+    EXPECT_EQ(pieceCode(B_ROOK), D_ROOK);
+    EXPECT_EQ(pieceCode(W_QUEEN), D_QUEEN);
+    EXPECT_EQ(pieceCode(B_QUEEN), D_QUEEN);
+    EXPECT_EQ(pieceCode(W_KING), D_KING);
+    EXPECT_EQ(pieceCode(B_KING), D_KING);
 }
 
 // Test colorCode

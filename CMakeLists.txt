@@ -33,6 +33,7 @@ add_library(KnightEngine
     src/human_player.cpp
     src/human_player.hpp
     src/i_chess_engine.hpp
+    src/magic_bitboards.hpp
     src/material_engine.hpp
     src/move_history.cpp
     src/move_history.hpp

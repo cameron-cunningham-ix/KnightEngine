@@ -7,18 +7,6 @@
 #include <array>
 #include <string>
 
-
-
-// Precomputed attack masks for each piece at every square
-// on the board
-extern std::array<U64, 64> pawnAttacksWhite;
-extern std::array<U64, 64> pawnAttacksBlack;
-extern std::array<U64, 64> knightAttacks;
-extern std::array<U64, 64> bishopAttacks;
-extern std::array<U64, 64> rookAttacks;
-extern std::array<U64, 64> queenAttacks;
-extern std::array<U64, 64> kingAttacks;
-
 // Move validator class declaration
 class MoveValidator {
 private:
@@ -61,15 +49,4 @@ U64 getBishopAttacks(int square, U64 blockers);
 U64 getQueenAttacks(int square, U64 blockers);
 
 // Board position helper function declarations
-bool isWithinBoard(int index);
 void printMove(const Move &move);
-
-// Attack table initialization functions
-void initializePawnAttacksWhite();
-void initializePawnAttacksBlack();
-void initializeKnightAttacks();
-void initializeBishopAttacks();
-void initializeRookAttacks();
-void initializeQueenAttacks();
-void initializeKingAttacks();
-void initializeAllAttacks();

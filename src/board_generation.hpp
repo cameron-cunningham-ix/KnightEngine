@@ -4,25 +4,12 @@
 #include <iostream>
 #include <bitset>
 
-// Enumeration for piece types on the board
-enum enumPiece
-{
-    nWhite,     // any white piece
-    nBlack,     // any black piece
-    nPawn,      // all pawns
-    nKnight,    // all knights
-    nBishop,    // all bishops
-    nRook,      // all rooks
-    nQueen,     // all queens
-    nKing       // all kings
-};
-
-
+/// @brief Class representing a chess board. Includes GameState information.
 class ChessBoard 
 {
 private:
-    
-    U64 pieceBB[8];       // Array of 64-bit bitboards; corresponds to enumPieces
+    U64 pieceBB[7];       // Bitboard for each piece type corresponding to the DenseType enum
+    U64 colorBB[2];       // Bitboard of all white pieces and all black pieces
     U64 whiteAttacksBB;   // Bitboard of all squares white attacks
     U64 blackAttacksBB;   // Bitboard of all squares black attacks
     
@@ -34,17 +21,28 @@ private:
     U64 attacksToWhiteKing[2];
     U64 attacksToBlackKing[2];
 
+    // Board utility
+    static const U64 W_KINGSIDECASTLEMASK =  0x0000000000000060; // 
+    static const U64 W_QUEENSIDECASTLEMASK = 0x0000000000000006; //
+    static const U64 B_KINGSIDECASTLEMASK =  0x6000000000000000; //
+    static const U64 B_QUEENSIDECASTLEMASK = 0x0600000000000000; //
+
+    
+    // Bitboard manipulation methods
+    void setBit(U64 &bb, int index);
+    void clearBit(U64 &bb, int index);
+    bool isBitSet(U64 bb, int index);
+
+    // Private board alteration functions
+    void movePiece(int from, int to, PieceType piece);
+    void removePiece(int square, PieceType piece);
+    void addPiece(int square, PieceType piece);
+    void updateAttacksBitBoards();
+
 public:
 
     // Default constructor declaration
     ChessBoard();
-
-    // Friend function declarations
-    friend void movePiece(ChessBoard& board, int from, int to, PieceType piece);
-    friend void removePiece(ChessBoard& board, int square, PieceType piece);
-    friend void addPiece(ChessBoard& board, int square, PieceType piece);
-    friend void makeMove(ChessBoard& board, const Move& move);
-    friend void setupPosition(ChessBoard& board, GameState& state, const std::string& fen);
 
     // Bitboard access methods
     U64 getPieceSet(PieceType pt) const;
@@ -65,6 +63,7 @@ public:
     U64 getWhitePieces() const;
     U64 getBlackPieces() const;
     U64 getAllPieces() const;
+    U64 getEmptySquares() const;
 
     // Piece type getter
     PieceType getPieceAt(int index) const;
@@ -72,6 +71,7 @@ public:
     // Board initialization methods
     void initializeWhiteBB();
     void initializeBlackBB();
+    void initializeEmptyBB();
     void initializePawnsBB();
     void initializeKnightsBB();
     void initializeBishopsBB();
@@ -79,13 +79,13 @@ public:
     void initializeQueensBB();
     void initializeKingsBB();
 
-    // Bitboard manipulation methods
-    void setBit(U64 &bb, int index);
-    void clearBit(U64 &bb, int index);
-    bool isBitSet(U64 bb, int index);
 
-    // Attack calculation method
-    U64 attacksToSquare(int indexOfSquare, Color colorOfKing) const;
+    // Attack calculation methods
+    U64 OppAttacksToSquare(int indexOfSquare, Color colorOfKing) const;
+
+    // Public board alteration methods
+    bool makeMove(DenseMove move, bool safeMode = true);
+    void unmakeMove(DenseMove move);
 
     // Debug printing methods
     void printBB(int i);

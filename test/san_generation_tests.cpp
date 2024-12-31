@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "../src/move_history.hpp"
+#include "../src/utility.hpp"
 
 class SANGenerationTest : public ::testing::Test {
 protected:

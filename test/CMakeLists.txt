@@ -24,6 +24,7 @@ add_executable(chess_tests
     human_player_tests.cpp
     engine_player_tests.cpp
     chess_match_tests.cpp
+    magic_tests.cpp
 )
 
 # Link against GoogleTest and chess engine library

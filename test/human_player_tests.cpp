@@ -1,6 +1,7 @@
 // test/human_player_tests.cpp
 #include <gtest/gtest.h>
 #include "../src/human_player.hpp"
+#include "../src/utility.hpp"
 #include <sstream>
 #include <chrono>
 

@@ -1,53 +1,59 @@
 #pragma once
 
+#include <stdexcept>
 #include <array>
 #include <bitset>
 
 typedef unsigned long long U64;     // Used for bitboards
 typedef unsigned int U32;           // Used for dense move representation
 
-enum PieceType : unsigned short {
-    W_PAWN,     // 0
-    W_KNIGHT,   // 1
-    W_BISHOP,   // 2
-    W_ROOK,     // 3
-    W_QUEEN,    // 4
-    W_KING,     // 5
-    B_PAWN,     // 6
-    B_KNIGHT,   // 7
-    B_BISHOP,   // 8
-    B_ROOK,     // 9
-    B_QUEEN,    // 10
-    B_KING,     // 11
+// Enum for piece types on the board + empty
+// 3 LSB are used to represent the piece type, 4th bit is used to represent the color
+enum PieceType : int {
+    EMPTY = 0,      // 0  - 0000
+    INVALID = 8,    // 8  - 1000
+    W_PAWN = 1,     // 1  - 0001 
+    W_KNIGHT = 2,   // 2  - 0010 
+    W_BISHOP = 3,   // 3  - 0011 
+    W_ROOK = 4,     // 4  - 0100 
+    W_QUEEN = 5,    // 5  - 0101 
+    W_KING = 6,     // 6  - 0110 
+    B_PAWN = 9,     // 9  - 1001 
+    B_KNIGHT = 10,  // 10 - 1010 
+    B_BISHOP = 11,  // 11 - 1011 
+    B_ROOK = 12,    // 12 - 1100 
+    B_QUEEN = 13,   // 13 - 1101
+    B_KING = 14     // 14 - 1110
 };
 
 enum Color : bool {
-    WHITE,      // 0
-    BLACK       // 1
+    WHITE = 0,      // 0
+    BLACK = 1       // 1
 };
 
-// Type for use with DenseMove - compare 3 LSB with DenseMove 3 LSB
-enum DenseType : unsigned short {
-    EMPTY,      // 0 - 000
-    PAWN,       // 1 - 001
-    KNIGHT,     // 2 - 010
-    BISHOP,     // 3 - 011
-    ROOK,       // 4 - 100
-    QUEEN,      // 5 - 101
-    KING        // 6 - 110
+// Type for use with board bitboards and DenseMove - compare 3 LSB with DenseMove 3 LSB
+enum DenseType : int {
+    D_EMPTY = 0,      // 0 - 000
+    D_PAWN = 1,       // 1 - 001
+    D_KNIGHT = 2,     // 2 - 010
+    D_BISHOP = 3,     // 3 - 011
+    D_ROOK = 4,       // 4 - 100
+    D_QUEEN = 5,      // 5 - 101
+    D_KING = 6        // 6 - 110
 };
 
 // Masks for extracting fields from dense move representation
-const U32 move_PieceMask =          0b00000000000000000000000111;
-const U32 move_ColorMask =          0b00000000000000000000001000;
-const U32 move_FromMask =           0b00000000000000001111110000;
-const U32 move_ToMask =             0b00000000001111110000000000;
-const U32 move_IsCaptureMask =      0b00000000010000000000000000;
-const U32 move_CaptureTypeMask =    0b00000011100000000000000000;
-const U32 move_IsCastleMask =       0b00000100000000000000000000;
-const U32 move_IsEnPassantMask =    0b00001000000000000000000000;
-const U32 move_IsPromotionMask =    0b00010000000000000000000000;
-const U32 move_PromoteToMask =      0b11100000000000000000000000;
+const U32 moveMask_DType =     0b00000000000000000000000111;
+const U32 moveMask_Color =     0b00000000000000000000001000;
+const U32 moveMask_Piece =     0b00000000000000000000001111;
+const U32 moveMask_From =      0b00000000000000001111110000;
+const U32 moveMask_To =        0b00000000001111110000000000;
+const U32 moveMask_IsCapture = 0b00000000010000000000000000;
+const U32 moveMask_CaptType =  0b00000011100000000000000000;
+const U32 moveMask_IsCastle =  0b00000100000000000000000000;
+const U32 moveMask_IsEnPass =  0b00001000000000000000000000;
+const U32 moveMask_IsPromo =   0b00010000000000000000000000;
+const U32 moveMask_PromoTo =   0b11100000000000000000000000;
 
 // Move struct using one unsigned 32-bit integer
 // Structure:
@@ -57,17 +63,17 @@ struct DenseMove {
     U32 data;
 
     // Default constructor
-    DenseMove() : data(0) {}
+    DenseMove() : data(0U) {}
 
     // Constructor with all fields
     DenseMove(DenseType piece, Color color, int from, int to, bool isCapture = false,
-              DenseType captureType = EMPTY, bool isCastle = false, bool isEnPassant = false,
-              bool isPromotion = false, DenseType promoteTo = EMPTY) {
+              DenseType captureType = DenseType::D_EMPTY, bool isCastle = false, bool isEnPassant = false,
+              bool isPromotion = false, DenseType promoteTo = DenseType::D_EMPTY) {
         data = 0;
         data |= piece;
         data |= (color << 3);
         if (from < 0 || from > 63 || to < 0 || to > 63) {
-            throw std::invalid_argument("Invalid square index to DenseMove constructor");
+            throw std::invalid_argument("Invalid square index");
         }
         data |= (from << 4);
         data |= (to << 10);
@@ -78,30 +84,46 @@ struct DenseMove {
         data |= (isPromotion << 22);
         data |= (promoteTo << 23);
     }
+    
+    // Constructor from unsigned 32-bit integer
+    DenseMove(U32 d) : data(d) {}
 
     // Equality operator
     bool operator==(const DenseMove& other) const {
         return data == other.data;
     }
 
-    // Constructor from unsigned 32-bit integer
-    DenseMove(U32 d) : data(d) {}
 
     // Getters
-    DenseType getPiece() const { return static_cast<DenseType>(data & move_PieceMask); }
-    Color getColor() const { return static_cast<Color>((data & move_ColorMask) >> 3); }
-    int getFrom() const { return (data & move_FromMask) >> 4; }
-    int getTo() const { return (data & move_ToMask) >> 10; }
-    bool isCapture() const { return (data & move_IsCaptureMask) >> 16; }
-    DenseType getCaptureType() const { return static_cast<DenseType>((data & move_CaptureTypeMask) >> 17); }
-    bool isCastle() const { return (data & move_IsCastleMask) >> 20; }
-    bool isEnPassant() const { return (data & move_IsEnPassantMask) >> 21; }
-    bool isPromotion() const { return (data & move_IsPromotionMask) >> 22; }
-    DenseType getPromoteTo() const { return static_cast<DenseType>((data & move_PromoteToMask) >> 23); }
+    DenseType getDenseType() const { return static_cast<DenseType>(data & moveMask_DType); }
+    PieceType getPieceType() const { return static_cast<PieceType>(data & moveMask_Piece); }
+    Color getColor() const { return static_cast<Color>((data & moveMask_Color) >> 3); }
+    int getFrom() const { return (data & moveMask_From) >> 4; }
+    int getTo() const { return (data & moveMask_To) >> 10; }
+    bool isCapture() const { return (data & moveMask_IsCapture) >> 16; }
+    DenseType getCaptDense() const { return static_cast<DenseType>((data & moveMask_CaptType) >> 17); }
+    PieceType getCaptPiece() const {
+        if (getColor() == WHITE) {
+            return static_cast<PieceType>(getCaptDense());
+        } else {
+            return static_cast<PieceType>(getCaptDense() + 8);
+        }
+    }
+    bool isCastle() const { return (data & moveMask_IsCastle) >> 20; }
+    bool isEnPassant() const { return (data & moveMask_IsEnPass) >> 21; }
+    bool isPromotion() const { return (data & moveMask_IsPromo) >> 22; }
+    DenseType getPromoteDense() const { return static_cast<DenseType>((data & moveMask_PromoTo) >> 23); }
+    PieceType getPromotePiece() const {
+        if (getColor() == WHITE) {
+            return static_cast<PieceType>(getPromoteDense());
+        } else {
+            return static_cast<PieceType>(getPromoteDense() + 8);
+        }
+    }
 
     // Setter for promotion type; useful for pawn promotions
     void setPromoteTo(DenseType promoteTo) {
-        data &= ~move_PromoteToMask;
+        data &= ~moveMask_PromoTo;
         data |= (promoteTo << 23);
     }
 };
@@ -120,7 +142,7 @@ struct Move {
     
     Move(PieceType p, int f, int t, bool cap = false, bool prom = false) :
         piece(p), from(f), to(t), isCapture(cap), isPromotion(prom),
-        isCastle(false), isEnPassant(false), promoteTo(W_QUEEN) {}
+        isCastle(false), isEnPassant(false), promoteTo(PieceType::W_QUEEN) {}
 
     // Default constructor
     Move() : piece(W_PAWN), from(-1), to(-1), isCapture(false), isPromotion(false),
