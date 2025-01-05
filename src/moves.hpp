@@ -8,45 +8,19 @@
 #include <string>
 
 // Move validator class declaration
-class MoveValidator {
+class MoveGenerator {
 private:
-    ChessBoard board;
-    GameState* state;
     
-    bool moveLeavesKingInCheck(const Move& move);
-    bool isValidCastling(const Move& move);
-    bool isValidEnPassant(const Move& move);
-    int findKingSquare(Color color) const;
-    bool canMakeMove(Move& move, Color color);
+    // Move generation functions
+    static void generatePawnMoves(const ChessBoard& board, std::vector<DenseMove>& moves);
+    static void generateEnPassantMoves(const ChessBoard &board, std::vector<DenseMove>& moves);
+    static void generateCastlingMoves(const ChessBoard& board, std::vector<DenseMove>& moves);
+    static void generatePieceMoves(const ChessBoard &board, std::vector<DenseMove>& moves, PieceType piece);
+    static std::vector<DenseMove> generatePsuedoMoves(const ChessBoard &board);
     
 public:
-    MoveValidator(ChessBoard& b, GameState* s);
-    bool isSquareUnderAttack(int square, Color attackingColor);
-    bool isInCheck(Color color) const;
-    bool isCheckmate(Color color);
-    bool isStalemate(Color color);
-    bool isMoveLegal(const Move& move);
-    void updateGameState(const Move& move);
+    static std::vector<DenseMove> generateLegalMoves(ChessBoard &board);
 };
-
-// Move generation function declarations
-void generatePawnMoves(const ChessBoard& cboard, const GameState* state, std::vector<Move>& moves);
-void generateEnPassantMoves(const ChessBoard &cboard, const GameState* state, std::vector<Move> &moves);
-void generateCastlingMoves(const ChessBoard& cboard, const GameState* state, std::vector<Move>& moves);
-void generatePieceMoves(const ChessBoard &cboard, std::vector<Move> &moves, PieceType piece);
-std::vector<Move> generatePsuedoMoves(const ChessBoard &cboard, const GameState* state);
-
-// Move execution function declarations
-void movePiece(ChessBoard& board, int from, int to, PieceType piece);
-void removePiece(ChessBoard& board, int square, PieceType piece);
-void addPiece(ChessBoard& board, int square, PieceType piece);
-void makeMove(ChessBoard& board, const Move& move);
-PieceType getPieceOnSquare(const ChessBoard& board, int square);
-
-// Attack computation function declarations
-U64 getRookAttacks(int square, U64 blockers);
-U64 getBishopAttacks(int square, U64 blockers);
-U64 getQueenAttacks(int square, U64 blockers);
 
 // Board position helper function declarations
 void printMove(const Move &move);

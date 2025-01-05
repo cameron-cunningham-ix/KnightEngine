@@ -9,7 +9,7 @@
 
 
 // Helper function to print current game status
-void printGameStatus(const ChessMatch& match) {
+void printGameStatus(ChessMatch& match) {
     const ChessClock& clock = match.getClock();
     
     // Print time remaining
@@ -27,9 +27,7 @@ void printGameStatus(const ChessMatch& match) {
               << " to move\n\n";
     
     // If in check, print warning
-    MoveValidator validator(const_cast<ChessBoard&>(match.getBoard()),
-                          const_cast<GameState*>(&match.getState()));
-    if (validator.isInCheck(match.getState().sideToMove)) {
+    if (match.getBoard().getCheckCount()) {
         std::cout << "CHECK!\n\n";
     }
 }

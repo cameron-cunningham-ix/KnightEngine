@@ -1,4 +1,6 @@
 #include "moves.hpp"
+#include "board_utility.hpp"
+#include "pext_bitboard.hpp"
 #include <bit>
 #include <vector>
 #include <algorithm>
@@ -7,443 +9,254 @@
 #include <math.h>
 
 // Forward declarations
-std::vector<Move> generatePsuedoMoves(const ChessBoard &cboard, const GameState* state);
+// std::vector<Move> generatePsuedoMoves(const ChessBoard &board, const GameState* state);
 
-// Helper method to check if a move leaves the king in check
-bool MoveValidator::moveLeavesKingInCheck(const Move& move) {
-    // Create a backup board to hold original 
-    ChessBoard keepBoard = board;
-    makeMove(board, move);
-    // Find king's position
-    int kingPos = std::countr_zero(state->sideToMove == WHITE ? 
-                    board.getWhiteKings() : board.getBlackKings());
-    
-    // Check if king is under attack after move
-    bool attacked = isSquareUnderAttack(kingPos, state->sideToMove == WHITE ? BLACK : WHITE);
-    // Restore board before returning
-    board = keepBoard;
-    return attacked;
-}
+// // Helper method to check if a move leaves the king in check
+// // Might be able to remove this function if all moves generated are legal
+// bool MoveGenerator::moveLeavesKingInCheck(ChessBoard board, const DenseMove& move) {
+//     // Get side to check
+//     Color side = board.currentGameState.sideToMove;
+//     // Make the move on board
+//     board.makeMove(move, true);
+//     // See if side's king is in check - if anything but 0ULL, inCheck is true
+//     bool inCheck = board.OppAttacksToSquare(
+//         side == WHITE ? board.getWhiteKingSquare() : board.getBlackKingSquare(),
+//         side
+//     );
+//     // Restore board before returning
+//     board.unmakeMove(move, false);
+//     return inCheck;
+// }
 
-// Validate castling move
-bool MoveValidator::isValidCastling(const Move& move) {
-    if (!move.isCastle) return false;
+// // Validate castling move
+// bool MoveGenerator::isValidCastling(const Move& move) {
+//     if (!move.isCastle) return false;
     
-    Color color = state->sideToMove;
-    bool isKingside = (move.to % 8 > move.from % 8);
+//     Color color = state->sideToMove;
+//     bool isKingside = (move.to % 8 > move.from % 8);
     
-    // Check if castling rights are still available
-    if (color == WHITE) {
-        if (isKingside && !state->canCastleWhiteKingside) return false;
-        if (!isKingside && !state->canCastleWhiteQueenside) return false;
-    } else {
-        if (isKingside && !state->canCastleBlackKingside) return false;
-        if (!isKingside && !state->canCastleBlackQueenside) return false;
-    }
+//     // Check if castling rights are still available
+//     if (color == WHITE) {
+//         if (isKingside && !state->canCastleWhiteKingside) return false;
+//         if (!isKingside && !state->canCastleWhiteQueenside) return false;
+//     } else {
+//         if (isKingside && !state->canCastleBlackKingside) return false;
+//         if (!isKingside && !state->canCastleBlackQueenside) return false;
+//     }
     
-    // Check if squares between king and rook are empty
-    U64 occupancy = board.getAllPieces();
-    if (isKingside) {
-        U64 kingToRook = (color == WHITE) ? 0x60ULL : 0x6000000000000000ULL;
-        if (occupancy & kingToRook) return false;
-    } else {
-        U64 kingToRook = (color == WHITE) ? 0xEULL : 0xE00000000000000ULL;
-        if (occupancy & kingToRook) return false;
-    }
+//     // Check if squares between king and rook are empty
+//     U64 occupancy = board.getAllPieces();
+//     if (isKingside) {
+//         U64 kingToRook = (color == WHITE) ? 0x60ULL : 0x6000000000000000ULL;
+//         if (occupancy & kingToRook) return false;
+//     } else {
+//         U64 kingToRook = (color == WHITE) ? 0xEULL : 0xE00000000000000ULL;
+//         if (occupancy & kingToRook) return false;
+//     }
     
-    // Check if king is in check
-    int kingPos = move.from;
-    if (isSquareUnderAttack(kingPos, color == WHITE ? BLACK : WHITE))
-        return false;
+//     // Check if king is in check
+//     int kingPos = move.from;
+//     if (isSquareUnderAttack(kingPos, color == WHITE ? BLACK : WHITE))
+//         return false;
         
-    // Check if king passes through check
-    int step = isKingside ? 1 : -1;
-    int passThrough = kingPos + step;
-    if (isSquareUnderAttack(passThrough, color == WHITE ? BLACK : WHITE))
-        return false;
+//     // Check if king passes through check
+//     int step = isKingside ? 1 : -1;
+//     int passThrough = kingPos + step;
+//     if (isSquareUnderAttack(passThrough, color == WHITE ? BLACK : WHITE))
+//         return false;
         
-    return true;
-}
+//     return true;
+// }
 
 // Validate en passant move
-bool MoveValidator::isValidEnPassant(const Move& move) {
-    if (!move.isEnPassant) return false;
+// bool MoveGenerator::isValidEnPassant(const Move& move) {
+//     if (!move.isEnPassant) return false;
     
-    // Check if en passant square matches
-    // NOTE: expects enPassantSquare to be the square behind the enpassantable pawn
-    if (move.to != state->enPassantSquare) return false;
+//     // Check if en passant square matches
+//     // NOTE: expects enPassantSquare to be the square behind the enpassantable pawn
+//     if (move.to != state->enPassantSquare) return false;
     
-    // Check if moving piece is a pawn
-    if (move.piece != W_PAWN && move.piece != B_PAWN) return false;
+//     // Check if moving piece is a pawn
+//     if (move.piece != W_PAWN && move.piece != B_PAWN) return false;
     
-    // Verify correct capture direction
-    int expectedFromRank = (state->sideToMove == WHITE) ? 4 : 3;
-    if (move.from / 8 != expectedFromRank) return false;
+//     // Verify correct capture direction
+//     int expectedFromRank = (state->sideToMove == WHITE) ? 4 : 3;
+//     if (move.from / 8 != expectedFromRank) return false;
     
-    return true;
-}
+//     return true;
+// }
 
-// Helper function to find king's position
-int MoveValidator::findKingSquare(Color color) const {
-    // Get the appropriate king's bitboard
-    U64 kingBB = (color == WHITE) ? board.getWhiteKings() : board.getBlackKings();
-    // Use countr_zero to find the index of the set bit (king's position)
-    return std::countr_zero(kingBB);
-}
+// // Helper function to find king's position
+// int MoveGenerator::findKingSquare(Color color) const {
+//     // Get the appropriate king's bitboard
+//     U64 kingBB = (color == WHITE) ? board.getWhiteKings() : board.getBlackKings();
+//     // Use countr_zero to find the index of the set bit (king's position)
+//     return std::countr_zero(kingBB);
+// }
 
 // Helper to check if a move is legally possible
-bool MoveValidator::canMakeMove(Move& move, Color color) {
-    // Create keepsake board
-    ChessBoard keepBoard = board;
+// bool MoveGenerator::canMakeMove(Move& move, Color color) {
+//     // Create keepsake board
+//     ChessBoard keepBoard = board;
     
-    makeMove(board, move);
-    // Check if the move leaves or puts the king in check
-    bool notChecked = !isInCheck(color);    // not checked, so you can make the move
-    board = keepBoard;  // Restore board
-    return notChecked;
-}
+//     makeMove(board, move);
+//     // Check if the move leaves or puts the king in check
+//     bool notChecked = !isInCheck(color);    // not checked, so you can make the move
+//     board = keepBoard;  // Restore board
+//     return notChecked;
+// }
 
 
-MoveValidator::MoveValidator(ChessBoard& b, GameState* s) : board(b), state(s) {}
+// MoveGenerator::MoveGenerator(ChessBoard& b, GameState* s) : board(b), state(s) {}
 
-// Helper method to check if a square is under attack
-bool MoveValidator::isSquareUnderAttack(int square, Color attackingColor) {
-    return board.OppAttacksToSquare(square, attackingColor == WHITE ? BLACK : WHITE);
-}
+// // Helper method to check if a square is under attack
+// bool MoveGenerator::isSquareUnderAttack(int square, Color attackingColor) {
+//     return board.OppAttacksToSquare(square, attackingColor == WHITE ? BLACK : WHITE);
+// }
 
-// Check if a specific color is in check
-bool MoveValidator::isInCheck(Color color) const {
-    // Find king's square
-    int kingSquare = findKingSquare(color);
+// // Check if a specific color is in check
+// bool MoveGenerator::isInCheck(Color color) const {
+//     // Find king's square
+//     int kingSquare = findKingSquare(color);
     
-    // Check if king's square is under attack by opposite color
-    return board.OppAttacksToSquare(kingSquare, color);
-}
+//     // Check if king's square is under attack by opposite color
+//     return board.OppAttacksToSquare(kingSquare, color);
+// }
 
-// Check if a specific color is in checkmate
-bool MoveValidator::isCheckmate(Color color) {
-    // First check if the player is in check
-    if (!isInCheck(color)) {
-        return false;
-    }
-    // Find king's position
-    U64 kingBB = color == WHITE ? board.getWhiteKings() : board.getBlackKings();
-    int kingPos = std::countr_zero(kingBB);
+// // Check if a specific color is in checkmate
+// bool MoveGenerator::isCheckmate(Color color) {
+//     // First check if the player is in check
+//     if (!isInCheck(color)) {
+//         return false;
+//     }
+//     // Find king's position
+//     U64 kingBB = color == WHITE ? board.getWhiteKings() : board.getBlackKings();
+//     int kingPos = std::countr_zero(kingBB);
     
-    // Check if king is in check
-    if (!isSquareUnderAttack(kingPos, color == WHITE ? BLACK : WHITE)) {
-        return false;  // Not even in check
-    }
+//     // Check if king is in check
+//     if (!isSquareUnderAttack(kingPos, color == WHITE ? BLACK : WHITE)) {
+//         return false;  // Not even in check
+//     }
     
-    // Generate all possible moves
-    std::vector<Move> moves = generatePsuedoMoves(board, state);
+//     // Generate all possible moves
+//     std::vector<Move> moves = generatePsuedoMoves(board, state);
     
-    // If any legal move exists, it's not checkmate
-    for (const Move& move : moves) {
-        if (isMoveLegal(move)) {
-            return false;
-        }
-    }
+//     // If any legal move exists, it's not checkmate
+//     for (const Move& move : moves) {
+//         if (isMoveLegal(move)) {
+//             return false;
+//         }
+//     }
     
-    return true;  // No legal moves and king is in check = checkmate
-}
+//     return true;  // No legal moves and king is in check = checkmate
+// }
 
-// Check if a specific color is in stalemate
-bool MoveValidator::isStalemate(Color color) {
-    // If in check, not stalemate
-    if (isInCheck(color)) {
-        return false;
-    }
+//// Check if a specific color is in stalemate
+// bool MoveGenerator::isStalemate(Color color) {
+//     // If in check, not stalemate
+//     if (isInCheck(color)) {
+//         return false;
+//     }
 
-    // Generate all possible moves for this color
-    std::vector<Move> possibleMoves = generatePsuedoMoves(board, state);
+//     // Generate all possible moves for this color
+//     std::vector<Move> possibleMoves = generatePsuedoMoves(board, state);
     
-    // Try each move to see if any are legal
-    for (Move& move : possibleMoves) {
-        // Skip moves of the wrong color
-        if ((color == WHITE && move.piece >= B_PAWN) ||
-            (color == BLACK && move.piece <= W_KING)) {
-            continue;
-        }
+//     // Try each move to see if any are legal
+//     for (Move& move : possibleMoves) {
+//         // Skip moves of the wrong color
+//         if ((color == WHITE && move.piece >= B_PAWN) ||
+//             (color == BLACK && move.piece <= W_KING)) {
+//             continue;
+//         }
 
-        // If any legal move exists, not stalemate
-        if (isMoveLegal(move)) {
-            return false;
-        }
-    }
-    // No legal moves found but not in check, it's stalemate
-    return true;
-}
+//         // If any legal move exists, not stalemate
+//         if (isMoveLegal(move)) {
+//             return false;
+//         }
+//     }
+//     // No legal moves found but not in check, it's stalemate
+//     return true;
+// }
 
-// NOTE: This function assumes the move is valid in terms of piece movement
-bool MoveValidator::isMoveLegal(const Move& move) {
-    // Check if it's the correct side's turn
-    bool isWhitePiece = move.piece <= W_KING;
-    if ((state->sideToMove == WHITE) != isWhitePiece) return false;
+// // NOTE: This function assumes the move is valid in terms of piece movement
+// bool MoveGenerator::isMoveLegal(const Move& move) {
+//     // Check if it's the correct side's turn
+//     bool isWhitePiece = move.piece <= W_KING;
+//     if ((state->sideToMove == WHITE) != isWhitePiece) return false;
 
-    // Check if the piece is on the square
-    if (getPieceOnSquare(board, move.from) != move.piece) return false;
+//     // Check if the piece is on the square
+//     if (getPieceOnSquare(board, move.from) != move.piece) return false;
 
-    // Check if the destination square is valid
-    if (move.to < 0 || move.to > 63) return false;
+//     // Check if the destination square is valid
+//     if (move.to < 0 || move.to > 63) return false;
     
-    // Handle special moves
-    if (move.isCastle && !isValidCastling(move)) return false;
-    if (move.isEnPassant && !isValidEnPassant(move)) return false;
+//     // Handle special moves
+//     if (move.isCastle && !isValidCastling(move)) return false;
+//     if (move.isEnPassant && !isValidEnPassant(move)) return false;
     
-    // Check promotion validity
-    if (move.isPromotion) {
-        if (move.piece != W_PAWN && move.piece != B_PAWN) return false;
-        int promRank = (move.piece == W_PAWN) ? 7 : 0;
-        if (move.to / 8 != promRank) return false;
-    }
+//     // Check promotion validity
+//     if (move.isPromotion) {
+//         if (move.piece != W_PAWN && move.piece != B_PAWN) return false;
+//         int promRank = (move.piece == W_PAWN) ? 7 : 0;
+//         if (move.to / 8 != promRank) return false;
+//     }
     
-    // Verify the move doesn't leave king in check
-    if (moveLeavesKingInCheck(move)) return false;
+//     // Verify the move doesn't leave king in check
+//     if (moveLeavesKingInCheck(move)) return false;
     
-    return true;
-}
-
-// Update game state after a move
-void MoveValidator::updateGameState(const Move& move) {
-    // Update castling rights
-    if (move.piece == W_KING) {
-        state->canCastleWhiteKingside = false;
-        state->canCastleWhiteQueenside = false;
-    } else if (move.piece == B_KING) {
-        state->canCastleBlackKingside = false;
-        state->canCastleBlackQueenside = false;
-    }
-    
-    // Check if rooks moved or were captured
-    if (move.from == 0 || move.to == 0) state->canCastleWhiteQueenside = false;
-    if (move.from == 7 || move.to == 7) state->canCastleWhiteKingside = false;
-    if (move.from == 56 || move.to == 56) state->canCastleBlackQueenside = false;
-    if (move.from == 63 || move.to == 63) state->canCastleBlackKingside = false;
-    
-    // Update en passant square
-    if ((move.piece == W_PAWN || move.piece == B_PAWN) &&
-        abs(move.to - move.from) == 16) {
-        state->enPassantSquare = (move.from + move.to) / 2;
-    } else {
-        state->enPassantSquare = -1;
-    }
-    
-    // Switch side to move
-    state->sideToMove = (state->sideToMove == WHITE) ? BLACK : WHITE;
-
-    // Check if halfmove clock should be reset or incremented
-    if (move.isCapture || move.piece == W_PAWN || move.piece == B_PAWN) {
-        state->halfMoveClock = 0;
-    } else {
-        state->halfMoveClock++;
-    }
-
-    // Increment fullmove number if black just moved
-    if (state->sideToMove == WHITE) {
-        state->fullMoveNumber++;
-    }
-}
-
-// Helper function to update bitboards for a piece movement
-void movePiece(ChessBoard& board, int from, int to, PieceType piece) {
-    // Clear bit at 'from' square and set bit at 'to' square for the piece's bitboard
-    U64 fromToBB = (1ULL << from) | (1ULL << to);  // Bitboard with both squares set
-
-    // Clear bit at 'from' square and set bit at 'to' square for the piece's bitboard
-    // Get color and piece type
-    bool isWhite = piece <= W_KING;
-    int pieceType = pieceCode(piece);
-
-    // Update color bitboard (white or black)
-    //board.colorBB[isWhite ? 0 : 1] ^= fromToBB;
-
-    // Update piece type bitboard (pawn, knight, etc.)
-    //board.pieceBB[pieceType] ^= fromToBB;
-}
-
-// Helper function to remove a piece from the board
-void removePiece(ChessBoard& board, int square, PieceType piece) {
-    U64 squareBB = 1ULL << square;
-
-    // Get color and piece type
-    bool isWhite = piece <= W_KING;
-    int pieceType = pieceCode(piece);
-
-    // Clear bit in color bitboard
-    //board.colorBB[isWhite ? 0 : 1] &= ~squareBB;
-
-    // Clear bit in piece type bitboard
-    //board.pieceBB[pieceType] &= ~squareBB;
-}
-
-// Helper function to add a piece to the board
-void addPiece(ChessBoard& board, int square, PieceType piece) {
-    U64 squareBB = 1ULL << square;
-
-    // Get color and piece type
-    bool isWhite = piece <= W_KING;
-    int pieceType = pieceCode(piece);
-
-    // Set bit in color bitboard
-    //board.colorBB[isWhite ? 0 : 1] |= squareBB;
-
-    // Set bit in piece type bitboard
-    //board.pieceBB[pieceType] |= squareBB;
-}
-
-// Function to determine what piece type is on a given square
-PieceType getPieceOnSquare(const ChessBoard& board, int square) {
-    return board.getPieceAt(square);
-}
-
-void makeMove(ChessBoard& board, const Move& move) {
-    // Handle invalid move
-    if (move == Move()) {
-        std::string errorMsg = std::format("Invalid move: {} to {}, {}", 
-            (move.from), (move.to), 
-            move.isCapture ? " (capture)" : "");
-        throw std::runtime_error(errorMsg);
-    }
-
-    // Handle captures first (except en passant)
-    if (move.isCapture && !move.isEnPassant) {
-        // Remove captured piece
-        PieceType capturedPiece = board.getPieceAt(move.to);
-        removePiece(board, move.to, capturedPiece);
-    }
-
-    if (move.isCastle) {
-        // Move king
-        movePiece(board, move.from, move.to, move.piece);
-        
-        // Move rook based on castle type
-        bool isKingside = (move.to % 8 > move.from % 8);
-        bool isWhite = move.piece == W_KING;
-        
-        if (isKingside) {
-            // Move rook from h1/h8 to f1/f8
-            int rookFrom = isWhite ? 7 : 63;
-            int rookTo = isWhite ? 5 : 61;
-            movePiece(board, rookFrom, rookTo, isWhite ? W_ROOK : B_ROOK);
-        } else {
-            // Move rook from a1/a8 to d1/d8
-            int rookFrom = isWhite ? 0 : 56;
-            int rookTo = isWhite ? 3 : 59;
-            movePiece(board, rookFrom, rookTo, isWhite ? W_ROOK : B_ROOK);
-        }
-    } else if (move.isEnPassant) {
-        // Move capturing pawn
-        movePiece(board, move.from, move.to, move.piece);
-        
-        // Remove captured pawn
-        int capturedPawnSquare = move.to + (move.piece <= W_KING ? -8 : 8);
-        removePiece(board, capturedPawnSquare, 
-                    move.piece <= W_KING ? B_PAWN : W_PAWN);
-    } else if (move.isPromotion) {
-        // Remove pawn from source square
-        removePiece(board, move.from, move.piece);
-        
-        // Add promoted piece to destination square
-        addPiece(board, move.to, move.promoteTo);
-    } else {
-        // Regular move
-        movePiece(board, move.from, move.to, move.piece);
-    }
-}
+//     return true;
+// }
 
 
+/// @brief Generates all possible pawn moves for current side of 'board' and pushes them onto 'moves' vector
+/// @param board 
+/// @param moves 
+void MoveGenerator::generatePawnMoves(const ChessBoard& board, std::vector<DenseMove>& moves) {
+    // Get occupancy and empty squares on board
+    U64 occupancy = board.getAllPieces();
+    U64 emptySquares = board.getEmptySquares();
+    Color sideToMove = board.currentGameState.sideToMove;
+    // If checkingCount is 1, we need to either block attack or capture piece
+    // Double check should already be accounted for and so not necessary to check
+    // if (board.getCheckCount() == 1) {
+    //     U64 attackMask = board.getAttacksToKing(sideToMove);
+    //     U64 orthoAtt = attackMask & board.getOrthogonalOpp(sideToMove);
+    // }
 
-void generateWhitePawnMoves(const ChessBoard& cboard, const GameState* state, std::vector<Move>& moves) {
-    U64 whitePawns = cboard.getWhitePawns();
-    U64 emptySquares = ~(cboard.getAllPieces());
-
-    // Calculate all capturing moves for white pawns
-    while (whitePawns) {
-        int index = std::countr_zero(whitePawns);        // Get index of the lowest set bit
-        // Use the precomputed attack mask
-        U64 attackMask = ATKMASK_WPAWN[index] & cboard.getBlackPieces();
-
-        // Loop through each bit in the attack mask
-        while (attackMask) {
-            int targetSquare = std::countr_zero(attackMask);     // Get index of the lowest set bit
-            // If 7th rank, move to 8th rank and promote
-            if (index >= 48 && index < 56) {
-                moves.push_back({W_PAWN, index, targetSquare, true, true});
-            }
-            else {
-                moves.push_back({W_PAWN, index, targetSquare, true, false});
-            }
-            attackMask &= (attackMask - 1);     // Clear the least significant bit
-        }
-        whitePawns &= (whitePawns - 1);     // Clear the least significant bit
-    }
-    // Reset whitePawns bitboard
-    whitePawns = cboard.getWhitePawns();
-    // One square forward
-    U64 singlePushes = (whitePawns << 8) & emptySquares;
-
-    // Two squares forward
-    // Hex value: each hex digit is 4 bits; 0x0000000000FF corresponds to bits in 3rd rank
-    U64 doublePushes = ((singlePushes & 0x0000000000FF0000) << 8) & emptySquares;
-
-    while (singlePushes) {
-        int targetSquare = std::countr_zero(singlePushes);
-        // If on 7th rank, move to 8th and promote
-        if (targetSquare >= 56 && targetSquare < 64) {
-            moves.push_back({W_PAWN, targetSquare - 8, targetSquare, false, true});
-        } 
-        else {
-            moves.push_back({W_PAWN, targetSquare - 8, targetSquare, false, false});
-        }
-        singlePushes &= (singlePushes - 1);
-    }
-
-    while (doublePushes) {
-        // Can only move two squares if on starting row
-        int targetSquare = std::countr_zero(doublePushes);
-        moves.push_back({W_PAWN, targetSquare - 16, targetSquare, false, false});
-        doublePushes &= (doublePushes - 1);
-    }
-}
-
-// Generates all psuedo-legal pawn moves
-void generatePawnMoves(const ChessBoard& cboard, const GameState* state, std::vector<Move>& moves) {
-    U64 emptySquares = ~(cboard.getAllPieces());
-
-    if (state->sideToMove == WHITE) {
-        U64 whitePawns = cboard.getWhitePawns();
+    if (sideToMove == WHITE) {
+        U64 whitePawns = board.getWhitePawns();
         // Calculate all capturing moves for white pawns
         while (whitePawns) {
-            int index = std::countr_zero(whitePawns);        // Get index of the lowest set bit
+            int index = std::countr_zero(whitePawns);   // Get index of the lowest set bit
             // Use the precomputed attack mask
-            U64 attackMask = ATKMASK_WPAWN[index] & cboard.getBlackPieces();
+            U64 attackMask = ATKMASK_WPAWN[index] & board.getBlackPieces();
 
             // Loop through each bit in the attack mask
             while (attackMask) {
                 int targetSquare = std::countr_zero(attackMask);     // Get index of the lowest set bit
                 // If 7th rank, move to 8th rank and promote
-                if (index >= 48 && index < 56) {
-                    Move promoteMove = Move(W_PAWN, index, targetSquare, true, true);
-                    //if (moveLeavesKingInCheck())
-                    promoteMove.promoteTo = W_KNIGHT;
+                if (targetSquare >= 56 && targetSquare < 64) {
+                    DenseMove promoteMove = DenseMove(W_PAWN, index, targetSquare, 
+                                                      board.getDenseTypeAt(targetSquare));
+                    promoteMove.setPromoteTo(D_KNIGHT);
                     moves.push_back(promoteMove);
-                    promoteMove.promoteTo = W_BISHOP;
+                    promoteMove.setPromoteTo(D_BISHOP);
                     moves.push_back(promoteMove);
-                    promoteMove.promoteTo = W_ROOK;
+                    promoteMove.setPromoteTo(D_ROOK);
                     moves.push_back(promoteMove);
-                    promoteMove.promoteTo = W_QUEEN;
+                    promoteMove.setPromoteTo(D_QUEEN);
                     moves.push_back(promoteMove);
                 }
                 else {
-                    moves.push_back({W_PAWN, index, targetSquare, true, false});
+                    moves.push_back(DenseMove(W_PAWN, index, targetSquare, 
+                                     board.getDenseTypeAt(targetSquare)));
                 }
                 attackMask &= (attackMask - 1);     // Clear the least significant bit
             }
             whitePawns &= (whitePawns - 1);     // Clear the least significant bit
         }
         // Reset whitePawns bitboard
-        whitePawns = cboard.getWhitePawns();
+        whitePawns = board.getWhitePawns();
         // One square forward
         U64 singlePushes = (whitePawns << 8) & emptySquares;
 
@@ -455,18 +268,19 @@ void generatePawnMoves(const ChessBoard& cboard, const GameState* state, std::ve
             int targetSquare = std::countr_zero(singlePushes);
             // If on 7th rank, move to 8th and promote
             if (targetSquare >= 56 && targetSquare < 64) {
-                Move promoteMove = Move(W_PAWN, targetSquare - 8, targetSquare, false, true);
-                promoteMove.promoteTo = W_KNIGHT;
+                DenseMove promoteMove = DenseMove(W_PAWN, targetSquare - 8, 
+                                                  targetSquare);
+                promoteMove.setPromoteTo(D_KNIGHT);
                 moves.push_back(promoteMove);
-                promoteMove.promoteTo = W_BISHOP;
+                promoteMove.setPromoteTo(D_BISHOP);
                 moves.push_back(promoteMove);
-                promoteMove.promoteTo = W_ROOK;
+                promoteMove.setPromoteTo(D_ROOK);
                 moves.push_back(promoteMove);
-                promoteMove.promoteTo = W_QUEEN;
+                promoteMove.setPromoteTo(D_QUEEN);
                 moves.push_back(promoteMove);
             } 
             else {
-                moves.push_back({W_PAWN, targetSquare - 8, targetSquare, false, false});
+                moves.push_back(DenseMove(W_PAWN, targetSquare - 8, targetSquare));
             }
             singlePushes &= (singlePushes - 1);
         }
@@ -474,43 +288,45 @@ void generatePawnMoves(const ChessBoard& cboard, const GameState* state, std::ve
         while (doublePushes) {
             // Can only move two squares if on starting row
             int targetSquare = std::countr_zero(doublePushes);
-            moves.push_back({W_PAWN, targetSquare - 16, targetSquare, false, false});
+            moves.push_back(DenseMove(W_PAWN, targetSquare - 16, targetSquare));
             doublePushes &= (doublePushes - 1);
         }
     }
     
     else {
-        U64 blackPawns = cboard.getBlackPawns();
+        U64 blackPawns = board.getBlackPawns();
         // Calculate all capturing moves for black pawns
         while (blackPawns) {
             int index = std::countr_zero(blackPawns);        // Get index of the lowest set bit
             // Use the precomputed attack mask
-            U64 attackMask = ATKMASK_BPAWN[index] & cboard.getWhitePieces();
+            U64 attackMask = ATKMASK_BPAWN[index] & board.getWhitePieces();
 
             // Loop through each bit in the attack mask
             while (attackMask) {
                 int targetSquare = std::countr_zero(attackMask);     // Get index of the lowest set bit
                 // If 2nd rank, move to 1st rank and promote
-                if (index >= 8 && index < 16) {
-                    Move promoteMove = Move(B_PAWN, index, targetSquare, true, true);
-                    promoteMove.promoteTo = B_KNIGHT;
+                if (targetSquare >= 0 && targetSquare < 8) {
+                    DenseMove promoteMove = DenseMove(B_PAWN, index, targetSquare, 
+                                                      board.getDenseTypeAt(targetSquare));
+                    promoteMove.setPromoteTo(D_KNIGHT);
                     moves.push_back(promoteMove);
-                    promoteMove.promoteTo = B_BISHOP;
+                    promoteMove.setPromoteTo(D_BISHOP);
                     moves.push_back(promoteMove);
-                    promoteMove.promoteTo = B_ROOK;
+                    promoteMove.setPromoteTo(D_ROOK);
                     moves.push_back(promoteMove);
-                    promoteMove.promoteTo = B_QUEEN;
+                    promoteMove.setPromoteTo(D_QUEEN);
                     moves.push_back(promoteMove);
                 }
                 else {
-                    moves.push_back({B_PAWN, index, targetSquare, true, false});
+                    moves.push_back(DenseMove(B_PAWN, index, targetSquare,
+                                              board.getDenseTypeAt(targetSquare)));
                 }
                 attackMask &= (attackMask - 1);     // Clear the least significant bit
             }
             blackPawns &= (blackPawns - 1);     // Clear the least significant bit
         }
         // Reset blackPawns bitboard
-        blackPawns = cboard.getBlackPawns();
+        blackPawns = board.getBlackPawns();
         // One square forward
         U64 singlePushes = (blackPawns >> 8) & emptySquares;
 
@@ -522,18 +338,19 @@ void generatePawnMoves(const ChessBoard& cboard, const GameState* state, std::ve
             int targetSquare = std::countr_zero(singlePushes);
             // If on 2nd rank, move to 1st and promote
             if (targetSquare >= 0 && targetSquare < 8) {
-                Move promoteMove = Move(B_PAWN, targetSquare + 8, targetSquare, false, true);
-                promoteMove.promoteTo = B_KNIGHT;
+                DenseMove promoteMove = DenseMove(B_PAWN, targetSquare + 8, targetSquare, 
+                                                      board.getDenseTypeAt(targetSquare));
+                promoteMove.setPromoteTo(D_KNIGHT);
                 moves.push_back(promoteMove);
-                promoteMove.promoteTo = B_BISHOP;
+                promoteMove.setPromoteTo(D_BISHOP);
                 moves.push_back(promoteMove);
-                promoteMove.promoteTo = B_ROOK;
+                promoteMove.setPromoteTo(D_ROOK);
                 moves.push_back(promoteMove);
-                promoteMove.promoteTo = B_QUEEN;
+                promoteMove.setPromoteTo(D_QUEEN);
                 moves.push_back(promoteMove);
             } 
             else {
-                moves.push_back({B_PAWN, targetSquare + 8, targetSquare, false, false});
+                moves.push_back(DenseMove(B_PAWN, targetSquare + 8, targetSquare));
             }
             singlePushes &= (singlePushes - 1);
         }
@@ -541,125 +358,145 @@ void generatePawnMoves(const ChessBoard& cboard, const GameState* state, std::ve
         while (doublePushes) {
             // Can only move two squares if on starting row
             int targetSquare = std::countr_zero(doublePushes);
-            moves.push_back({B_PAWN, targetSquare + 16, targetSquare, false, false});
+            moves.push_back(DenseMove(B_PAWN, targetSquare + 16, targetSquare));
             doublePushes &= (doublePushes - 1);
         }
     }    
 }
 
-// Generate all possible en passant captures based on current game state
-void generateEnPassantMoves(const ChessBoard &cboard, const GameState* state, std::vector<Move> &moves) {
+/// @brief Generates all possible en passant captures for 'board' and pushes them onto 'moves' vector
+/// @param board 
+/// @param moves 
+void MoveGenerator::generateEnPassantMoves(const ChessBoard &board, std::vector<DenseMove> &moves) {
+    // Get current state
+    Color sideToMove = board.currentGameState.sideToMove;
+    int enPassSquare = board.currentGameState.enPassantSquare;
     // If no en passant square is available, return
-    if (state->enPassantSquare == -1) return;
+    if (enPassSquare == -1) return;
 
     // Get pawns that could potentially make en passant capture
-    if (state->sideToMove == WHITE) {
+    if (sideToMove == WHITE) {
         // Get white pawns that can capture the black pawn via en passant
-        U64 epCaptors = ATKMASK_BPAWN[state->enPassantSquare] & cboard.getWhitePawns();
+        U64 epCaptors = ATKMASK_BPAWN[enPassSquare] & board.getWhitePawns();
         
         // For each white pawn that can make the capture
         while (epCaptors) {
             int from = std::countr_zero(epCaptors);  // Get index of capturing pawn
-            Move move{W_PAWN, from, state->enPassantSquare, true, false};
-            move.isEnPassant = true;
+            DenseMove move(W_PAWN, from, enPassSquare, D_PAWN, false, true);
             moves.push_back(move);
             epCaptors &= (epCaptors - 1);  // Clear least significant bit
         }
     } else {
         // Get black pawns that can capture the white pawn via en passant
-        U64 epCaptors = ATKMASK_WPAWN[state->enPassantSquare] & cboard.getBlackPawns();
+        U64 epCaptors = ATKMASK_WPAWN[enPassSquare] & board.getBlackPawns();
         
         // For each black pawn that can make the capture
         while (epCaptors) {
             int from = std::countr_zero(epCaptors);  // Get index of capturing pawn
-            Move move{B_PAWN, from, state->enPassantSquare, true, false};
-            move.isEnPassant = true;
+            DenseMove move(B_PAWN, from, enPassSquare, D_PAWN, false, true);
             moves.push_back(move);
             epCaptors &= (epCaptors - 1);  // Clear least significant bit
         }
     }
 }
-
-void generateCastlingMoves(const ChessBoard& cboard, const GameState* state, std::vector<Move>& moves) {
-    if (state->sideToMove == WHITE) {
-        if (state->canCastleWhiteKingside) {
-            Move move(W_KING, 4, 6);
-            move.isCastle = true;
+/// @brief Generates all possible castling moves from 'board' and pushes them onto 'moves' vector
+/// @param board 
+/// @param state 
+/// @param moves 
+void MoveGenerator::generateCastlingMoves(const ChessBoard& board, std::vector<DenseMove>& moves) {
+    // Get board occupancy
+    U64 occupancy = board.getAllPieces();
+    if (board.currentGameState.sideToMove == WHITE) {
+        // If white still has kingside castle rights and there's no pieces in between
+        if (board.currentGameState.canCastleWhiteKingside &&
+            (occupancy & BoardUtility::W_ShortCastleMask) == 0) {
+            DenseMove move(W_KING, 4, 6, D_EMPTY, true);
             moves.push_back(move);
         }
-        if (state->canCastleWhiteQueenside) {
-            Move move(W_KING, 4, 2);
-            move.isCastle = true;
+        // If white still has queenside castle rights and there's no pieces in between
+        if (board.currentGameState.canCastleWhiteQueenside &&
+            (occupancy & BoardUtility::W_LongCastleMask) == 0) {
+            DenseMove move(W_KING, 4, 2, D_EMPTY, true);
             moves.push_back(move);
         }
     } else {
-        if (state->canCastleBlackKingside) {
-            Move move(B_KING, 60, 62);
-            move.isCastle = true;
+        // If black still has kingside castle rights and there's no pieces in between
+        if (board.currentGameState.canCastleBlackKingside &&
+            (occupancy & BoardUtility::B_ShortCastleMask) == 0) {
+            DenseMove move(B_KING, 60, 62, D_EMPTY, true);
             moves.push_back(move);
         }
-        if (state->canCastleBlackQueenside) {
-            Move move(B_KING, 60, 58);
-            move.isCastle = true;
+        // If black still has queenside castle rights and there's no pieces in between
+        if (board.currentGameState.canCastleBlackQueenside &&
+            (occupancy & BoardUtility::B_LongCastleMask) == 0) {
+            DenseMove move(B_KING, 60, 58, D_EMPTY, true);
             moves.push_back(move);
         }
     }
 }
 
-// Generate all psuedo-legal moves for one piecetype
-void generatePieceMoves(const ChessBoard &cboard, std::vector<Move> &moves, PieceType piece) {
+/// @brief 
+/// @param board 
+/// @param moves 
+/// @param piece 
+void MoveGenerator::generatePieceMoves(const ChessBoard &board, std::vector<DenseMove> &moves, PieceType piece) {
+    // std::cout << "MoveGen.genPieceMoves start\n    piece " << piece << "\n";
     U64 pieceBB;
-    U64 opposition;
-    U64 emptySquares = ~(cboard.getAllPieces());
+    U64 opposition = board.getSideToMove() == WHITE ? board.getBlackPieces() : 
+                                                      board.getWhitePieces();
+    U64 friendlyOccupancy = board.getSideToMove() == WHITE ? board.getWhitePieces() : 
+                                                             board.getBlackPieces();
+    U64 occupancy = board.getAllPieces();
+    U64 emptySquares = board.getEmptySquares();
+
+    // std::cout << "    bitboards\nopposition\n";
+    // printBitboard(opposition);
+    // std::cout << "    friendlyOccupancy\n";
+    // printBitboard(friendlyOccupancy);
+    // std::cout << "    occupancy\n";
+    // printBitboard(occupancy);
+    // std::cout << "    emptySquares\n";
+    // printBitboard(emptySquares);
+
 
     switch (piece) {
         case W_PAWN:
-            // pieceBB = cboard.getWhitePawns();
-            // opposition = cboard.getBlackPieces();
+            // Pawns have their own function
+            return;
             break;
         case W_KNIGHT:
-            pieceBB = cboard.getWhiteKnights();
-            opposition = cboard.getBlackPieces();
+            pieceBB = board.getWhiteKnights();
             break;
         case W_BISHOP:
-            pieceBB = cboard.getWhiteBishops();
-            opposition = cboard.getBlackPieces();
+            pieceBB = board.getWhiteBishops();
             break;
         case W_ROOK:
-            pieceBB = cboard.getWhiteRooks();
-            opposition = cboard.getBlackPieces();
+            pieceBB = board.getWhiteRooks();
             break;
         case W_QUEEN:
-            pieceBB = cboard.getWhiteQueens();
-            opposition = cboard.getBlackPieces();
+            pieceBB = board.getWhiteQueens();
             break;
         case W_KING:
-            pieceBB = cboard.getWhiteKings();
-            opposition = cboard.getBlackPieces();
+            pieceBB = board.getWhiteKings();
             break;
         case B_PAWN:
-            // pieceBB = cboard.getWhiteKnights();
-            // opposition = cboard.getBlackPieces();
+            // Pawns have their own function
+            return;
             break;
         case B_KNIGHT:
-            pieceBB = cboard.getBlackKnights();
-            opposition = cboard.getWhitePieces();
+            pieceBB = board.getBlackKnights();
             break;
         case B_BISHOP:
-            pieceBB = cboard.getBlackBishops();
-            opposition = cboard.getWhitePieces();
+            pieceBB = board.getBlackBishops();
             break;
         case B_ROOK:
-            pieceBB = cboard.getBlackRooks();
-            opposition = cboard.getWhitePieces();
+            pieceBB = board.getBlackRooks();
             break;
         case B_QUEEN:
-            pieceBB = cboard.getBlackQueens();
-            opposition = cboard.getWhitePieces();
+            pieceBB = board.getBlackQueens();
             break;
         case B_KING:
-            pieceBB = cboard.getBlackKings();
-            opposition = cboard.getWhitePieces();
+            pieceBB = board.getBlackKings();
             break;
         default:
             // Handle invalid piece type or error case
@@ -703,33 +540,32 @@ void generatePieceMoves(const ChessBoard &cboard, std::vector<Move> &moves, Piec
         U64 freeSpace = attackMask & emptySquares;
         
         if (piece == W_ROOK || piece == B_ROOK) {
-            U64 blocked = getRookAttacks(index, ~emptySquares);
+            U64 blocked = PEXT::getRookAttacks(index, occupancy);
             attacks &= blocked;
             freeSpace &= blocked;
         }
         
         if (piece == W_BISHOP || piece == B_BISHOP) {
-            U64 blocked = getBishopAttacks(index, ~emptySquares);
+            U64 blocked = PEXT::getBishopAttacks(index, occupancy);
             attacks &= blocked;
             freeSpace &= blocked;
         }
 
         if (piece == W_QUEEN || piece == B_QUEEN){
-            U64 blocked = getQueenAttacks(index, ~emptySquares);
+            U64 blocked = PEXT::getRookAttacks(index, occupancy) | PEXT::getBishopAttacks(index, occupancy);
             attacks &= blocked;
             freeSpace &= blocked;
         }
         
-
         while (attacks) {
             int targetSquare = std::countr_zero(attacks);       // Get index of the lowest set bit
-            moves.push_back({piece, index, targetSquare, true, false});
+            moves.push_back(DenseMove(piece, index, targetSquare, board.getDenseTypeAt(targetSquare)));
             attacks &= (attacks - 1);
         }
 
         while (freeSpace) {
             int targetSquare = std::countr_zero(freeSpace);     // Get index of the lowest set bit
-            moves.push_back({piece, index, targetSquare, false, false});
+            moves.push_back(DenseMove(piece, index, targetSquare));
             freeSpace &= (freeSpace - 1);
         }
         pieceBB &= (pieceBB - 1);
@@ -740,246 +576,64 @@ void generatePieceMoves(const ChessBoard &cboard, std::vector<Move> &moves, Piec
 
 // Generate the list of moves that can possibly be made by the current side to move,
 // not taking into account other legality
-std::vector<Move> generatePsuedoMoves(const ChessBoard &cboard, const GameState* state) {
-    std::vector<Move> move_list;
+std::vector<DenseMove> MoveGenerator::generatePsuedoMoves(const ChessBoard &board) {
+    // Move list to be returned
+    std::vector<DenseMove> move_list;
 
-    generatePawnMoves(cboard, state, move_list);
-    generateEnPassantMoves(cboard, state, move_list);
-    generateCastlingMoves(cboard, state, move_list);
-    if (state->sideToMove == WHITE) {
-        generatePieceMoves(cboard, move_list, W_KNIGHT);
-        generatePieceMoves(cboard, move_list, W_BISHOP);
-        generatePieceMoves(cboard, move_list, W_ROOK);
-        generatePieceMoves(cboard, move_list, W_QUEEN);
-        generatePieceMoves(cboard, move_list, W_KING);
+    // If current side's king is in double check, only the king can move 
+    // and we can return early
+    if (board.getCheckCount() == 2) {
+        MoveGenerator::generatePieceMoves(board, move_list, 
+            board.currentGameState.sideToMove == WHITE ? W_KING : B_KING);
+        return move_list;
+    }
+
+    MoveGenerator::generatePawnMoves(board, move_list);
+    MoveGenerator::generateEnPassantMoves(board, move_list);
+    MoveGenerator::generateCastlingMoves(board, move_list);
+    if (board.currentGameState.sideToMove == WHITE) {
+        MoveGenerator::generatePieceMoves(board, move_list, W_KNIGHT);
+        MoveGenerator::generatePieceMoves(board, move_list, W_BISHOP);
+        MoveGenerator::generatePieceMoves(board, move_list, W_ROOK);
+        MoveGenerator::generatePieceMoves(board, move_list, W_QUEEN);
+        MoveGenerator::generatePieceMoves(board, move_list, W_KING);
     }
     else {
-        generatePieceMoves(cboard, move_list, B_KNIGHT);
-        generatePieceMoves(cboard, move_list, B_BISHOP);
-        generatePieceMoves(cboard, move_list, B_ROOK);
-        generatePieceMoves(cboard, move_list, B_QUEEN);
-        generatePieceMoves(cboard, move_list, B_KING);
+        MoveGenerator::generatePieceMoves(board, move_list, B_KNIGHT);
+        MoveGenerator::generatePieceMoves(board, move_list, B_BISHOP);
+        MoveGenerator::generatePieceMoves(board, move_list, B_ROOK);
+        MoveGenerator::generatePieceMoves(board, move_list, B_QUEEN);
+        MoveGenerator::generatePieceMoves(board, move_list, B_KING);
     }
     return move_list;
 }
 
-/// @brief Returns a bitboard of possible squares a rook could attack 'square' parameter from
-/// @param square 
-/// @param blockers 
-/// @return 
-U64 getRookAttacks(int square, U64 blockers) {
-    U64 attacks = ATKMASK_ROOK[square];
+std::vector<DenseMove> MoveGenerator::generateLegalMoves(ChessBoard& board) {
+    // std::cout << "MoveGenerator.generateLegalMoves start\n";
+    std::vector<DenseMove> psuedo = generatePsuedoMoves(board);
+    // std::cout << "    Psuedo legal moves generated\n";
 
-    // Check each direction (N, S, E, W) for blockers
-    // South
-    for (int sq = square - 8; sq >= 0; sq -= 8) {
-        if (blockers & (1ULL << sq)) {
-            U64 file = 0ULL;
-            for (int sSq = sq - 8; sSq >= 0; sSq -= 8) {
-                file |= 1ULL << sSq;
-            }
-            attacks ^= file;
-            break;
+    std::vector<DenseMove> legal;
+    // For each psuedo legal move generated
+    for (const DenseMove& move : psuedo) {
+        // std::cout << "    move: " << std::bitset<32>(move.data) << "\n";
+        // Make the move on the board
+        board.makeMove(move, true);
+        // std::cout << "    made move\n";
+        // If the move did not leave its own side in check,
+        // its a legal move, add to list
+        if (!board.isSideInCheck(move.getColor())) {
+            // std::cout << "    legal: " << move.getPieceType() << " from "
+            //     << move.getFrom() << " to " << move.getTo() << " capture " << move.getCaptPiece()
+            //     << "\n";
+            legal.emplace_back(move);
         }
+        // std::cout << "    unmaking move\n";
+        // Unmake the move to return board to prev state
+        board.unmakeMove(move, true);
     }
-
-    // West
-    for (int sq = square - 1; sq % 8 != 7 && sq >= 0; sq--) {
-        if (blockers & (1ULL << sq)) {
-            U64 rank = 0ULL;
-            for (int rankSq = sq - 1; rankSq % 8 != 7 && rankSq >= 0; rankSq--) {
-                rank |= 1ULL << rankSq;
-            }
-            attacks ^= rank;
-            break;
-        }
-    }
-
-    // East
-    for (int sq = square + 1; sq % 8 != 0 && sq < 64; sq++) {
-        if (blockers & (1ULL << sq)) {
-            U64 rank = 0ULL;
-            for (int rankSq = sq + 1; rankSq % 8 != 0 && rankSq < 64; rankSq++) {
-                rank |= 1ULL << rankSq;
-            }
-            attacks ^= rank;
-            break;
-        }
-    }
-
-    // North
-    for (int sq = square + 8; sq < 64; sq += 8) {
-        if (blockers & (1ULL << sq)) {
-            U64 file = 0ULL;
-            for (int nSq = sq + 8; nSq < 64; nSq += 8){
-                file |= 1ULL << nSq;
-            }
-            attacks ^= file;
-            break;
-        }
-    }
-    
-    return attacks;
-}
-
-U64 getBishopAttacks(int square, U64 blockers) {
-    U64 attacks = ATKMASK_BISHOP[square];
-
-    // Check each diagonal direction (NE, SE, SW, NW) for blockers
-    // Northeast
-    for (int sq = square + 9; sq % 8 != 0 && sq < 64; sq += 9) {
-        if (blockers & (1ULL << sq)) {
-            U64 diagonal = 0ULL;
-            for (int diagSq = sq + 9; diagSq % 8 != 0 && diagSq < 64; diagSq += 9) {
-                diagonal |= 1ULL << diagSq;
-            }
-            attacks ^= diagonal;
-            break;
-        }
-    }
-
-    // Southeast
-    for (int sq = square - 7; sq % 8 != 0 && sq >= 0; sq -= 7) {
-        if (blockers & (1ULL << sq)) {
-            U64 diagonal = 0ULL;
-            for (int diagSq = sq - 7; diagSq % 8 != 0 && diagSq >= 0; diagSq -= 7) {
-                diagonal |= 1ULL << diagSq;
-            }
-            attacks ^= diagonal;
-            break;
-        }
-    }
-
-    // Southwest
-    for (int sq = square - 9; sq % 8 != 7 && sq >= 0; sq -= 9) {
-        if (blockers & (1ULL << sq)) {
-            U64 diagonal = 0ULL;
-            for (int diagSq = sq - 9; diagSq % 8 != 7 && diagSq >= 0; diagSq -= 9) {
-                diagonal |= 1ULL << diagSq;
-            }
-            attacks ^= diagonal;
-            break;
-        }
-    }
-
-    // Northwest
-    for (int sq = square + 7; sq % 8 != 7 && sq < 64; sq += 7) {
-        if (blockers & (1ULL << sq)) {
-            U64 diagonal = 0ULL;
-            for (int diagSq = sq + 7; diagSq % 8 != 7 && diagSq < 64; diagSq += 7) {
-                diagonal |= 1ULL << diagSq;
-            }
-            attacks ^= diagonal;
-            break;
-        }
-    }
-
-    return attacks;
-}
-
-
-U64 getQueenAttacks(int square, U64 blockers) {
-    U64 attacks = ATKMASK_QUEEN[square];
-
-    // Check each diagonal direction (NE, SE, SW, NW) for blockers
-    // Northeast
-    for (int sq = square + 9; sq % 8 != 0 && sq < 64; sq += 9) {
-        if (blockers & (1ULL << sq)) {
-            U64 diagonal = 0ULL;
-            for (int diagSq = sq + 9; diagSq % 8 != 0 && diagSq < 64; diagSq += 9) {
-                diagonal |= 1ULL << diagSq;
-            }
-            attacks ^= diagonal;
-            break;
-        }
-    }
-
-    // Southeast
-    for (int sq = square - 7; sq % 8 != 0 && sq >= 0; sq -= 7) {
-        if (blockers & (1ULL << sq)) {
-            U64 diagonal = 0ULL;
-            for (int diagSq = sq - 7; diagSq % 8 != 0 && diagSq >= 0; diagSq -= 7) {
-                diagonal |= 1ULL << diagSq;
-            }
-            attacks ^= diagonal;
-            break;
-        }
-    }
-
-    // Southwest
-    for (int sq = square - 9; sq % 8 != 7 && sq >= 0; sq -= 9) {
-        if (blockers & (1ULL << sq)) {
-            U64 diagonal = 0ULL;
-            for (int diagSq = sq - 9; diagSq % 8 != 7 && diagSq >= 0; diagSq -= 9) {
-                diagonal |= 1ULL << diagSq;
-            }
-            attacks ^= diagonal;
-            break;
-        }
-    }
-
-    // Northwest
-    for (int sq = square + 7; sq % 8 != 7 && sq < 64; sq += 7) {
-        if (blockers & (1ULL << sq)) {
-            U64 diagonal = 0ULL;
-            for (int diagSq = sq + 7; diagSq % 8 != 7 && diagSq < 64; diagSq += 7) {
-                diagonal |= 1ULL << diagSq;
-            }
-            attacks ^= diagonal;
-            break;
-        }
-    }
-
-    // Check each direction (N, S, E, W) for blockers
-    // South
-    for (int sq = square - 8; sq >= 0; sq -= 8) {
-        if (blockers & (1ULL << sq)) {
-            U64 south = 0ULL;
-            for (int sSq = sq - 8; sSq >= 0; sSq -= 8) {
-                south |= 1ULL << sSq;
-            }
-            attacks ^= south;
-            break;
-        }
-    }
-
-    // West
-    for (int sq = square - 1; sq % 8 != 7 && sq >= 0; sq--) {
-        if (blockers & (1ULL << sq)) {
-            U64 rank = 0ULL;
-            for (int rankSq = sq - 1; rankSq % 8 != 7 && rankSq >= 0; rankSq--) {
-                rank |= 1ULL << rankSq;
-            }
-            attacks ^= rank;
-            break;
-        }
-    }
-
-    // East
-    for (int sq = square + 1; sq % 8 != 0 && sq < 64; sq++) {
-        if (blockers & (1ULL << sq)) {
-            U64 rank = 0ULL;
-            for (int rankSq = sq + 1; rankSq % 8 != 0 && rankSq < 64; rankSq++) {
-                rank |= 1ULL << rankSq;
-            }
-            attacks ^= rank;
-            break;
-        }
-    }
-
-    // North
-    for (int sq = square + 8; sq < 64; sq += 8) {
-        if (blockers & (1ULL << sq)) {
-            U64 north = 0ULL;
-            for (int nSq = sq + 8; nSq < 64; nSq += 8){
-                north |= 1ULL << nSq;
-            }
-            attacks ^= north;
-            break;
-        }
-    }
-
-    return attacks;
+    // std::cout << "    generateLegalMoves returning, size " << legal.size() << "\n";
+    return legal;
 }
 
 void printMove(const Move &move) {

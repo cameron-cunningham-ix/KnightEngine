@@ -13,18 +13,18 @@ FetchContent_MakeAvailable(googletest)
 # Create test executable
 add_executable(chess_tests
     board_tests.cpp
+    chess_clock_tests.cpp
+    chess_match_tests.cpp
+    engine_player_tests.cpp
+    execution_time_tests.cpp
+    game_state_tests.cpp
+    human_player_tests.cpp
     move_generation_tests.cpp
     move_validation_tests.cpp
-    game_state_tests.cpp
-    utility_tests.cpp
-    execution_time_tests.cpp
-    chess_clock_tests.cpp
-    san_generation_tests.cpp
+    pext_bitboard_tests.cpp
     pgn_tests.cpp
-    human_player_tests.cpp
-    engine_player_tests.cpp
-    chess_match_tests.cpp
-    magic_tests.cpp
+    san_generation_tests.cpp
+    utility_tests.cpp
 )
 
 # Link against GoogleTest and chess engine library

@@ -24,31 +24,39 @@ void ChessMatch::start() {
     
     while (!isMatchOver && !isPaused) {
         // Get the current player
-        IPlayer* currentPlayer = (state.sideToMove == WHITE) ?
+        IPlayer* currentPlayer = (board.getSideToMove() == WHITE) ?
                                 whitePlayer.get() : blackPlayer.get();
-                                
+        // std::cout << "ChessMatch.start currentPlayer " << currentPlayer->getName() << "\n";
         try {
             // Get move from current player
-            Move move = currentPlayer->getMove(board, state, clock);
-            history.addMove(move, board, state, clock.getWhiteTime());
+            DenseMove move = currentPlayer->getMove(board, clock);
+            // std::cout << "ChessMatch.start move returned " << move.getPieceType() << " from "
+            //     << move.getFrom() << " to " << move.getTo() << "\n";
+            history.addMove(move, board, clock.getWhiteTime());
+            // std::cout << "ChessMatch.start move added to history\n";
             
             // Make the move
-            makeMove(board, move);
-            
-            // Update game state and history
-            MoveValidator validator(board, &state);
-            validator.updateGameState(move);
+            board.makeMove(move, false);
+            // std::cout << "ChessMatch.start move made\n";
             
             // Update clock
             clock.makeMove();
+            // std::cout << "ChessMatch.start clock makeMove made\n";
+
             
             // Notify opponent
-            IPlayer* opponent = (state.sideToMove == WHITE) ? 
+            IPlayer* opponent = (board.currentGameState.sideToMove == WHITE) ? 
                                whitePlayer.get() : blackPlayer.get();
+            // std::cout << "ChessMatch.start get opp\n";
+            
             opponent->notifyOpponentMove(move);
+            // std::cout << "ChessMatch.start notified opp\n";
+
             
             // Check for game end conditions
             if (checkForGameEnd()) {
+                // std::cout << "ChessMatch.start game ended\n";
+
                 break;
             }
 
@@ -61,9 +69,9 @@ void ChessMatch::start() {
             isMatchOver = true;
             
             // Determine if this was a resignation
-            result = (state.sideToMove == WHITE) ? 
+            result = (board.currentGameState.sideToMove == WHITE) ? 
                      MatchResult::BlackWin : MatchResult::WhiteWin;
-            terminationReason = (state.sideToMove == WHITE) ? 
+            terminationReason = (board.currentGameState.sideToMove == WHITE) ? 
                                TerminationReason::WhiteResigned :
                                TerminationReason::BlackResigned;
         }
@@ -74,35 +82,43 @@ void ChessMatch::start() {
 }
 
 bool ChessMatch::checkForGameEnd() {
-    MoveValidator validator(board, &state);
-    
+    // std::cout << "ChessMatch checkForGameEnd start\n";
     // Check for checkmate
-    if (validator.isCheckmate(state.sideToMove)) {
+    if (isCheckmate(board)) {
+        // std::cout << "    isCheckmate true\n";
         isMatchOver = true;
-        result = (state.sideToMove == WHITE) ? 
+        result = (board.currentGameState.sideToMove == WHITE) ? 
                  MatchResult::BlackWin : MatchResult::WhiteWin;
         terminationReason = TerminationReason::Checkmate;
         return true;
     }
+        // std::cout << "    isCheckmate false\n";
+
     
     // Check for stalemate
-    if (validator.isStalemate(state.sideToMove)) {
+    if (isStalemate(board)) {
+        // std::cout << "    isStalemate true\n";
         isMatchOver = true;
         result = MatchResult::Draw;
         terminationReason = TerminationReason::Stalemate;
         return true;
     }
+    // std::cout << "    isStalemate false\n";
+
     
     // Check for threefold repetition
     if (isThreefoldRepetition()) {
+        // std::cout << "    isThreefoldRep true\n";
         isMatchOver = true;
         result = MatchResult::Draw;
         terminationReason = TerminationReason::ThreefoldRepetition;
         return true;
     }
+    // std::cout << "    isThreefoldRep false\n";
+
     
     // Check 50-move rule
-    if (state.halfMoveClock >= 100) {
+    if (board.currentGameState.halfMoveClock >= 100) {
         isMatchOver = true;
         result = MatchResult::Draw;
         terminationReason = TerminationReason::FiftyMoveRule;
@@ -175,7 +191,7 @@ void ChessMatch::setTimeControl(const TimeControl& tc) {
 void ChessMatch::setInitialPosition(const std::string& fen) {
     // Set up a custom starting position - only allowed before match starts
     if (!clock.isClockRunning()) {
-        setupPosition(board, state, fen);
+        board.setupPositionFromFEN(fen);
         history = MoveHistory(fen);  // Reset history with new starting position
         
         // Update player names in history

@@ -23,37 +23,30 @@ public:
     MaterialEngine() 
         : ChessEngineBase("MaterialEngine", "0.1", "Cameron Cunningham", 3) {}
 
-    Move findBestMove(const ChessBoard& board, 
-                     const GameState& state,
-                     int maxDepth = -1) override {
+    DenseMove findBestMove(ChessBoard& board, 
+                           int maxDepth = -1) override {
         startSearch();
         int actualDepth = (maxDepth > 0) ? maxDepth : searchDepth;
         
         // Generate all legal moves
-        std::vector<Move> moves = generatePsuedoMoves(board, &state);
-        MoveValidator validator(const_cast<ChessBoard&>(board), 
-                              const_cast<GameState*>(&state));
+        std::vector<DenseMove> moves = MoveGenerator::generateLegalMoves(board);
         
-        int bestScore = state.sideToMove == WHITE ? -999999 : 999999;
-        Move bestMove;
+        int bestScore = board.currentGameState.sideToMove == WHITE ? -999999 : 999999;
+        DenseMove bestMove;
 
         // Evaluate each move
-        for (const Move& move : moves) {
-            if (!validator.isMoveLegal(move)) continue;
-
+        for (const DenseMove& move : moves) {
             // Make move on temporary board
             ChessBoard tempBoard = board;
-            GameState tempState = state;
-            makeMove(tempBoard, move);
-            validator.updateGameState(move);
+            tempBoard.makeMove(move, true);
 
             // Evaluate resulting position
-            int score = -alphaBeta(tempBoard, tempState, actualDepth - 1, 
-                                 -999999, 999999, state.sideToMove == BLACK);
+            int score = -alphaBeta(tempBoard, actualDepth - 1, 
+                                 -999999, 999999, board.currentGameState.sideToMove == BLACK);
 
             // Update best move if better score found
-            if ((state.sideToMove == WHITE && score > bestScore) ||
-                (state.sideToMove == BLACK && score < bestScore)) {
+            if ((board.currentGameState.sideToMove == WHITE && score > bestScore) ||
+                (board.currentGameState.sideToMove == BLACK && score < bestScore)) {
                 bestScore = score;
                 bestMove = move;
             }
@@ -64,7 +57,7 @@ public:
         return bestMove;
     }
 
-    int evaluatePosition(const ChessBoard& board, const GameState& state) override {
+    int evaluatePosition(const ChessBoard& board) override {
         int score = 0;
 
         // Material count
@@ -73,7 +66,7 @@ public:
         // Positional evaluation
         score += evaluatePositional(board, WHITE) - evaluatePositional(board, BLACK);
 
-        return state.sideToMove == WHITE ? score : -score;
+        return board.currentGameState.sideToMove == WHITE ? score : -score;
     }
 
 private:
@@ -140,27 +133,21 @@ private:
     }
 
     // Alpha-beta search implementation
-    int alphaBeta(const ChessBoard& board, const GameState& state, 
-                 int depth, int alpha, int beta, bool maximizing) {
+    int alphaBeta(ChessBoard& board, int depth, int alpha, 
+                  int beta, bool maximizing) {
         if (depth == 0 || !isSearching) {
-            return evaluatePosition(board, state);
+            return evaluatePosition(board);
         }
 
-        std::vector<Move> moves = generatePsuedoMoves(board, &state);
-        MoveValidator validator(const_cast<ChessBoard&>(board), 
-                              const_cast<GameState*>(&state));
+        std::vector<DenseMove> moves = MoveGenerator::generateLegalMoves(board);
 
         if (maximizing) {
             int maxEval = -999999;
-            for (const Move& move : moves) {
-                if (!validator.isMoveLegal(move)) continue;
-
+            for (const DenseMove& move : moves) {
                 ChessBoard tempBoard = board;
-                GameState tempState = state;
-                makeMove(tempBoard, move);
-                validator.updateGameState(move);
+                tempBoard.makeMove(move, true);
 
-                int eval = alphaBeta(tempBoard, tempState, depth - 1, alpha, beta, false);
+                int eval = alphaBeta(tempBoard, depth - 1, alpha, beta, false);
                 maxEval = std::max(maxEval, eval);
                 alpha = std::max(alpha, eval);
                 if (beta <= alpha) break;
@@ -168,15 +155,11 @@ private:
             return maxEval;
         } else {
             int minEval = 999999;
-            for (const Move& move : moves) {
-                if (!validator.isMoveLegal(move)) continue;
-
+            for (const DenseMove& move : moves) {
                 ChessBoard tempBoard = board;
-                GameState tempState = state;
-                makeMove(tempBoard, move);
-                validator.updateGameState(move);
+                tempBoard.makeMove(move, true);
 
-                int eval = alphaBeta(tempBoard, tempState, depth - 1, alpha, beta, true);
+                int eval = alphaBeta(tempBoard, depth - 1, alpha, beta, true);
                 minEval = std::min(minEval, eval);
                 beta = std::min(beta, eval);
                 if (beta <= alpha) break;

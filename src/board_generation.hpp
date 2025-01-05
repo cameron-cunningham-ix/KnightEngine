@@ -3,51 +3,28 @@
 #include "types.hpp"
 #include <iostream>
 #include <bitset>
+#include <vector>
 
-/// @brief Class representing a chess board. Includes GameState information.
+/// @brief Class representing a current state of a chess board, including game state and
+/// move history
 class ChessBoard 
 {
-private:
-    U64 pieceBB[7];       // Bitboard for each piece type corresponding to the DenseType enum
-    U64 colorBB[2];       // Bitboard of all white pieces and all black pieces
-    U64 whiteAttacksBB;   // Bitboard of all squares white attacks
-    U64 blackAttacksBB;   // Bitboard of all squares black attacks
-    
-    // Array of bitboards of all attacks to kings
-    // Index 0: Direct attacks
-    // Index 1: Pin attacks, i.e. attacks that are blocked by one piece
-    //          and would be a check if the blocking piece were removed
-    // Used for move generation and move validation
-    U64 attacksToWhiteKing[2];
-    U64 attacksToBlackKing[2];
-
-    // Board utility
-    static const U64 W_KINGSIDECASTLEMASK =  0x0000000000000060; // 
-    static const U64 W_QUEENSIDECASTLEMASK = 0x0000000000000006; //
-    static const U64 B_KINGSIDECASTLEMASK =  0x6000000000000000; //
-    static const U64 B_QUEENSIDECASTLEMASK = 0x0600000000000000; //
-
-    
-    // Bitboard manipulation methods
-    void setBit(U64 &bb, int index);
-    void clearBit(U64 &bb, int index);
-    bool isBitSet(U64 bb, int index);
-
-    // Private board alteration functions
-    void movePiece(int from, int to, PieceType piece);
-    void removePiece(int square, PieceType piece);
-    void addPiece(int square, PieceType piece);
-    void updateAttacksBitBoards();
-
 public:
-
-    // Default constructor declaration
+    /// @brief Default constructor, sets standard position
     ChessBoard();
 
-    // Bitboard access methods
-    U64 getPieceSet(PieceType pt) const;
+    void setupPositionFromFEN(const std::string &fen);
+    std::string getFEN();
+    void printFEN();
+    // Current board state
+    GameState currentGameState;
+    // History of game states
+    std::vector<GameState> stateHistory;
+    // History of moves
+    std::vector<DenseMove> moveHistory;
 
-    // Piece position getters
+    // Bitboard getters
+    U64 getPieceSet(PieceType pt) const;
     U64 getWhitePawns() const;
     U64 getWhiteKnights() const;
     U64 getWhiteBishops() const;
@@ -64,11 +41,56 @@ public:
     U64 getBlackPieces() const;
     U64 getAllPieces() const;
     U64 getEmptySquares() const;
-
+    U64 getAttacksToKing(Color side) const;
+    U64 getOrthogonalOpp(Color side) const;
+    U64 getDiagonalOpp(Color side) const;
+    // King square getters
+    int getWhiteKingSquare() const;
+    int getBlackKingSquare() const;
+    // State getters
+    Color getSideToMove() const;
+    Color getOppSide() const;
+    
     // Piece type getter
     PieceType getPieceAt(int index) const;
+    DenseType getDenseTypeAt(int index) const;
 
-    // Board initialization methods
+    // Whether current side to move is in check
+    bool isInCheck();
+    // Whether 'side' is in check
+    bool isSideInCheck(Color side);
+    // How many pieces are checking current side's king
+    int getCheckCount() const;
+
+    // Attack calculation methods
+    U64 OppAttacksToSquare(int indexOfSquare, Color colorOfKing) const;
+
+    // Public board alteration methods
+    void makeMove(DenseMove move, bool searching);
+    void unmakeMove(DenseMove move, bool searching);
+
+    // Debug printing methods
+    void printBB(int i);
+    void printBB(U64 bitb);
+    void printBoardInfo(bool fullInfo = true);
+
+private:
+    U64 pieceBB[7];         // Bitboards for each piece type corresponding to the DenseType enum
+    U64 colorBB[2];         // Bitboards of all white pieces and all black pieces
+    U64 attacksToKings[2];  // Bitboards for the current attack masks to the kings
+    /* Board keeps a cached check value rather than just calculating it per move and storing 
+     * that value since there are instances where we 
+     *  
+     */
+    bool hasCachedInCheckValue; // Whether there is a cached inCheck value for this position
+    bool cachedInCheckValue;    // In check value for current side to move
+    // King squares - 0 = WHITE, 1 - BLACK for easy calculating
+    int kingSquares[2];
+    int checkingCount;          // The number of pieces currently checking the current side's king
+
+    
+
+    // Normal board initialization methods
     void initializeWhiteBB();
     void initializeBlackBB();
     void initializeEmptyBB();
@@ -78,16 +100,13 @@ public:
     void initializeRooksBB();
     void initializeQueensBB();
     void initializeKingsBB();
+    void initializeGameState();
 
 
-    // Attack calculation methods
-    U64 OppAttacksToSquare(int indexOfSquare, Color colorOfKing) const;
+    // Private board alteration functions
+    void movePiece(int from, int to, PieceType piece);
+    void removePiece(int square, PieceType piece);
+    void addPiece(int square, PieceType piece);
 
-    // Public board alteration methods
-    bool makeMove(DenseMove move, bool safeMode = true);
-    void unmakeMove(DenseMove move);
-
-    // Debug printing methods
-    void printBB(int i);
-    void printBB(U64 bitb);
+    bool calculateIsInCheck();
 };

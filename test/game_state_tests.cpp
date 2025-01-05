@@ -1,44 +1,39 @@
 // test/game_state_tests.cpp
-#include <gtest/gtest.h>
 #include "../src/moves.hpp"
+#include "../src/pext_bitboard.hpp"
+#include <gtest/gtest.h>
 
 class GameStateTest : public ::testing::Test {
 protected:
     ChessBoard board;
-    GameState state;
-    MoveValidator* validator;
 
     void SetUp() override {
+        // Initialize PEXT
+        PEXT::initialize();
         board = ChessBoard();
-        state = GameState();
-        validator = new MoveValidator(board, &state);
     }
 
-    void setBoard(ChessBoard newBoard, GameState newState) {
+    void setBoard(ChessBoard newBoard) {
         board = newBoard;
-        state = newState;
-        validator = new MoveValidator(board, &state);
-        //validator = new MoveValidator(board, &state);
     }
 };
 
 // Test castling rights updates
 TEST_F(GameStateTest, CastlingRightsUpdate) {
     // Move king's rook
-    setupPosition(board, state, "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1");
-    setBoard(board, state);
-    Move rookMove{W_ROOK, 7, 15, false, false};
-    validator->updateGameState(rookMove);
+    board.setupPositionFromFEN("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1");
+    DenseMove rookMove{W_ROOK, 7, 15};
+    board.makeMove(rookMove, false);
     
-    EXPECT_FALSE(state.canCastleWhiteKingside);
-    EXPECT_TRUE(state.canCastleWhiteQueenside);
+    EXPECT_FALSE(board.currentGameState.canCastleWhiteKingside);
+    EXPECT_TRUE(board.currentGameState.canCastleWhiteQueenside);
 }
 
 // Test en passant square updates
 TEST_F(GameStateTest, EnPassantUpdate) {
     // Make a two-square pawn move
-    Move pawnMove{W_PAWN, 8, 24, false, false};
-    validator->updateGameState(pawnMove);
+    DenseMove pawnMove{W_PAWN, 8, 24};
+    board.makeMove(pawnMove, false);
     
-    EXPECT_EQ(state.enPassantSquare, 16);
+    EXPECT_EQ(board.currentGameState.enPassantSquare, 16);
 }

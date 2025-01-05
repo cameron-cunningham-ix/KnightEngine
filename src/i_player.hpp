@@ -20,13 +20,12 @@ public:
     
     // Get a move from this player given the current game state
     // Returns the chosen move, or throws if no valid move can be made
-    virtual Move getMove(const ChessBoard& board, 
-                        const GameState& state,
-                        const ChessClock& clock) = 0;
+    virtual DenseMove getMove(ChessBoard& board, 
+                              const ChessClock& clock) = 0;
     
     // Notify the player of the opponent's move
     // Useful for AI players to update their game tree
-    virtual void notifyOpponentMove(const Move& move) = 0;
+    virtual void notifyOpponentMove(const DenseMove& move) = 0;
     
     // Get the player's displayed name
     virtual std::string getName() const = 0;

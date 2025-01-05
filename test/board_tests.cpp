@@ -1,6 +1,10 @@
 // test/board_tests.cpp
-#include <gtest/gtest.h>
 #include "../src/board_generation.hpp"
+#include "../src/pext_bitboard.hpp"
+#include "../src/board_utility.hpp"
+#include <gtest/gtest.h>
+#include <iostream>
+#include <fstream>
 #include <utility.hpp>
 
 class ChessBoardTest : public ::testing::Test {
@@ -9,6 +13,7 @@ protected:
 
     void SetUp() override {
         // Called before each test
+        PEXT::initialize();
         board = ChessBoard();
     }
 };
@@ -30,25 +35,9 @@ TEST_F(ChessBoardTest, InitialBoardSetup) {
     EXPECT_EQ(board.getBlackRooks(), 0x8100000000000000ULL);
     EXPECT_EQ(board.getBlackQueens(), 0x0800000000000000ULL);
     EXPECT_EQ(board.getBlackKings(), 0x1000000000000000ULL);
-
     EXPECT_EQ(board.getAllPieces(), 0xFFFF00000000FFFFULL);
-}
+    EXPECT_EQ(board.getEmptySquares(), 0x0000FFFFFFFF0000ULL);
 
-// Test bitboard operations
-TEST_F(ChessBoardTest, BitboardOperations) {
-    // Test setBit
-    U64 bb = 0ULL;
-    board.setBit(bb, 8);  // Set a2 square
-    EXPECT_EQ(bb, 0x0000000000000100ULL);
-
-    // Test clearBit
-    board.clearBit(bb, 8);
-    EXPECT_EQ(bb, 0ULL);
-
-    // Test isBitSet
-    board.setBit(bb, 8);
-    EXPECT_TRUE(board.isBitSet(bb, 8));
-    EXPECT_FALSE(board.isBitSet(bb, 9));
 }
 
 // Test getPieceBitboard
@@ -108,8 +97,7 @@ TEST_F(ChessBoardTest, GetPieceAt) {
     EXPECT_EQ(board.getPieceAt(55), B_PAWN);
 
     // Random position
-    GameState state;
-    setupPosition(board, state, "1nb2r2/rppkqp1p/p2p1npb/4p2Q/1PB1P3/P1N5/1BPPNPPP/2KR1R2 w - - 6 11");
+    board.setupPositionFromFEN("1nb2r2/rppkqp1p/p2p1npb/4p2Q/1PB1P3/P1N5/1BPPNPPP/2KR1R2 w - - 6 11");
     EXPECT_EQ(board.getPieceAt(3), W_ROOK);
     EXPECT_EQ(board.getPieceAt(12), W_KNIGHT);
     EXPECT_EQ(board.getPieceAt(9), W_BISHOP);
@@ -145,22 +133,444 @@ TEST_F(ChessBoardTest, GetPieceAt) {
     EXPECT_EQ(board.getPieceAt(55), B_PAWN);
 }
 
+// Test getDenseTypeAt
+TEST_F(ChessBoardTest, GetDenseTypeAt) {
+    // Test initial position
+    EXPECT_EQ(board.getDenseTypeAt(0), D_ROOK);
+    EXPECT_EQ(board.getDenseTypeAt(1), D_KNIGHT);
+    EXPECT_EQ(board.getDenseTypeAt(2), D_BISHOP);
+    EXPECT_EQ(board.getDenseTypeAt(3), D_QUEEN);
+    EXPECT_EQ(board.getDenseTypeAt(4), D_KING);
+    EXPECT_EQ(board.getDenseTypeAt(5), D_BISHOP);
+    EXPECT_EQ(board.getDenseTypeAt(6), D_KNIGHT);
+    EXPECT_EQ(board.getDenseTypeAt(7), D_ROOK);
+    EXPECT_EQ(board.getDenseTypeAt(8), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(9), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(10), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(11), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(12), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(13), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(14), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(15), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(56), D_ROOK);
+    EXPECT_EQ(board.getDenseTypeAt(57), D_KNIGHT);
+    EXPECT_EQ(board.getDenseTypeAt(58), D_BISHOP);
+    EXPECT_EQ(board.getDenseTypeAt(59), D_QUEEN);
+    EXPECT_EQ(board.getDenseTypeAt(60), D_KING);
+    EXPECT_EQ(board.getDenseTypeAt(61), D_BISHOP);
+    EXPECT_EQ(board.getDenseTypeAt(62), D_KNIGHT);
+    EXPECT_EQ(board.getDenseTypeAt(63), D_ROOK);
+    EXPECT_EQ(board.getDenseTypeAt(48), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(49), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(50), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(51), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(52), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(53), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(54), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(55), D_PAWN);
+
+    // Random position
+    board.setupPositionFromFEN("1nb2r2/rppkqp1p/p2p1npb/4p2Q/1PB1P3/P1N5/1BPPNPPP/2KR1R2 w - - 6 11");
+    EXPECT_EQ(board.getDenseTypeAt(3), D_ROOK);
+    EXPECT_EQ(board.getDenseTypeAt(12), D_KNIGHT);
+    EXPECT_EQ(board.getDenseTypeAt(9), D_BISHOP);
+    EXPECT_EQ(board.getDenseTypeAt(39), D_QUEEN);
+    EXPECT_EQ(board.getDenseTypeAt(2), D_KING);
+    EXPECT_EQ(board.getDenseTypeAt(26), D_BISHOP);
+    EXPECT_EQ(board.getDenseTypeAt(18), D_KNIGHT);
+    EXPECT_EQ(board.getDenseTypeAt(5), D_ROOK);
+    EXPECT_EQ(board.getDenseTypeAt(16), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(25), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(10), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(11), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(28), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(13), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(14), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(15), D_PAWN);
+
+    EXPECT_EQ(board.getDenseTypeAt(61), D_ROOK);
+    EXPECT_EQ(board.getDenseTypeAt(57), D_KNIGHT);
+    EXPECT_EQ(board.getDenseTypeAt(58), D_BISHOP);
+    EXPECT_EQ(board.getDenseTypeAt(52), D_QUEEN);
+    EXPECT_EQ(board.getDenseTypeAt(51), D_KING);
+    EXPECT_EQ(board.getDenseTypeAt(47), D_BISHOP);
+    EXPECT_EQ(board.getDenseTypeAt(45), D_KNIGHT);
+    EXPECT_EQ(board.getDenseTypeAt(48), D_ROOK);
+    EXPECT_EQ(board.getDenseTypeAt(40), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(49), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(50), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(43), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(36), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(53), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(46), D_PAWN);
+    EXPECT_EQ(board.getDenseTypeAt(55), D_PAWN);
+}
+
+// Test makeMove
+TEST_F(ChessBoardTest, MakeMove1) {
+    testing::internal::CaptureStdout();
+
+    std::ofstream outfile("MakeMove1.txt");
+    if (outfile.is_open()) {
+        outfile << "MakeMove1 test: " << std::endl;
+    }
+    // Test position, lots of possible moves
+    board.setupPositionFromFEN("1qrnb2k/5ppp/8/8/8/8/PPP5/K2BNRQ1 w - - 0 1");
+    board.printBoardInfo(false);
+    
+    board.makeMove(DenseMove(W_PAWN, BoardUtility::A2, BoardUtility::A3), false);
+    outfile << "White pawn move\n";
+    board.printBoardInfo(false);
+
+    board.unmakeMove(DenseMove(W_PAWN, BoardUtility::A2, BoardUtility::A3), false);
+    outfile << "White pawn move unmade\nAll pieces: ";
+    board.printBoardInfo(false);
+
+    board.makeMove(DenseMove(B_PAWN, BoardUtility::H7, BoardUtility::H6), false);
+    outfile << "Black pawn move\nAll pieces: ";
+    board.printBoardInfo(false);
+
+    board.unmakeMove(DenseMove(B_PAWN, BoardUtility::H7, BoardUtility::H6), false);
+    outfile << "Black pawn move unmade\nAll pieces: ";
+    board.printBoardInfo(false);
+
+    board.makeMove(DenseMove(W_BISHOP, BoardUtility::D1, BoardUtility::E2), false);
+    outfile << "White bishop move\nAll pieces: ";
+    board.printBoardInfo(false);
+
+    board.unmakeMove(DenseMove(W_BISHOP, BoardUtility::D1, BoardUtility::E2), false);
+    outfile << "White bishop move unmade\nAll pieces: ";
+    board.printBoardInfo(false);
+
+    board.makeMove(DenseMove(B_BISHOP, BoardUtility::E8, BoardUtility::D7), false);
+    outfile << "Black bishop move\nAll pieces: ";
+    board.printBoardInfo(false);
+
+    board.unmakeMove(DenseMove(B_BISHOP, BoardUtility::E8, BoardUtility::D7), false);
+    outfile << "Black bishop move unmade\nAll pieces: ";
+    board.printBoardInfo(false);
+
+    board.makeMove(DenseMove(W_KNIGHT, BoardUtility::E1, BoardUtility::F3), false);
+    outfile << "White knight move\nAll pieces: ";
+    board.printBoardInfo(false);
+
+    board.unmakeMove(DenseMove(W_KNIGHT, BoardUtility::E1, BoardUtility::F3), false);
+    outfile << "White knight move unmade\nAll pieces: ";
+    board.printBoardInfo(false);
+
+    board.makeMove(DenseMove(B_KNIGHT, BoardUtility::D8, BoardUtility::E6), false);
+    outfile << "Black knight move\nAll pieces: ";
+    board.printBoardInfo(false);
+    
+    board.unmakeMove(DenseMove(B_KNIGHT, BoardUtility::D8, BoardUtility::E6), false);
+    outfile << "Black knight move unmade\nAll pieces: ";
+    board.printBoardInfo(false);
+
+    board.makeMove(DenseMove(W_ROOK, BoardUtility::F1, BoardUtility::F2), false);
+    outfile << "White rook move\nAll pieces: ";
+    board.printBoardInfo(false);
+
+    board.unmakeMove(DenseMove(W_ROOK, BoardUtility::F1, BoardUtility::F2), false);
+    outfile << "White rook move unmade\nAll pieces: ";
+    board.printBoardInfo(false);
+
+    board.makeMove(DenseMove(B_ROOK, BoardUtility::C8, BoardUtility::C7), false);
+    outfile << "Black rook move\nAll pieces: ";
+    board.printBoardInfo(false);
+
+    board.unmakeMove(DenseMove(B_ROOK, BoardUtility::C8, BoardUtility::C7), false);
+    outfile << "Black rook move unmade\nAll pieces: ";
+    board.printBoardInfo(false);
+
+    board.makeMove(DenseMove(W_QUEEN, BoardUtility::G1, BoardUtility::G3), false);
+    outfile << "White queen move\nAll pieces: ";
+    board.printBoardInfo(false);
+
+    board.unmakeMove(DenseMove(W_QUEEN, BoardUtility::G1, BoardUtility::G3), false);
+    outfile << "White queen move unmade\nAll pieces: ";
+    board.printBoardInfo(false);
+
+
+    board.makeMove(DenseMove(B_QUEEN, BoardUtility::B8, BoardUtility::B5), false);
+    outfile << "Black queen move\nAll pieces: ";
+    board.printBoardInfo(false);
+
+    board.unmakeMove(DenseMove(B_QUEEN, BoardUtility::B8, BoardUtility::B5), false);
+    outfile << "Black queen move unmade\nAll pieces: ";
+    board.printBoardInfo(false);
+
+
+    board.makeMove(DenseMove(W_KING, BoardUtility::A1, BoardUtility::B1), false);
+    outfile << "White king move\nAll pieces: ";
+    board.printBoardInfo(false);
+
+    board.unmakeMove(DenseMove(W_KING, BoardUtility::A1, BoardUtility::B1), false);
+    outfile << "White king move unmade\nAll pieces: ";
+    board.printBoardInfo(false);
+
+
+    DenseMove b_king(B_KING, BoardUtility::H8, BoardUtility::G8);
+    outfile << "B King Move: \n";
+    outfile << " DType " << b_king.getDenseType() <<
+         " PType " << b_king.getPieceType() <<
+         " getColor " << b_king.getColor() <<
+         " getFrom " << b_king.getFrom() << 
+         " getTo " << b_king.getTo() <<
+         " getCaptDense " << b_king.getCaptDense() <<
+         " getCaptPiece " << b_king.getCaptPiece() <<
+         " isCastle " << b_king.isCastle() <<
+         " getPromoteDense " << b_king.getPromoteDense() <<
+         " getPromotePiece " << b_king.getPromotePiece() << "\n";
+    board.makeMove(b_king, false);
+    board.printBoardInfo(false);
+
+    board.unmakeMove(b_king, false);
+    outfile << "Black king move unmade\nAll pieces: ";
+    board.printBoardInfo(false);
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
+}
+
+// Test attacks to kings
+TEST_F(ChessBoardTest, GetAttacksToKing1) {
+    // Initial position, no attacks either side
+    EXPECT_EQ(board.getAttacksToKing(WHITE), 0ULL);
+    EXPECT_EQ(board.getAttacksToKing(BLACK), 0ULL);
+
+
+}
+
+TEST_F(ChessBoardTest, GetKingSquare1) {
+    // Initial position
+    EXPECT_EQ(board.getWhiteKingSquare(), 4);
+    EXPECT_EQ(board.getBlackKingSquare(), 60);
+    
+    // Random position
+    board.setupPositionFromFEN("rnbq1bnr/pppp1ppp/5k2/4p3/4P3/3K4/PPPP1PPP/RNBQ1BNR w - - 4 4");
+    EXPECT_EQ(board.getWhiteKingSquare(), BoardUtility::D3);
+    EXPECT_EQ(board.getBlackKingSquare(), BoardUtility::F6);
+    // Check after makeMove
+    board.makeMove(DenseMove(W_KING, BoardUtility::D3, BoardUtility::C4), false);
+    EXPECT_EQ(board.getWhiteKingSquare(), BoardUtility::C4);
+    board.makeMove(DenseMove(B_KING, BoardUtility::F6, BoardUtility::G6), false);
+    // Check after unmakeMove
+    board.unmakeMove(DenseMove(B_KING, BoardUtility::F6, BoardUtility::G6), false);
+    EXPECT_EQ(board.getBlackKingSquare(), BoardUtility::F6);
+
+    board.unmakeMove(DenseMove(W_KING, BoardUtility::D3, BoardUtility::C4), false);
+    EXPECT_EQ(board.getWhiteKingSquare(), BoardUtility::D3);
+}
+
 // Test basic OppAttacksToSquare
 TEST_F(ChessBoardTest, AttacksToSquare1) {
     // Initial position, white king - no attacks
     EXPECT_EQ(board.OppAttacksToSquare(4, WHITE), 0x0ULL);
-    GameState state;
     // Test position, white pawn on b5
-    setupPosition(board, state, "8/2p5/3p4/KP5r/1R3p1k/4P3/6P1/8 w - - 0 1");
-    printBitboard(board.OppAttacksToSquare(33, WHITE));
+    board.setupPositionFromFEN("8/2p5/3p4/KP5r/1R3p1k/4P3/6P1/8 w - - 0 1");
+    // printBitboard(board.OppAttacksToSquare(33, WHITE));
     EXPECT_EQ(board.OppAttacksToSquare(33, WHITE), 0b0000000000000000000000001000000000000000000000000000000000000000);
 }
 
 // Test more OppAttacksToSquare
 TEST_F(ChessBoardTest, AttacksToSquare2) {
-    GameState state;
     // Test position, white pawn on b5
-    setupPosition(board, state, "1r6/2p5/3n4/KP5r/1R3p1k/4P3/6P1/8 w - - 0 1");
-    printBitboard(board.OppAttacksToSquare(33, WHITE));
+    board.setupPositionFromFEN("1r6/2p5/3n4/KP5r/1R3p1k/4P3/6P1/8 w - - 0 1");
+    // printBitboard(board.OppAttacksToSquare(33, WHITE));
     EXPECT_EQ(board.OppAttacksToSquare(33, WHITE), 0b0000001000000000000010001000000000000000000000000000000000000000);
+}
+
+// Test initial game state
+TEST_F(ChessBoardTest, GameState1) {
+    EXPECT_EQ(board.currentGameState.sideToMove, WHITE);
+    EXPECT_EQ(board.getSideToMove(), WHITE);
+    EXPECT_EQ(board.getOppSide(), BLACK);
+    EXPECT_EQ(board.currentGameState.enPassantSquare, -1);
+    EXPECT_EQ(board.currentGameState.fullMoveNumber, 1);
+    EXPECT_EQ(board.currentGameState.halfMoveClock, 0);
+    EXPECT_EQ(board.currentGameState.canCastleWhiteKingside, true);
+    EXPECT_EQ(board.currentGameState.canCastleWhiteQueenside, true);
+    EXPECT_EQ(board.currentGameState.canCastleBlackKingside, true);
+    EXPECT_EQ(board.currentGameState.canCastleBlackQueenside, true);
+}
+
+// Test game state from FEN setup
+TEST_F(ChessBoardTest, GameState2) {
+    // Starting position
+    board.setupPositionFromFEN("rnbqkbnr/ppp2ppp/8/3pp3/2B1P3/8/PPPP1PPP/RNBQK1NR w KQkq - 0 3");
+    EXPECT_EQ(board.currentGameState.sideToMove, WHITE);
+    EXPECT_EQ(board.getSideToMove(), WHITE);
+    EXPECT_EQ(board.getOppSide(), BLACK);
+    EXPECT_EQ(board.currentGameState.enPassantSquare, -1);
+    EXPECT_EQ(board.currentGameState.fullMoveNumber, 3);
+    EXPECT_EQ(board.currentGameState.halfMoveClock, 0);
+    EXPECT_EQ(board.currentGameState.canCastleWhiteKingside, true);
+    EXPECT_EQ(board.currentGameState.canCastleWhiteQueenside, true);
+    EXPECT_EQ(board.currentGameState.canCastleBlackKingside, true);
+    EXPECT_EQ(board.currentGameState.canCastleBlackQueenside, true);
+}
+
+// Test game state from FEN setup
+TEST_F(ChessBoardTest, GameState3) {
+    // Starting position
+    board.setupPositionFromFEN("rnbqkbnr/ppp2ppp/8/3pp3/2B1P3/8/PPPP1PPP/RNBQK1NR b KQkq - 0 3");
+    EXPECT_EQ(board.currentGameState.sideToMove, BLACK);
+    EXPECT_EQ(board.getSideToMove(), BLACK);
+    EXPECT_EQ(board.getOppSide(), WHITE);
+    EXPECT_EQ(board.currentGameState.enPassantSquare, -1);
+    EXPECT_EQ(board.currentGameState.fullMoveNumber, 3);
+    EXPECT_EQ(board.currentGameState.halfMoveClock, 0);
+    EXPECT_EQ(board.currentGameState.canCastleWhiteKingside, true);
+    EXPECT_EQ(board.currentGameState.canCastleWhiteQueenside, true);
+    EXPECT_EQ(board.currentGameState.canCastleBlackKingside, true);
+    EXPECT_EQ(board.currentGameState.canCastleBlackQueenside, true);
+}
+
+// Test game state from FEN setup
+TEST_F(ChessBoardTest, GameState4) {
+    // Starting position
+    board.setupPositionFromFEN("rnbqkbnr/pp3ppp/8/2pPp3/2B5/8/PPPP1PPP/RNBQK1NR w KQkq c6 0 4");
+    EXPECT_EQ(board.currentGameState.sideToMove, WHITE);
+    EXPECT_EQ(board.getSideToMove(), WHITE);
+    EXPECT_EQ(board.getOppSide(), BLACK);
+    EXPECT_EQ(board.currentGameState.enPassantSquare, BoardUtility::C6);    // Square behind pawn
+    EXPECT_EQ(board.currentGameState.fullMoveNumber, 4);
+    EXPECT_EQ(board.currentGameState.halfMoveClock, 0);
+    EXPECT_EQ(board.currentGameState.canCastleWhiteKingside, true);
+    EXPECT_EQ(board.currentGameState.canCastleWhiteQueenside, true);
+    EXPECT_EQ(board.currentGameState.canCastleBlackKingside, true);
+    EXPECT_EQ(board.currentGameState.canCastleBlackQueenside, true);
+}
+
+// Test game state from FEN setup
+TEST_F(ChessBoardTest, GameState5) {
+    // Starting position
+    board.setupPositionFromFEN("rnbqkbnr/pp3ppp/8/2pPp3/2B5/8/PPPPKPPP/RNBQ2NR b kq - 1 4");
+    EXPECT_EQ(board.currentGameState.sideToMove, BLACK);
+    EXPECT_EQ(board.getSideToMove(), BLACK);
+    EXPECT_EQ(board.getOppSide(), WHITE);
+    EXPECT_EQ(board.currentGameState.enPassantSquare, -1);    // Square behind pawn
+    EXPECT_EQ(board.currentGameState.fullMoveNumber, 4);
+    EXPECT_EQ(board.currentGameState.halfMoveClock, 1);
+    EXPECT_EQ(board.currentGameState.canCastleWhiteKingside, false);
+    EXPECT_EQ(board.currentGameState.canCastleWhiteQueenside, false);
+    EXPECT_EQ(board.currentGameState.canCastleBlackKingside, true);
+    EXPECT_EQ(board.currentGameState.canCastleBlackQueenside, true);
+}
+
+// Test game state from play
+TEST_F(ChessBoardTest, GameState6) {
+    // Starting position
+    board.makeMove(DenseMove(W_PAWN, BoardUtility::E2, BoardUtility::E3), true);
+    EXPECT_EQ(board.currentGameState.sideToMove, BLACK);
+    EXPECT_EQ(board.getSideToMove(), BLACK);
+    EXPECT_EQ(board.getOppSide(), WHITE);
+    EXPECT_EQ(board.currentGameState.enPassantSquare, -1);    // Square behind pawn
+    EXPECT_EQ(board.currentGameState.fullMoveNumber, 1);
+    EXPECT_EQ(board.currentGameState.halfMoveClock, 0);     // Pawns don't increase HMC
+    EXPECT_EQ(board.currentGameState.canCastleWhiteKingside, true);
+    EXPECT_EQ(board.currentGameState.canCastleWhiteQueenside, true);
+    EXPECT_EQ(board.currentGameState.canCastleBlackKingside, true);
+    EXPECT_EQ(board.currentGameState.canCastleBlackQueenside, true);
+
+    board.makeMove(DenseMove(B_PAWN, BoardUtility::E7, BoardUtility::E5), true);
+    EXPECT_EQ(board.currentGameState.sideToMove, WHITE);
+    EXPECT_EQ(board.getSideToMove(), WHITE);
+    EXPECT_EQ(board.getOppSide(), BLACK);
+    EXPECT_EQ(board.currentGameState.enPassantSquare, BoardUtility::E6);    // Square behind pawn
+    EXPECT_EQ(board.currentGameState.fullMoveNumber, 2);
+    EXPECT_EQ(board.currentGameState.halfMoveClock, 0);
+    EXPECT_EQ(board.currentGameState.canCastleWhiteKingside, true);
+    EXPECT_EQ(board.currentGameState.canCastleWhiteQueenside, true);
+    EXPECT_EQ(board.currentGameState.canCastleBlackKingside, true);
+    EXPECT_EQ(board.currentGameState.canCastleBlackQueenside, true);
+
+    board.unmakeMove(DenseMove(B_PAWN, BoardUtility::E7, BoardUtility::E5), true);
+    EXPECT_EQ(board.currentGameState.sideToMove, BLACK);
+    EXPECT_EQ(board.getSideToMove(), BLACK);
+    EXPECT_EQ(board.getOppSide(), WHITE);
+    EXPECT_EQ(board.currentGameState.enPassantSquare, -1);    // Square behind pawn
+    EXPECT_EQ(board.currentGameState.fullMoveNumber, 1);
+    EXPECT_EQ(board.currentGameState.halfMoveClock, 0);     // Pawns don't increase HMC
+    EXPECT_EQ(board.currentGameState.canCastleWhiteKingside, true);
+    EXPECT_EQ(board.currentGameState.canCastleWhiteQueenside, true);
+    EXPECT_EQ(board.currentGameState.canCastleBlackKingside, true);
+    EXPECT_EQ(board.currentGameState.canCastleBlackQueenside, true);
+
+}
+
+// Test checks in initial states
+TEST_F(ChessBoardTest, IsInCheck1) {
+    // Test initial position
+    EXPECT_EQ(board.isInCheck(), false);
+    EXPECT_EQ(board.isSideInCheck(WHITE), false);
+    EXPECT_EQ(board.isSideInCheck(BLACK), false);
+    EXPECT_EQ(board.getCheckCount(), 0);
+
+    // Test random position not in check
+    board.setupPositionFromFEN("r1bq1rk1/p1pp2pp/2n2n2/1p2pp2/3PPB2/b1N2N2/PPP1QPPP/R2K1B1R w - - 3 8");
+    EXPECT_EQ(board.isInCheck(), false);
+    EXPECT_EQ(board.isSideInCheck(WHITE), false);
+    EXPECT_EQ(board.isSideInCheck(BLACK), false);
+    EXPECT_EQ(board.getCheckCount(), 0);
+
+    // Test position in check
+    board.setupPositionFromFEN("r1bq1rk1/p1pp2pp/2n2n2/1p2pp2/2QPPB2/b1N2N2/PPP2PPP/R2K1B1R b - - 4 8");
+    EXPECT_EQ(board.isInCheck(), true);
+    EXPECT_EQ(board.isSideInCheck(WHITE), false);
+    EXPECT_EQ(board.isSideInCheck(BLACK), true);
+    EXPECT_EQ(board.getCheckCount(), 1);
+
+}
+
+// Test checks in play states
+TEST_F(ChessBoardTest, IsInCheck2) {
+    board.makeMove(DenseMove(W_PAWN, BoardUtility::E2, BoardUtility::E4), false);
+    EXPECT_EQ(board.isInCheck(), false);
+    EXPECT_EQ(board.isSideInCheck(WHITE), false);
+    EXPECT_EQ(board.isSideInCheck(BLACK), false);
+    EXPECT_EQ(board.getCheckCount(), 0);
+
+    board.makeMove(DenseMove(B_PAWN, BoardUtility::E7, BoardUtility::E5), false);
+    EXPECT_EQ(board.isInCheck(), false);
+    EXPECT_EQ(board.isSideInCheck(WHITE), false);
+    EXPECT_EQ(board.isSideInCheck(BLACK), false);
+    EXPECT_EQ(board.getCheckCount(), 0);
+
+    board.makeMove(DenseMove(W_BISHOP, BoardUtility::F1, BoardUtility::B5), false);
+    EXPECT_EQ(board.isInCheck(), false);
+    EXPECT_EQ(board.isSideInCheck(WHITE), false);
+    EXPECT_EQ(board.isSideInCheck(BLACK), false);
+    EXPECT_EQ(board.getCheckCount(), 0);
+
+    board.makeMove(DenseMove(B_BISHOP, BoardUtility::F8, BoardUtility::B4), false);
+    EXPECT_EQ(board.isInCheck(), false);
+    EXPECT_EQ(board.isSideInCheck(WHITE), false);
+    EXPECT_EQ(board.isSideInCheck(BLACK), false);
+    EXPECT_EQ(board.getCheckCount(), 0);
+
+    board.makeMove(DenseMove(W_BISHOP, BoardUtility::B5, BoardUtility::D7, D_PAWN), false);
+    EXPECT_EQ(board.isInCheck(), true);
+    EXPECT_EQ(board.isSideInCheck(WHITE), false);
+    EXPECT_EQ(board.isSideInCheck(BLACK), true);
+    EXPECT_EQ(board.getCheckCount(), 1);
+
+    board.unmakeMove(DenseMove(W_BISHOP, BoardUtility::B5, BoardUtility::D7, D_PAWN), false);
+    EXPECT_EQ(board.isInCheck(), false);
+    EXPECT_EQ(board.isSideInCheck(WHITE), false);
+    EXPECT_EQ(board.isSideInCheck(BLACK), false);
+    EXPECT_EQ(board.getCheckCount(), 0);
+    
+}
+
+// Test getFEN from initial position
+TEST_F(ChessBoardTest, GetFEN1) {
+    EXPECT_EQ(board.getFEN(), "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+}
+
+// Test getFEN from random position
+TEST_F(ChessBoardTest, GetFEN2) {
+    board.setupPositionFromFEN("r1bq1rk1/p1pp2pp/2n2n2/1p2pp2/3PPB2/b1N2N2/PPP1QPPP/R2K1B1R w - - 3 8");
+    EXPECT_EQ(board.getFEN(), "r1bq1rk1/p1pp2pp/2n2n2/1p2pp2/3PPB2/b1N2N2/PPP1QPPP/R2K1B1R w - - 3 8");
 }

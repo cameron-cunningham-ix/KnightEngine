@@ -1,9 +1,9 @@
 #pragma once
 
+#include "types.hpp"
 #include <chrono>
 #include <mutex>
 #include <atomic>
-#include "types.hpp"
 
 // Time control structure to define various types of time controls
 struct TimeControl {

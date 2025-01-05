@@ -22,6 +22,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_library(KnightEngine
     src/board_generation.cpp
     src/board_generation.hpp
+    src/board_utility.hpp
     src/chess_clock.cpp
     src/chess_clock.hpp
     src/chess_engine_base.cpp
@@ -33,13 +34,14 @@ add_library(KnightEngine
     src/human_player.cpp
     src/human_player.hpp
     src/i_chess_engine.hpp
-    src/magic_bitboards.hpp
+    src/i_player.hpp
     src/material_engine.hpp
     src/move_history.cpp
     src/move_history.hpp
     src/moves.cpp
     src/moves.hpp
-    src/player.hpp
+    src/pext_bitboard.cpp
+    src/pext_bitboard.hpp
     src/random_engine.hpp
     src/types.hpp
     src/utility.cpp

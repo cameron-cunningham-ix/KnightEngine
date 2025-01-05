@@ -4,7 +4,7 @@
 #include "moves.hpp"
 #include "chess_clock.hpp"
 #include "move_history.hpp"
-#include "player.hpp"
+#include "i_player.hpp"
 #include <memory>
 #include <string>
 
@@ -37,7 +37,6 @@ class ChessMatch {
 private:
     // Core game components
     ChessBoard board;
-    GameState state;
     MoveHistory history;
     ChessClock clock;
     
@@ -77,7 +76,7 @@ public:
     
     // Access to game components (const only)
     const ChessBoard& getBoard() const { return board; }
-    const GameState& getState() const { return state; }
+    const GameState& getState() const { return board.currentGameState; }
     const MoveHistory& getHistory() const { return history; }
     const ChessClock& getClock() const { return clock; }
     static std::string getCurrentDate();

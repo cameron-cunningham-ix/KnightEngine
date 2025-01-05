@@ -1,16 +1,17 @@
 // test/utility_tests.cpp
-#include <gtest/gtest.h>
 #include "../src/utility.hpp"
+#include "../src/pext_bitboard.hpp"
+#include <gtest/gtest.h>
 
 class UtilityTest : public ::testing::Test {
 protected:
     ChessBoard board;  // Fresh board for each test
-    GameState state;
 
     void SetUp() override {
+        // Initialize PEXT
+        PEXT::initialize();
         // Called before each test
         board = ChessBoard();
-        state = GameState();
     }
 };
 
@@ -109,7 +110,7 @@ TEST_F(UtilityTest, AlgebraicNotationConversion) {
 TEST_F(UtilityTest, FENOperations) {
     // Test initial position
     std::string initialFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    setupPosition(board, state, initialFEN);
+    board.setupPositionFromFEN(initialFEN);
     
     // Verify piece positions
     EXPECT_EQ(board.getWhitePawns(), 0x000000000000FF00ULL);
@@ -118,20 +119,20 @@ TEST_F(UtilityTest, FENOperations) {
     EXPECT_EQ(board.getBlackKings(), 0x1000000000000000ULL);
     
     // Verify game state
-    EXPECT_EQ(state.sideToMove, WHITE);
-    EXPECT_TRUE(state.canCastleWhiteKingside);
-    EXPECT_TRUE(state.canCastleWhiteQueenside);
-    EXPECT_TRUE(state.canCastleBlackKingside);
-    EXPECT_TRUE(state.canCastleBlackQueenside);
-    EXPECT_EQ(state.enPassantSquare, -1);
+    EXPECT_EQ(board.currentGameState.sideToMove, WHITE);
+    EXPECT_TRUE(board.currentGameState.canCastleWhiteKingside);
+    EXPECT_TRUE(board.currentGameState.canCastleWhiteQueenside);
+    EXPECT_TRUE(board.currentGameState.canCastleBlackKingside);
+    EXPECT_TRUE(board.currentGameState.canCastleBlackQueenside);
+    EXPECT_EQ(board.currentGameState.enPassantSquare, -1);
     
     // Test complex position
     std::string complexFEN = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
-    setupPosition(board, state, complexFEN);
+    board.setupPositionFromFEN(complexFEN);
     
     // Test printing FEN (should match input)
     testing::internal::CaptureStdout();
-    printFEN(board, state);
+    board.printFEN();
     std::string output = testing::internal::GetCapturedStdout();
     EXPECT_TRUE(output.find(complexFEN) != std::string::npos);
 }
@@ -139,55 +140,55 @@ TEST_F(UtilityTest, FENOperations) {
 // Test legal moves counting
 TEST_F(UtilityTest, LegalMovesCount) {
     // Test initial position
-    setupPosition(board, state, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
-    EXPECT_EQ(countLegalMoves(board, &state), 20);  // Initial position has 20 legal moves
+    board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
+    EXPECT_EQ(countLegalMoves(board), 20);  // Initial position has 20 legal moves
     
     // Test scholar's mate position
-    setupPosition(board, state, "r1bqkbnr/pppp1Qpp/8/n3p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 1");
-    EXPECT_EQ(countLegalMoves(board, &state), 0);  // No legal moves, checkmate
+    board.setupPositionFromFEN("r1bqkbnr/pppp1Qpp/8/n3p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 1");
+    EXPECT_EQ(countLegalMoves(board), 0);  // No legal moves, checkmate
 }
 
 // Test checkmate and stalemate detection
 TEST_F(UtilityTest, GameEndDetection) {
     // Test scholar's mate checkmate
-    setupPosition(board, state, "rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 0 1");
-    EXPECT_TRUE(isCheckmate(board, &state));
-    EXPECT_FALSE(isStalemate(board, &state));
+    board.setupPositionFromFEN("rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 0 1");
+    EXPECT_TRUE(isCheckmate(board));
+    EXPECT_FALSE(isStalemate(board));
     
     // Test basic stalemate
-    setupPosition(board, state, "k7/8/1Q6/8/8/8/8/K7 b - - 0 1");
-    EXPECT_FALSE(isCheckmate(board, &state));
-    EXPECT_TRUE(isStalemate(board, &state));
+    board.setupPositionFromFEN("k7/8/1Q6/8/8/8/8/K7 b - - 0 1");
+    EXPECT_FALSE(isCheckmate(board));
+    EXPECT_TRUE(isStalemate(board));
     
     // Test normal position
-    setupPosition(board, state, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
-    EXPECT_FALSE(isCheckmate(board, &state));
-    EXPECT_FALSE(isStalemate(board, &state));
+    board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
+    EXPECT_FALSE(isCheckmate(board));
+    EXPECT_FALSE(isStalemate(board));
 }
 
 // Test position setup for common test positions
 TEST_F(UtilityTest, TestPositionSetup) {
-    setupTestPosition(board, state, "initial");
+    setupTestPosition(board, "initial");
     EXPECT_EQ(board.getWhitePawns(), 0x000000000000FF00ULL);
     
-    setupTestPosition(board, state, "kiwipete");
+    setupTestPosition(board, "kiwipete");
     EXPECT_NE(board.getWhitePawns(), 0x000000000000FF00ULL);  // Should be different from initial
     
-    setupTestPosition(board, state, "nonexistent");
+    setupTestPosition(board, "nonexistent");
     // Should handle invalid position name gracefully
 }
 
 // Test attack pattern verification
 TEST_F(UtilityTest, AttackPatternVerification) {
     // Test knight attack pattern
-    setupPosition(board, state, "8/8/8/8/4N3/8/8/8 w - - 0 1");
+    board.setupPositionFromFEN("8/8/8/8/4N3/8/8/8 w - - 0 1");
     std::vector<std::string> expectedKnightAttacks = {
         "f6", "g5", "g3", "f2", "d2", "c3", "c5", "d6"
     };
     EXPECT_TRUE(verifyAttackPattern(board, 28, expectedKnightAttacks));
     
     // Test bishop attack pattern
-    setupPosition(board, state, "8/8/8/8/4B3/8/8/8 w - - 0 1");
+    board.setupPositionFromFEN("8/8/8/8/4B3/8/8/8 w - - 0 1");
     std::vector<std::string> expectedBishopAttacks = {
         "h7", "g6", "f5", "d3", "c2", "b1",
         "a8", "b7", "c6", "d5", "f3", "g2", "h1"
@@ -195,7 +196,7 @@ TEST_F(UtilityTest, AttackPatternVerification) {
     EXPECT_TRUE(verifyAttackPattern(board, 28, expectedBishopAttacks));
 
     // Test queen attack pattern
-    setupPosition(board, state, "8/8/8/8/4Q3/8/8/8 w - - 0 1");
+    board.setupPositionFromFEN("8/8/8/8/4Q3/8/8/8 w - - 0 1");
     std::vector<std::string> expectedQueenAttacks = {
         "h7", "g6", "f5", "d3", "c2", "b1",
         "a8", "b7", "c6", "d5", "f3", "g2", "h1",
@@ -208,92 +209,92 @@ TEST_F(UtilityTest, AttackPatternVerification) {
 // Test perft function for initial board
 TEST_F(UtilityTest, PerftD1CalculationInitial) {
     // Test initial position at different depths
-    setupPosition(board, state, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
-    EXPECT_EQ(perft(board, &state, 1), 20ULL);          // Depth 1
+    board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
+    EXPECT_EQ(perft(board, 1), 20ULL);          // Depth 1
 }
 
 // Test perft function for initial board
 TEST_F(UtilityTest, PerftD2CalculationInitial) {
     // Test initial position at different depths
-    setupPosition(board, state, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
-    EXPECT_EQ(perft(board, &state, 2), 400ULL);         // Depth 2
+    board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
+    EXPECT_EQ(perft(board, 2), 400ULL);         // Depth 2
 }
 
 // Test perft function for initial board
 TEST_F(UtilityTest, PerftD3CalculationInitial) {
     // Test initial position at different depths
-    setupPosition(board, state, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
-    EXPECT_EQ(perft(board, &state, 3), 8902ULL);        // Depth 3
+    board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
+    EXPECT_EQ(perft(board, 3), 8902ULL);        // Depth 3
 }
 
 // Test perft function for initial board
 TEST_F(UtilityTest, PerftD4CalculationInitial) {
     // Test initial position at different depths
-    setupPosition(board, state, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
-    EXPECT_EQ(perft(board, &state, 4), 197281ULL);      // Depth 4
+    board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
+    EXPECT_EQ(perft(board, 4), 197281ULL);      // Depth 4
 }
 
 // // Test perft function for initial board
 // TEST_F(UtilityTest, PerftD5CalculationInitial) {
 //     // Test initial position at different depths
-//     setupPosition(board, state, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
-//     EXPECT_EQ(perft(board, &state, 5), 4865609ULL);     // Depth 5
+//     board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
+//     EXPECT_EQ(perft(board, 5), 4865609ULL);     // Depth 5
 // }
 
 // // Test perft function for initial board
 // TEST_F(UtilityTest, PerftD6CalculationInitial) {
 //     // Test initial position at different depths
-//     setupPosition(board, state, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
-//     EXPECT_EQ(perft(board, &state, 6), 119060324ULL);   // Depth 6
+//     board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
+//     EXPECT_EQ(perft(board, 6), 119060324ULL);   // Depth 6
 // }
 
 // // Test perft function for initial board
 // TEST_F(UtilityTest, PerftD7CalculationInitial) {
 //     // Test initial position at different depths
-//     setupPosition(board, state, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
-//     EXPECT_EQ(perft(board, &state, 7), 3195901860ULL);   // Depth 7
+//     board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
+//     EXPECT_EQ(perft(board, 7), 3195901860ULL);   // Depth 7
 // }
 
 // TEST_F(UtilityTest, PerftD8CalculationInitial) {
 //     // Test initial position at different depths
-//     setupPosition(board, state, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
-//     EXPECT_EQ(perft(board, &state, 8), 84998978956ULL);   // Depth 8
+//     board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
+//     EXPECT_EQ(perft(board, 8), 84998978956ULL);   // Depth 8
 // }
 
 //Test perft function for kiwipete board
 TEST_F(UtilityTest, PerftD1CalculationKiwiPete) {
-    setupPosition(board, state, "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-    EXPECT_EQ(perft(board, &state, 1), 48ULL);     // Depth 1
+    board.setupPositionFromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+    EXPECT_EQ(perft(board, 1), 48ULL);     // Depth 1
 }
 
 // Test perft function for kiwipete board
 TEST_F(UtilityTest, PerftD2CalculationKiwiPete) {
-    setupPosition(board, state, "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-    EXPECT_EQ(perft(board, &state, 2), 2039ULL);   // Depth 2
+    board.setupPositionFromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+    EXPECT_EQ(perft(board, 2), 2039ULL);   // Depth 2
 }
 
 // Test perft function for kiwipete board
 TEST_F(UtilityTest, PerftD3CalculationKiwiPete) {
-    setupPosition(board, state, "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-    EXPECT_EQ(perft(board, &state, 3), 97862ULL);   // Depth 3
+    board.setupPositionFromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+    EXPECT_EQ(perft(board, 3), 97862ULL);   // Depth 3
 }
 
 // // Test perft function for kiwipete board
 // TEST_F(UtilityTest, PerftD4CalculationKiwiPete) {
-//     setupPosition(board, state, "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-//     EXPECT_EQ(perft(board, &state, 4), 4085603ULL);   // Depth 4
+//     board.setupPositionFromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+//     EXPECT_EQ(perft(board, 4), 4085603ULL);   // Depth 4
 // }
 
 // // Test perft function for "Position 3" board (from chessprogramming.org)
 // TEST_F(UtilityTest, PerftD1CalculationPos3) {
-//     setupPosition(board, state, "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -");
-//     EXPECT_EQ(perft(board, &state, 1), 14ULL);   // Depth 1
+//     board.setupPositionFromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -");
+//     EXPECT_EQ(perft(board, 1), 14ULL);   // Depth 1
 // }
 
 // // Test perft function for "Position 3" board (from chessprogramming.org)
 // TEST_F(UtilityTest, PerftMetricsD1CalculationPos3) {
-//     setupPosition(board, state, "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
-//     PerftMetrics metrics = calcPerftMetrics(board, &state, 1);  // Depth 1
+//     board.setupPositionFromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
+//     PerftMetrics metrics = calcPerftMetrics(board, 1);  // Depth 1
 //     EXPECT_EQ(metrics.nodes, 14);
 //     EXPECT_EQ(metrics.captures, 1);
 //     EXPECT_EQ(metrics.enPassants, 0);
@@ -305,8 +306,8 @@ TEST_F(UtilityTest, PerftD3CalculationKiwiPete) {
 
 // // Test perft function for "Position 3" board (from chessprogramming.org)
 // TEST_F(UtilityTest, PerftMetricsD2CalculationPos3) {
-//     setupPosition(board, state, "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
-//     PerftMetrics metrics = calcPerftMetrics(board, &state, 2);  // Depth 2
+//     board.setupPositionFromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
+//     PerftMetrics metrics = calcPerftMetrics(board, 2);  // Depth 2
 //     EXPECT_EQ(metrics.nodes, 191);
 //     EXPECT_EQ(metrics.captures, 14);
 //     EXPECT_EQ(metrics.enPassants, 0);
@@ -318,8 +319,8 @@ TEST_F(UtilityTest, PerftD3CalculationKiwiPete) {
 
 // // Test perft function for "Position 3_1" board (from chessprogramming.org)
 // TEST_F(UtilityTest, PerftMetricsD1CalculationPos3_1) {
-//     setupPosition(board, state, "8/2p5/3p4/KP5r/5R1k/8/4P1P1/8 b - - 0 1");
-//     PerftMetrics metrics = calcPerftMetrics(board, &state, 1);  // Depth 1
+//     board.setupPositionFromFEN("8/2p5/3p4/KP5r/5R1k/8/4P1P1/8 b - - 0 1");
+//     PerftMetrics metrics = calcPerftMetrics(board, 1);  // Depth 1
 //     EXPECT_EQ(metrics.nodes, 2);
 //     EXPECT_EQ(metrics.captures, 0);
 //     EXPECT_EQ(metrics.enPassants, 0);
@@ -331,234 +332,240 @@ TEST_F(UtilityTest, PerftD3CalculationKiwiPete) {
 
 // // Test perft function for "Position 3" board (from chessprogramming.org)
 // TEST_F(UtilityTest, PerftD3CalculationPos3) {
-//     setupPosition(board, state, "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
-//     EXPECT_EQ(perft(board, &state, 3), 2812ULL);   // Depth 3
+//     board.setupPositionFromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
+//     EXPECT_EQ(perft(board, 3), 2812ULL);   // Depth 3
 // }
 
 // Test perft function for "Position 4" board (from chessprogramming.org)
 TEST_F(UtilityTest, PerftD1CalculationPos4) {
-    setupPosition(board, state, "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
-    EXPECT_EQ(perft(board, &state, 1), 6ULL);   // Depth 1
+    board.setupPositionFromFEN("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
+    EXPECT_EQ(perft(board, 1), 6ULL);   // Depth 1
 }
 
 // Test perft function for "Position 4" board (from chessprogramming.org)
 TEST_F(UtilityTest, PerftD2CalculationPos4) {
-    setupPosition(board, state, "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
-    EXPECT_EQ(perft(board, &state, 2), 264ULL);   // Depth 2
+    board.setupPositionFromFEN("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
+    EXPECT_EQ(perft(board, 2), 264ULL);   // Depth 2
 }
 
 // Test perft function for "Position 4" board (from chessprogramming.org)
 TEST_F(UtilityTest, PerftD3CalculationPos4) {
-    setupPosition(board, state, "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
-    EXPECT_EQ(perft(board, &state, 3), 9467ULL);   // Depth 3
+    board.setupPositionFromFEN("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
+    EXPECT_EQ(perft(board, 3), 9467ULL);   // Depth 3
 }
 
 // Test perft function for "Position 4" board (from chessprogramming.org)
 TEST_F(UtilityTest, PerftD4CalculationPos4) {
-    setupPosition(board, state, "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
-    EXPECT_EQ(perft(board, &state, 4), 422333ULL);   // Depth 4
+    board.setupPositionFromFEN("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
+    EXPECT_EQ(perft(board, 4), 422333ULL);   // Depth 4
 }
 
 // Test perft function for "Position 4" mirrored board (from chessprogramming.org)
 TEST_F(UtilityTest, PerftD1CalculationPos4Mirror) {
-    setupPosition(board, state, "r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1 ");
-    EXPECT_EQ(perft(board, &state, 1), 6ULL);   // Depth 1
+    board.setupPositionFromFEN("r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1 ");
+    EXPECT_EQ(perft(board, 1), 6ULL);   // Depth 1
 }
 
 // Test perft function for "Position 4" board (from chessprogramming.org)
 TEST_F(UtilityTest, PerftD2CalculationPos4Mirror) {
-    setupPosition(board, state, "r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1 ");
-    EXPECT_EQ(perft(board, &state, 2), 264ULL);   // Depth 2
+    board.setupPositionFromFEN("r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1 ");
+    EXPECT_EQ(perft(board, 2), 264ULL);   // Depth 2
 }
 
 // Test perft function for "Position 4" board (from chessprogramming.org)
 TEST_F(UtilityTest, PerftD3CalculationPos4Mirror) {
-    setupPosition(board, state, "r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1 ");
-    EXPECT_EQ(perft(board, &state, 3), 9467ULL);   // Depth 3
+    board.setupPositionFromFEN("r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1 ");
+    EXPECT_EQ(perft(board, 3), 9467ULL);   // Depth 3
 }
 
 // Test perft function for "Position 4" board (from chessprogramming.org)
 TEST_F(UtilityTest, PerftD4CalculationPos4Mirror) {
-    setupPosition(board, state, "r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1 ");
-    EXPECT_EQ(perft(board, &state, 4), 422333ULL);   // Depth 4
+    board.setupPositionFromFEN("r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1 ");
+    EXPECT_EQ(perft(board, 4), 422333ULL);   // Depth 4
 }
 
 // // Test perft function for "Position 4" board (from chessprogramming.org)
 // TEST_F(UtilityTest, PerftD5CalculationPos4Mirror) {
-//     setupPosition(board, state, "r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1 ");
-//     EXPECT_EQ(perft(board, &state, 5), 15833292ULL);   // Depth 5
+//     board.setupPositionFromFEN("r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1 ");
+//     EXPECT_EQ(perft(board, 5), 15833292ULL);   // Depth 5
 // }
 
 // Test perft function for "Position 5" board (from chessprogramming.org)
 TEST_F(UtilityTest, PerftD1CalculationPos5) {
-    setupPosition(board, state, "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8");
-    EXPECT_EQ(perft(board, &state, 1), 44ULL);   // Depth 1
+    board.setupPositionFromFEN("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8");
+    EXPECT_EQ(perft(board, 1), 44ULL);   // Depth 1
 }
 
 // Test perft function for "Position 5" board (from chessprogramming.org)
 TEST_F(UtilityTest, PerftD2CalculationPos5) {
-    setupPosition(board, state, "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8");
-    EXPECT_EQ(perft(board, &state, 2), 1486ULL);   // Depth 2
+    board.setupPositionFromFEN("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8");
+    EXPECT_EQ(perft(board, 2), 1486ULL);   // Depth 2
 }
 
 // Test perft function for "Position 5" board (from chessprogramming.org)
 TEST_F(UtilityTest, PerftD3CalculationPos5) {
-    setupPosition(board, state, "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8");
-    EXPECT_EQ(perft(board, &state, 3), 62379ULL);   // Depth 3
+    board.setupPositionFromFEN("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8");
+    EXPECT_EQ(perft(board, 3), 62379ULL);   // Depth 3
 }
 
 // Test perft function for "Position 5" board (from chessprogramming.org)
 TEST_F(UtilityTest, PerftD4CalculationPos5) {
-    setupPosition(board, state, "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8");
-    EXPECT_EQ(perft(board, &state, 4), 2103487ULL);   // Depth 4
+    board.setupPositionFromFEN("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8");
+    EXPECT_EQ(perft(board, 4), 2103487ULL);   // Depth 4
 }
 
 // // Test perft function for "Position 5" board (from chessprogramming.org)
 // TEST_F(UtilityTest, PerftD5CalculationPos5) {
-//     setupPosition(board, state, "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8");
-//     EXPECT_EQ(perft(board, &state, 5), 89941194ULL);   // Depth 5
+//     board.setupPositionFromFEN("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8");
+//     EXPECT_EQ(perft(board, 5), 89941194ULL);   // Depth 5
 // }
 
 // Test perft function for "Position 6" board (from chessprogramming.org)
 TEST_F(UtilityTest, PerftD1CalculationPos6) {
-    setupPosition(board, state, "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10");
-    EXPECT_EQ(perft(board, &state, 1), 46ULL);   // Depth 1
+    board.setupPositionFromFEN("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10");
+    EXPECT_EQ(perft(board, 1), 46ULL);   // Depth 1
 }
 
 // Test perft function for "Position 6" board (from chessprogramming.org)
 TEST_F(UtilityTest, PerftD2CalculationPos6) {
-    setupPosition(board, state, "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10");
-    EXPECT_EQ(perft(board, &state, 2), 2079ULL);   // Depth 2
+    board.setupPositionFromFEN("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10");
+    EXPECT_EQ(perft(board, 2), 2079ULL);   // Depth 2
 }
 
 // Test perft function for "Position 6" board (from chessprogramming.org)
 TEST_F(UtilityTest, PerftD3CalculationPos6) {
-    setupPosition(board, state, "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10");
-    EXPECT_EQ(perft(board, &state, 3), 89890ULL);   // Depth 3
+    board.setupPositionFromFEN("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10");
+    EXPECT_EQ(perft(board, 3), 89890ULL);   // Depth 3
 }
 
 // // Test perft function for "Position 6" board (from chessprogramming.org)
 // TEST_F(UtilityTest, PerftD4CalculationPos6) {
-//     setupPosition(board, state, "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10");
-//     EXPECT_EQ(perft(board, &state, 4), 3894594ULL);   // Depth 4
+//     board.setupPositionFromFEN("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10");
+//     EXPECT_EQ(perft(board, 4), 3894594ULL);   // Depth 4
 // }
 
 // Test perft function for 3rd board (from https://github.com/AndyGrant/Ethereal/blob/master/src/perft/standard.epd)
 TEST_F(UtilityTest, PerftD1CalculationStandardPos3) {
-    setupPosition(board, state, "4k3/8/8/8/8/8/8/4K2R w K - 0 1");
-    EXPECT_EQ(perft(board, &state, 1), 15ULL);   // Depth 1
+    board.setupPositionFromFEN("4k3/8/8/8/8/8/8/4K2R w K - 0 1");
+    EXPECT_EQ(perft(board, 1), 15ULL);   // Depth 1
 }
 
 // Test perft function for 3rd board (from https://github.com/AndyGrant/Ethereal/blob/master/src/perft/standard.epd)
 TEST_F(UtilityTest, PerftD2CalculationStandardPos3) {
-    setupPosition(board, state, "4k3/8/8/8/8/8/8/4K2R w K - 0 1");
-    EXPECT_EQ(perft(board, &state, 2), 66ULL);   // Depth 2
+    board.setupPositionFromFEN("4k3/8/8/8/8/8/8/4K2R w K - 0 1");
+    EXPECT_EQ(perft(board, 2), 66ULL);   // Depth 2
 }
 
 // Test perft function for 3rd board (from https://github.com/AndyGrant/Ethereal/blob/master/src/perft/standard.epd)
 TEST_F(UtilityTest, PerftD3CalculationStandardPos3) {
-    setupPosition(board, state, "4k3/8/8/8/8/8/8/4K2R w K - 0 1");
-    EXPECT_EQ(perft(board, &state, 3), 1197ULL);   // Depth 1
+    board.setupPositionFromFEN("4k3/8/8/8/8/8/8/4K2R w K - 0 1");
+    EXPECT_EQ(perft(board, 3), 1197ULL);   // Depth 1
 }
 
 // Test perft function for 3rd board (from https://github.com/AndyGrant/Ethereal/blob/master/src/perft/standard.epd)
 TEST_F(UtilityTest, PerftD4CalculationStandardPos3) {
-    setupPosition(board, state, "4k3/8/8/8/8/8/8/4K2R w K - 0 1");
-    EXPECT_EQ(perft(board, &state, 4), 7059ULL);   // Depth 4
+    board.setupPositionFromFEN("4k3/8/8/8/8/8/8/4K2R w K - 0 1");
+    EXPECT_EQ(perft(board, 4), 7059ULL);   // Depth 4
 }
 
 // Test perft function for 3rd board (from https://github.com/AndyGrant/Ethereal/blob/master/src/perft/standard.epd)
 TEST_F(UtilityTest, PerftD5CalculationStandardPos3) {
-    setupPosition(board, state, "4k3/8/8/8/8/8/8/4K2R w K - 0 1");
-    EXPECT_EQ(perft(board, &state, 5), 133987ULL);   // Depth 5
+    board.setupPositionFromFEN("4k3/8/8/8/8/8/8/4K2R w K - 0 1");
+    EXPECT_EQ(perft(board, 5), 133987ULL);   // Depth 5
 }
 
 // Test perft function for 4th board
 TEST_F(UtilityTest, PerftD1CalculationStandardPos4) {
-    setupPosition(board, state, "4k3/8/8/8/8/8/8/R3K3 w Q - 0 1");
-    EXPECT_EQ(perft(board, &state, 1), 16ULL);   // Depth 1
+    board.setupPositionFromFEN("4k3/8/8/8/8/8/8/R3K3 w Q - 0 1");
+    EXPECT_EQ(perft(board, 1), 16ULL);   // Depth 1
 }
 
 // Test perft function for 4th board
 TEST_F(UtilityTest, PerftD2CalculationStandardPos4) {
-    setupPosition(board, state, "4k3/8/8/8/8/8/8/R3K3 w Q - 0 1");
-    EXPECT_EQ(perft(board, &state, 2), 71ULL);   // Depth 2
+    board.setupPositionFromFEN("4k3/8/8/8/8/8/8/R3K3 w Q - 0 1");
+    EXPECT_EQ(perft(board, 2), 71ULL);   // Depth 2
 }
 
 // Test perft function for 4th board
 TEST_F(UtilityTest, PerftD3CalculationStandardPos4) {
-    setupPosition(board, state, "4k3/8/8/8/8/8/8/R3K3 w Q - 0 1");
-    EXPECT_EQ(perft(board, &state, 3), 1287ULL);   // Depth 3
+    board.setupPositionFromFEN("4k3/8/8/8/8/8/8/R3K3 w Q - 0 1");
+    EXPECT_EQ(perft(board, 3), 1287ULL);   // Depth 3
 }
 
 // Test perft function for 4th board
 TEST_F(UtilityTest, PerftD4CalculationStandardPos4) {
-    setupPosition(board, state, "4k3/8/8/8/8/8/8/R3K3 w Q - 0 1");
-    EXPECT_EQ(perft(board, &state, 4), 7626ULL);   // Depth 4
+    board.setupPositionFromFEN("4k3/8/8/8/8/8/8/R3K3 w Q - 0 1");
+    EXPECT_EQ(perft(board, 4), 7626ULL);   // Depth 4
 }
 
 // Test perft function for 4th board
 TEST_F(UtilityTest, PerftD5CalculationStandardPos4) {
-    setupPosition(board, state, "4k3/8/8/8/8/8/8/R3K3 w Q - 0 1");
-    EXPECT_EQ(perft(board, &state, 5), 145232ULL);   // Depth 5
+    board.setupPositionFromFEN("4k3/8/8/8/8/8/8/R3K3 w Q - 0 1");
+    EXPECT_EQ(perft(board, 5), 145232ULL);   // Depth 5
 }
 
 // Test perft function for 5th board
 TEST_F(UtilityTest, PerftD1CalculationStandardPos5) {
-    setupPosition(board, state, "4k2r/8/8/8/8/8/8/4K3 w k - 0 1");
-    EXPECT_EQ(perft(board, &state, 1), 5ULL);   // Depth 1
+    board.setupPositionFromFEN("4k2r/8/8/8/8/8/8/4K3 w k - 0 1");
+    EXPECT_EQ(perft(board, 1), 5ULL);   // Depth 1
 }
 
 // Test perft function for 5th board
 TEST_F(UtilityTest, PerftD2CalculationStandardPos5) {
-    setupPosition(board, state, "4k2r/8/8/8/8/8/8/4K3 w k - 0 1");
-    EXPECT_EQ(perft(board, &state, 2), 75ULL);   // Depth 2
+    board.setupPositionFromFEN("4k2r/8/8/8/8/8/8/4K3 w k - 0 1");
+    EXPECT_EQ(perft(board, 2), 75ULL);   // Depth 2
 }
 
 // Test perft function for 5th board
 TEST_F(UtilityTest, PerftD3CalculationStandardPos5) {
-    setupPosition(board, state, "4k2r/8/8/8/8/8/8/4K3 w k - 0 1");
-    EXPECT_EQ(perft(board, &state, 3), 459ULL);   // Depth 3
+    board.setupPositionFromFEN("4k2r/8/8/8/8/8/8/4K3 w k - 0 1");
+    EXPECT_EQ(perft(board, 3), 459ULL);   // Depth 3
 }
 
 // Test perft function for 5th board
 TEST_F(UtilityTest, PerftD4CalculationStandardPos5) {
-    setupPosition(board, state, "4k2r/8/8/8/8/8/8/4K3 w k - 0 1");
-    EXPECT_EQ(perft(board, &state, 4), 8290ULL);   // Depth 4
+    board.setupPositionFromFEN("4k2r/8/8/8/8/8/8/4K3 w k - 0 1");
+    EXPECT_EQ(perft(board, 4), 8290ULL);   // Depth 4
 }
 
 // Test perft function for 5th board
 TEST_F(UtilityTest, PerftD5CalculationStandardPos5) {
-    setupPosition(board, state, "4k2r/8/8/8/8/8/8/4K3 w k - 0 1");
-    EXPECT_EQ(perft(board, &state, 5), 47635ULL);   // Depth 5
+    board.setupPositionFromFEN("4k2r/8/8/8/8/8/8/4K3 w k - 0 1");
+    EXPECT_EQ(perft(board, 5), 47635ULL);   // Depth 5
 }
 
 // Test perft function for 6th board
 TEST_F(UtilityTest, PerftD1CalculationStandardPos6) {
-    setupPosition(board, state, "r3k3/8/8/8/8/8/8/4K3 w q - 0 1");
-    EXPECT_EQ(perft(board, &state, 1), 5ULL);   // Depth 1
+    board.setupPositionFromFEN("r3k3/8/8/8/8/8/8/4K3 w q - 0 1");
+    EXPECT_EQ(perft(board, 1), 5ULL);   // Depth 1
 }
 
 // Test perft function for 6th board
 TEST_F(UtilityTest, PerftD2CalculationStandardPos6) {
-    setupPosition(board, state, "r3k3/8/8/8/8/8/8/4K3 w q - 0 1");
-    EXPECT_EQ(perft(board, &state, 2), 80ULL);   // Depth 2
+    board.setupPositionFromFEN("r3k3/8/8/8/8/8/8/4K3 w q - 0 1");
+    EXPECT_EQ(perft(board, 2), 80ULL);   // Depth 2
 }
 
 // Test perft function for 6th board
 TEST_F(UtilityTest, PerftD3CalculationStandardPos6) {
-    setupPosition(board, state, "r3k3/8/8/8/8/8/8/4K3 w q - 0 1");
-    EXPECT_EQ(perft(board, &state, 3), 493ULL);   // Depth 3
+    board.setupPositionFromFEN("r3k3/8/8/8/8/8/8/4K3 w q - 0 1");
+    EXPECT_EQ(perft(board, 3), 493ULL);   // Depth 3
 }
 
 // Test perft function for 6th board
 TEST_F(UtilityTest, PerftD4CalculationStandardPos6) {
-    setupPosition(board, state, "r3k3/8/8/8/8/8/8/4K3 w q - 0 1");
-    EXPECT_EQ(perft(board, &state, 4), 8897ULL);   // Depth 4
+    board.setupPositionFromFEN("r3k3/8/8/8/8/8/8/4K3 w q - 0 1");
+    EXPECT_EQ(perft(board, 4), 8897ULL);   // Depth 4
 }
 
 // Test perft function for 6th board
 TEST_F(UtilityTest, PerftD5CalculationStandardPos6) {
-    setupPosition(board, state, "r3k3/8/8/8/8/8/8/4K3 w q - 0 1");
-    EXPECT_EQ(perft(board, &state, 5), 52710ULL);   // Depth 5
+    board.setupPositionFromFEN("r3k3/8/8/8/8/8/8/4K3 w q - 0 1");
+    EXPECT_EQ(perft(board, 5), 52710ULL);   // Depth 5
+}
+
+// Test setBitsBetween function
+TEST_F(UtilityTest, SetBitsBetween) {
+    std::cout << std::bitset<64>(setBitsBetween(1, 7)) << "\n";
+    std::cout << std::bitset<64>(setBitsBetween(1, 7, 4)) << "\n";
 }

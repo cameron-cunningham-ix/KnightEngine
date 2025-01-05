@@ -1,17 +1,18 @@
-#include <gtest/gtest.h>
 #include "../src/move_history.hpp"
 #include "../src/utility.hpp"
+#include "../src/pext_bitboard.hpp"
+#include <gtest/gtest.h>
 
 class PGNTest : public ::testing::Test {
 protected:
     MoveHistory history;
     ChessBoard board;
-    GameState state;
 
     void SetUp() override {
+        // Initialize PEXT
+        PEXT::initialize();
         history = MoveHistory();
         board = ChessBoard();
-        state = GameState();
     }
 
     // Helper to verify move count
@@ -32,11 +33,11 @@ protected:
 
 // Test generateSAN
 TEST_F(PGNTest, GenerateSAN) {
-    setupPosition(board, state, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    Move e4 = Move(W_PAWN, 12, 28);
-    Move na3 = Move(W_KNIGHT, 1, 16);
-    EXPECT_EQ("e4", history.generateSAN(e4, board, state));
-    EXPECT_EQ("Na3", history.generateSAN(na3, board, state));
+    board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    DenseMove e4 = DenseMove(W_PAWN, 12, 28);
+    DenseMove na3 = DenseMove(W_KNIGHT, 1, 16);
+    EXPECT_EQ("e4", history.generateSAN(e4, board));
+    EXPECT_EQ("Na3", history.generateSAN(na3, board));
 }
 
 // Test basic move parsing

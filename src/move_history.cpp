@@ -37,13 +37,17 @@ MoveHistory::MoveHistory(const std::string& initialFEN)
 }
 
 // Add a new move to the history
-void MoveHistory::addMove(const Move& move, const ChessBoard& board, const GameState& state,
+void MoveHistory::addMove(const DenseMove& move, ChessBoard& board,
                          std::chrono::milliseconds timeStamp) {
+    // std::cout << "MoveHistory.addMove start\n";
     // Generate SAN notation for the move
-    std::string san = generateSAN(move, board, state);
+    std::string san = generateSAN(move, board);
+    // std::cout << "MoveHistory.addMove generated SAN: " << san << "\n";
 
     // Create and add FEN entry
-    std::string fen = getFEN(board, state);
+    std::string fen = getFEN(board);
+    // std::cout << "MoveHistory.addMove got FEN: " << fen << "\n";
+
     fens.emplace_back(fen);
     
     // Create and add history entry
@@ -51,51 +55,48 @@ void MoveHistory::addMove(const Move& move, const ChessBoard& board, const GameS
 }
 
 // Generate Standard Algebraic Notation for a move
-std::string MoveHistory::generateSAN(const Move& move, const ChessBoard& board, const GameState& state) const {
+std::string MoveHistory::generateSAN(const DenseMove& move, ChessBoard& board) const {
     std::stringstream san;
-    
+    // Get move attributes
+    PieceType movePiece = move.getPieceType();
+    int moveFrom = move.getFrom();
+    int moveTo = move.getTo();
     // Handle castling first
-    if (move.isCastle) {
-        if (move.to % 8 > move.from % 8) {
+    if (move.isCastle()) {
+        if (moveTo % 8 > moveFrom % 8) {
             return "O-O";    // Kingside castle
         } else {
             return "O-O-O";  // Queenside castle
         }
     }
 
-    // Add piece letter (except for pawns)
-    if (move.piece != W_PAWN && move.piece != B_PAWN) {
-        auto it = pieceToSAN.find(move.piece);
+    // Add movePiece letter (except for pawns)
+    if (movePiece != W_PAWN && movePiece != B_PAWN) {
+        auto it = pieceToSAN.find(movePiece);
         if (it != pieceToSAN.end()) {
             san << it->second[0];
         } else {
-            throw std::runtime_error("Invalid piece type in generateSAN");
+            throw std::runtime_error("Invalid movePiece type in generateSAN");
         }
     }
 
     // Check for move ambiguity
-    std::vector<Move> legalMoves;
-    std::vector<Move> ambiguousMoves;
+    std::vector<DenseMove> legalMoves;
+    std::vector<DenseMove> ambiguousMoves;
     
-    // Get all pseudo-legal moves
-    auto pseudoMoves = generatePsuedoMoves(board, &state);
-    ChessBoard tempBoard = board;
-    GameState tempState = state;
-    MoveValidator validator(tempBoard, &tempState);
+    // Get all legal moves
+    legalMoves = MoveGenerator::generateLegalMoves(board);
 
-    // Filter to only legal moves of the same piece type going to the same square
-    for (const Move& candidateMove : pseudoMoves) {
-        if (candidateMove.piece != move.piece || candidateMove.to != move.to) {
+    for (const DenseMove& candidateMove : legalMoves) {
+        if (candidateMove.getPieceType() != movePiece
+            || candidateMove.getTo() != move.getTo()) {
             continue;
         }
-        if (!validator.isMoveLegal(candidateMove)) {
-            continue;
-        }
-        if (candidateMove.from == move.from) {
+        if (candidateMove.getFrom() == move.getFrom()) {
             continue;
         }
         // Pawn captures are always unambiguous since we add the file later
-        if (move.piece == W_PAWN || move.piece == B_PAWN) {
+        if (movePiece == W_PAWN || movePiece == B_PAWN) {
             continue;
         }
         ambiguousMoves.push_back(candidateMove);
@@ -107,11 +108,11 @@ std::string MoveHistory::generateSAN(const Move& move, const ChessBoard& board, 
         bool sameRank = false;
         
         // Check if any ambiguous moves share the same file or rank
-        for (const Move& ambiguousMove : ambiguousMoves) {
-            if (ambiguousMove.from % 8 == move.from % 8) {
+        for (const DenseMove& ambiguousMove : ambiguousMoves) {
+            if (ambiguousMove.getFrom() % 8 == move.getFrom() % 8) {
                 sameFile = true;
             }
-            if (ambiguousMove.from / 8 == move.from / 8) {
+            if (ambiguousMove.getFrom() / 8 == move.getFrom() / 8) {
                 sameRank = true;
             }
         }
@@ -122,41 +123,39 @@ std::string MoveHistory::generateSAN(const Move& move, const ChessBoard& board, 
         // 3. Use both if neither is unique
         if (!sameFile) {
             // File is sufficient for disambiguation
-            san << (char)('a' + (move.from % 8));
+            san << (char)('a' + (move.getFrom() % 8));
         } else if (!sameRank) {
             // Need rank for disambiguation
-            san << (char)('1' + (move.from / 8));
+            san << (char)('1' + (move.getFrom() / 8));
         } else {
             // Need both file and rank
-            san << (char)('a' + (move.from % 8))
-                << (char)('1' + (move.from / 8));
+            san << (char)('a' + (move.getFrom() % 8))
+                << (char)('1' + (move.getFrom() / 8));
         }
     }
 
     // Add capture symbol if it's a capture
-    if (move.isCapture) {
+    if (move.getCaptDense() != D_EMPTY) {
         // Always show file of origin for pawn captures
-        if (move.piece == W_PAWN || move.piece == B_PAWN) {
-            san << (char)('a' + (move.from % 8));
+        if (movePiece == W_PAWN || movePiece == B_PAWN) {
+            san << (char)('a' + (moveFrom % 8));
         }
         san << "x";
     }
 
     // Add destination square
-    san << (char)('a' + (move.to % 8)) << (char)('1' + (move.to / 8));
+    san << (char)('a' + (moveTo % 8)) << (char)('1' + (moveTo / 8));
 
     // Add promotion piece
-    if (move.isPromotion) {
-        san << "=" << pieceToSAN.at(move.promoteTo);
+    if (move.getPromoteDense() != D_EMPTY) {
+        san << "=" << pieceToSAN.at(move.getPromotePiece());
     }
 
     // Check for check and checkmate
-    makeMove(tempBoard, move);
-    MoveValidator tempValidator(tempBoard, &tempState);
-    tempValidator.updateGameState(move);
+    board.makeMove(move, true);
 
-    if (tempValidator.isInCheck(tempState.sideToMove)) {
-        if (tempValidator.isCheckmate(tempState.sideToMove)) {
+    if (board.isInCheck()) {
+        if (isCheckmate(board)) {
             san << "#";
         } else {
             san << "+";
@@ -292,10 +291,9 @@ bool MoveHistory::fromPGN(const std::string& pgn) {
         
         // Initialize board with starting position
         ChessBoard board;
-        GameState state;
         if (!isStandardStart) {
             if (isValidFEN(startingFen)) {
-                setupPosition(board, state, startingFen);
+                board.setupPositionFromFEN(startingFen);
             }
             else 
                 return false;
@@ -380,20 +378,13 @@ bool MoveHistory::fromPGN(const std::string& pgn) {
                         // Skip move numbers
                         else if (currentMove.find('.') == std::string::npos) {
                             // Process as actual move
-                            Move move = sanToMove(currentMove, board, state);
-                            
-                            // Verify move is legal
-                            MoveValidator validator(board, &state);
-                            if (!validator.isMoveLegal(move)) {
-                                throw std::runtime_error("Illegal move: " + currentMove);
-                            }
+                            DenseMove move = sanToMove(currentMove, board);
                             
                             // Add move to history
-                            addMove(move, board, state);
+                            addMove(move, board);
 
                             // Update board position
-                            makeMove(board, move);
-                            validator.updateGameState(move);
+                            board.makeMove(move, true);
                         }
                     } catch (const std::exception& e) {
                         std::cerr << "Error processing move: " << currentMove 
@@ -416,18 +407,13 @@ bool MoveHistory::fromPGN(const std::string& pgn) {
                     setTag("Result", currentMove);
                 }
                 else {
-                    Move move = sanToMove(currentMove, board, state);
+                    DenseMove move = sanToMove(currentMove, board);
 
-                    MoveValidator validator(board, &state);
-                    if (!validator.isMoveLegal(move)) {
-                        throw std::runtime_error("Illegal move: " + currentMove);
-                    }
                     // Add move to history
-                    addMove(move, board, state);
+                    addMove(move, board);
 
                     // Update board position
-                    makeMove(board, move);
-                    validator.updateGameState(move);
+                    board.makeMove(move, true);
                 }
             } catch (const std::exception& e) {
                 return false;
@@ -448,7 +434,7 @@ bool MoveHistory::fromPGN(const std::string& pgn) {
 }
 
 // Helper method to process a single move token
-void MoveHistory::processMoveToken(const std::string& token, ChessBoard& board, GameState& state) {
+void MoveHistory::processMoveToken(const std::string& token, ChessBoard& board) {
     // Skip move numbers
     if (token.find('.') != std::string::npos) return;
     
@@ -468,21 +454,13 @@ void MoveHistory::processMoveToken(const std::string& token, ChessBoard& board, 
     
     try {
         // Convert SAN to move
-        Move move = sanToMove(token, board, state);
-        
-        // Verify move is legal
-        MoveValidator validator(board, &state);
-        if (!validator.isMoveLegal(move)) {
-            throw std::runtime_error("Illegal move: " + token);
-        }
+        DenseMove move = sanToMove(token, board);
         
         // Add move to history
-        addMove(move, board, state);
+        addMove(move, board);
         
         // Update board position
-        makeMove(board, move);
-        validator.updateGameState(move);
-        
+        board.makeMove(move, true);
     } catch (const std::exception& e) {
         // Log error for debugging
         std::cerr << "Error processing move: " << token << " - " << e.what() << std::endl;
@@ -490,7 +468,8 @@ void MoveHistory::processMoveToken(const std::string& token, ChessBoard& board, 
     }
 }
 
-std::string MoveHistory::getFEN(ChessBoard board, GameState state) {
+std::string MoveHistory::getFEN(ChessBoard board) {
+    // std::cout << "MoveHistory.getFEN start\n";
     std::string fen;
     
     int square = 56;        // Start at a8
@@ -498,8 +477,9 @@ std::string MoveHistory::getFEN(ChessBoard board, GameState state) {
     // Loop through all squares for position portion of FEN
     for (square; square >= 0; square++) {
         PieceType current = board.getPieceAt(square);
+        // std::cout << "  square " << square << " piece " << current << "\n";
         // Empty square
-        if (current == -1) {
+        if (current == PieceType::EMPTY) {
             emptyCount++;
             // Entire rank empty or end of the rank
             if (emptyCount >= 8 || square % 8 == 7) {
@@ -512,7 +492,9 @@ std::string MoveHistory::getFEN(ChessBoard board, GameState state) {
         }
         // Piece on current square
         else {
+            // std::cout << "  try get pieceToFEN\n";
             std::string fenPiece = pieceToFEN.at(current);
+            // std::cout << "  " << fenPiece << "\n";
             // Append any previous empty squares
             if (emptyCount != 0) {
                 fen.append(std::to_string(emptyCount));
@@ -530,25 +512,27 @@ std::string MoveHistory::getFEN(ChessBoard board, GameState state) {
 
     // FEN player turn
     fen.append(" ");
-    fen.append(state.sideToMove == 0 ? "w" : "b");
+    fen.append(board.currentGameState.sideToMove == 0 ? "w" : "b");
     // FEN castling rights
     fen.append(" ");
-    if (state.canCastleWhiteKingside) fen.append("K");
-    if (state.canCastleWhiteQueenside) fen.append("Q");
-    if (state.canCastleBlackKingside) fen.append("k");
-    if (state.canCastleBlackQueenside) fen.append("q");
-    if (!state.canCastleWhiteKingside && !state.canCastleWhiteQueenside &&
-        !state.canCastleBlackKingside && !state.canCastleBlackQueenside) fen.append("-");
+    if (board.currentGameState.canCastleWhiteKingside) fen.append("K");
+    if (board.currentGameState.canCastleWhiteQueenside) fen.append("Q");
+    if (board.currentGameState.canCastleBlackKingside) fen.append("k");
+    if (board.currentGameState.canCastleBlackQueenside) fen.append("q");
+    if (!board.currentGameState.canCastleWhiteKingside && 
+        !board.currentGameState.canCastleWhiteQueenside &&
+        !board.currentGameState.canCastleBlackKingside && 
+        !board.currentGameState.canCastleBlackQueenside) fen.append("-");
     // FEN En Passant
     fen.append(" ");
-    if (state.enPassantSquare == -1) fen.append("-");
-    else fen.append(indexToAlgebraic(state.enPassantSquare));
+    if (board.currentGameState.enPassantSquare == -1) fen.append("-");
+    else fen.append(indexToAlgebraic(board.currentGameState.enPassantSquare));
     // FEN Half Move clock
     fen.append(" ");
-    fen.append(std::to_string(state.halfMoveClock));
+    fen.append(std::to_string(board.currentGameState.halfMoveClock));
     // FEN Full Move Number
     fen.append(" ");
-    fen.append(std::to_string(state.fullMoveNumber));
+    fen.append(std::to_string(board.currentGameState.fullMoveNumber));
 
     return fen;
 }

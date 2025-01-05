@@ -23,19 +23,18 @@ EnginePlayer::~EnginePlayer() {
     }
 }
 
-Move EnginePlayer::getMove(const ChessBoard& board, 
-                          const GameState& state,
-                          const ChessClock& clock) {
+DenseMove EnginePlayer::getMove(ChessBoard& board, 
+                                const ChessClock& clock) {
     int depth = calculateSearchDepth(clock);
     thinking = true;
-    bestMove = engine->findBestMove(board, state, depth);
+    bestMove = engine->findBestMove(board, depth);
     thinking = false;
     return bestMove;
 }
 
-void EnginePlayer::notifyOpponentMove(const Move& move) {
+void EnginePlayer::notifyOpponentMove(const DenseMove& move) {
     // Notify engine about opponent's move for any internal state updates
-    std::vector<Move> moves = {move};
+    std::vector<DenseMove> moves = {move};
     position("", moves);  // Empty FEN means use current position
 }
 
@@ -66,7 +65,7 @@ void EnginePlayer::uciNewGame() {
     // Reset any engine-specific state
 }
 
-void EnginePlayer::position(const std::string& fen, const std::vector<Move>& moves) {
+void EnginePlayer::position(const std::string& fen, const std::vector<DenseMove>& moves) {
     std::stringstream ss;
     ss << "position ";
     if (fen.empty()) {
@@ -76,7 +75,7 @@ void EnginePlayer::position(const std::string& fen, const std::vector<Move>& mov
     }
     if (!moves.empty()) {
         ss << " moves";
-        for (const Move& move : moves) {
+        for (const DenseMove& move : moves) {
             ss << " " << moveToUCI(move);
         }
     }
@@ -108,9 +107,9 @@ void EnginePlayer::quit() {
     cv.notify_all();
 }
 
-bool EnginePlayer::hasOption(const std::string& name) const {
-    return options.count(name) > 0;
-}
+// bool EnginePlayer::hasOption(const std::string& name) const {
+//     return options.count(name) > 0;
+// }
 
 int EnginePlayer::calculateSearchDepth(const ChessClock& clock) const {
     // Get remaining time for current player
@@ -199,7 +198,7 @@ void EnginePlayer::processCommand(const std::string& cmd) {
             // For now, just use base engine search
             ChessBoard board;  // Need to track current position
             GameState state;
-            bestMove = engine->findBestMove(board, state);
+            bestMove = engine->findBestMove(board);
             thinking = false;
             sendResponse("bestmove " + moveToUCI(bestMove));
         }).detach();
@@ -211,13 +210,13 @@ void EnginePlayer::sendResponse(const std::string& response) {
     std::cout << response << std::endl;
 }
 
-std::string EnginePlayer::moveToUCI(const Move& move) const {
-    std::string from = indexToAlgebraic(move.from);
-    std::string to = indexToAlgebraic(move.to);
+std::string EnginePlayer::moveToUCI(const DenseMove& move) const {
+    std::string from = indexToAlgebraic(move.getFrom());
+    std::string to = indexToAlgebraic(move.getTo());
     std::string promotion = "";
     
-    if (move.isPromotion) {
-        switch (move.promoteTo) {
+    if (move.getPromoteDense() != D_EMPTY) {
+        switch (move.getPromotePiece()) {
             case W_QUEEN:
             case B_QUEEN: promotion = "q"; break;
             case W_ROOK:
@@ -233,34 +232,33 @@ std::string EnginePlayer::moveToUCI(const Move& move) const {
     return from + to + promotion;
 }
 
-Move EnginePlayer::uciToMove(const std::string& uciMove, 
-                            const ChessBoard& board,
-                            const GameState& state) const {
-    if (uciMove.length() < 4) return Move();
+DenseMove EnginePlayer::uciToMove(const std::string& uciMove, 
+                                  const ChessBoard& board) const {
+    if (uciMove.length() < 4) return DenseMove();
     
     int from = algebraicToIndex(uciMove.substr(0, 2));
     int to = algebraicToIndex(uciMove.substr(2, 2));
     
-    if (from == -1 || to == -1) return Move();
+    if (from == -1 || to == -1) return DenseMove();
     
     PieceType piece = board.getPieceAt(from);
-    bool isCapture = board.getPieceAt(to) != static_cast<PieceType>(-1);
+    DenseType capturedPiece = board.getDenseTypeAt(to);
     bool isPromotion = uciMove.length() > 4;
     
-    Move move(piece, from, to, isCapture, isPromotion);
+    DenseMove move(piece, from, to, capturedPiece);
     
     if (isPromotion && uciMove.length() > 4) {
         // Set promotion piece
         char prom = uciMove[4];
-        PieceType promoteTo;
+        DenseType promoteTo;
         switch (prom) {
-            case 'q': promoteTo = state.sideToMove == WHITE ? W_QUEEN : B_QUEEN; break;
-            case 'r': promoteTo = state.sideToMove == WHITE ? W_ROOK : B_ROOK; break;
-            case 'b': promoteTo = state.sideToMove == WHITE ? W_BISHOP : B_BISHOP; break;
-            case 'n': promoteTo = state.sideToMove == WHITE ? W_KNIGHT : B_KNIGHT; break;
-            default: return Move();
+            case 'q': promoteTo = D_QUEEN; break;
+            case 'r': promoteTo = D_ROOK; break;
+            case 'b': promoteTo = D_BISHOP; break;
+            case 'n': promoteTo = D_KNIGHT; break;
+            default: return DenseMove();
         }
-        move.promoteTo = promoteTo;
+        move.setPromoteTo(promoteTo);
     }
     
     return move;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "player.hpp"
+#include "i_player.hpp"
 #include <iostream>
 
 class HumanPlayer : public IPlayer {
@@ -15,11 +15,10 @@ public:
         : name(playerName), isResigned(false), acceptedDraw(false) {}
     
     // Implementation of IPlayer interface
-    Move getMove(const ChessBoard& board,
-                 const GameState& state, 
-                 const ChessClock& clock) override;
+    DenseMove getMove(ChessBoard& board,
+                      const ChessClock& clock) override;
     
-    void notifyOpponentMove(const Move& move) override;
+    void notifyOpponentMove(const DenseMove& move) override;
     std::string getName() const override { return name; }
     PlayerType getType() const override { return PlayerType::Human; }
     bool getIsResigned() const { return isResigned; }

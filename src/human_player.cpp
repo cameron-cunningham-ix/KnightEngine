@@ -2,13 +2,12 @@
 #include "moves.hpp"
 #include <sstream>
 
-Move HumanPlayer::getMove(const ChessBoard& board,
-                         const GameState& state,
-                         const ChessClock& clock) {
+DenseMove HumanPlayer::getMove(ChessBoard& board,
+                               const ChessClock& clock) {
     // Print current game state
     std::cout << "\nIt's " << name << "'s turn.\n";
     std::cout << "Time remaining: " 
-              << (state.sideToMove == WHITE ? 
+              << (board.currentGameState.sideToMove == WHITE ? 
                   clock.getWhiteTime().count() : 
                   clock.getBlackTime().count()) 
               << "ms\n";
@@ -29,9 +28,9 @@ Move HumanPlayer::getMove(const ChessBoard& board,
         }
 
         // sanToMove checks if the move is legal
-        Move chosenMove = sanToMove(input, board, state);
+        DenseMove chosenMove = sanToMove(input, board);
 
-        if (chosenMove == Move()) {
+        if (chosenMove == DenseMove()) {
             std::cout << "Invalid move. Please use Standard Algebraic Notation (e.g. 'e4' or 'Nf3')\n";
             continue;
         } else {
@@ -40,10 +39,12 @@ Move HumanPlayer::getMove(const ChessBoard& board,
     }
 }
 
-void HumanPlayer::notifyOpponentMove(const Move& move) {
+void HumanPlayer::notifyOpponentMove(const DenseMove& move) {
     // Human players don't need to process opponent moves
     // But we could print them here if desired
-    std::cout << "Opponent played: " << move.piece << " from " << move.from << " to " << move.to << std::endl;
+    std::cout << "Opponent played: " << move.getPieceType()
+              << " from " << move.getFrom()
+              << " to " << move.getTo() << std::endl;
 }
 
 void HumanPlayer::onGameEnd() {

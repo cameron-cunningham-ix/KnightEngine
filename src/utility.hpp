@@ -75,20 +75,18 @@ void printBitboard(U64 bitb);
 void printBBLine(U64 bitb);
 int algebraicToIndex(const std::string& square);
 std::string indexToAlgebraic(int index);
-void setupPosition(ChessBoard& board, GameState& state, const std::string& fen);
-void printFEN(ChessBoard board, GameState state);
-std::string getFEN(ChessBoard board, GameState state);
 bool isValidFEN(const std::string& fen);
-int countLegalMoves(ChessBoard& board, GameState* state);
-bool isCheckmate(ChessBoard& board, GameState* state);
-bool isStalemate(ChessBoard& board, GameState* state);
-U64 perft(ChessBoard& board, GameState* state, int depth);
-PerftMetrics calcPerftMetrics(ChessBoard& board, GameState* state, int depth);
-void setupTestPosition(ChessBoard& board, GameState& state, const std::string& positionName);
+int countLegalMoves(ChessBoard& board);
+bool isCheckmate(ChessBoard& board);
+bool isStalemate(ChessBoard& board);
+U64 perft(ChessBoard& board, int depth);
+PerftMetrics calcPerftMetrics(ChessBoard& board, int depth);
+void setupTestPosition(ChessBoard& board, const std::string& positionName);
 bool verifyAttackPattern(const ChessBoard& board, int square, 
                         const std::vector<std::string>& expectedAttacks);
-Move sanToMove(const std::string &san, const ChessBoard &board, const GameState &state);
+DenseMove sanToMove(const std::string &san, ChessBoard &board);
 void printBoard(const ChessBoard& board);
+U64 setBitsBetween(int startIndex, int endIndex, int direction = 0);
 
 inline int popcount(U64 x) {
     #if defined(__GNUC__) || defined(__clang__)
@@ -390,7 +388,7 @@ const std::array<U64, 64> ATKMASK_ROOK = {
     0b1000000010000000100000001000000010000000100000000111111110000000,
     0b0000000100000001000000010000000100000001111111100000000100000001,
     0b0000001000000010000000100000001000000010111111010000001000000010,
-    0b0000010000000100000001000000010000000100111110110000010000000100,
+    0b0000010000000100000001000000010000000100111110110000010000000100, // 18
     0b0000100000001000000010000000100000001000111101110000100000001000,
     0b0001000000010000000100000001000000010000111011110001000000010000,
     0b0010000000100000001000000010000000100000110111110010000000100000,

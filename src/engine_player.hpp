@@ -1,6 +1,6 @@
 #pragma once
 
-#include "player.hpp"
+#include "i_player.hpp"
 #include "i_chess_engine.hpp"
 #include "chess_engine_base.hpp"
 #include <memory>
@@ -20,8 +20,8 @@ private:
     // UCI-specific members
     bool initialized;                         // Whether UCI mode is initialized
     bool thinking;                            // Whether engine is calculating
-    Move bestMove;                            // Best move from last search
-    Move ponderMove;                          // Ponder move from last search
+    DenseMove bestMove;                            // Best move from last search
+    DenseMove ponderMove;                          // Ponder move from last search
     std::map<std::string, Option> options;    // Engine options
     
     // Thread management for UCI
@@ -38,8 +38,8 @@ private:
     void uciLoop();
     void processCommand(const std::string& cmd);
     void sendResponse(const std::string& response);
-    std::string moveToUCI(const Move& move) const;
-    Move uciToMove(const std::string& uciMove, const ChessBoard& board, const GameState& state) const;
+    std::string moveToUCI(const DenseMove& move) const;
+    DenseMove uciToMove(const std::string& uciMove, const ChessBoard& board) const;
 
 public:
     // Constructor takes ownership of an engine implementation
@@ -51,10 +51,9 @@ public:
     ~EnginePlayer();
 
     // IPlayer interface implementation
-    Move getMove(const ChessBoard& board, 
-                const GameState& state,
-                const ChessClock& clock) override;
-    void notifyOpponentMove(const Move& move) override;
+    DenseMove getMove(ChessBoard& board, 
+                      const ChessClock& clock) override;
+    void notifyOpponentMove(const DenseMove& move) override;
     std::string getName() const override { return engine->getName(); }
     PlayerType getType() const override { return PlayerType::Engine; }
     bool acceptsDraw() const override { return acceptDraws; }
@@ -65,18 +64,18 @@ public:
     void isReady() override;
     void setOption(const std::string& name, const std::string& value) override;
     void uciNewGame() override;
-    void position(const std::string& fen, const std::vector<Move>& moves) override;
+    void position(const std::string& fen, const std::vector<DenseMove>& moves) override;
     void go(const std::map<std::string, std::string>& searchParams) override;
     void stop() override;
     void quit() override;
     
     bool isInitialized() const override { return initialized; }
     bool isThinking() const override { return thinking; }
-    bool hasOption(const std::string& name) const override;
+    bool hasOption(const std::string& name) const override { return options.find(name) != options.end(); }
     
     std::string getAuthor() const override { return engine->getAuthor(); }
-    Move getBestMove() const override { return bestMove; }
-    Move getPonderMove() const override { return ponderMove; }
+    DenseMove getBestMove() const override { return bestMove; }
+    DenseMove getPonderMove() const override { return ponderMove; }
     ChessEngineBase* getEngineForTesting() { return engine.get(); }
     
     const std::map<std::string, Option>& getOptions() const override { return options; }

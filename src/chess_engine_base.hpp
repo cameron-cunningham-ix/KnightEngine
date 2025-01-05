@@ -13,7 +13,7 @@ protected:
     std::string engineVersion;             // Version of the engine
     std::string engineAuthor;              // Author of the engine
     std::atomic<bool> isSearching;         // Whether engine is currently searching
-    Move bestMove;                         // Best move found in last search
+    DenseMove bestMove;                         // Best move found in last search
     int searchDepth;                       // Current search depth
     
     // Engine options with their current values
@@ -34,13 +34,11 @@ public:
     virtual ~ChessEngineBase() = default;
 
     // Core engine interface that must be implemented by all engines
-    virtual Move findBestMove(const ChessBoard& board, 
-                            const GameState& state,
-                            int maxDepth = -1) = 0;
+    virtual DenseMove findBestMove(ChessBoard& board, 
+                                   int maxDepth = -1) = 0;
 
     // Optional evaluation function that engines can override
-    virtual int evaluatePosition(const ChessBoard& board, 
-                               const GameState& state) = 0;
+    virtual int evaluatePosition(const ChessBoard& board) = 0;
 
     // Common functionality that engines might want to override
     virtual void stopSearch() { isSearching = false; }
@@ -52,12 +50,12 @@ public:
     std::string getVersion() const { return engineVersion; }
     std::string getAuthor() const { return engineAuthor; }
     bool isThinking() const { return isSearching; }
-    Move getBestMove() const { return bestMove; }
+    DenseMove getBestMove() const { return bestMove; }
     int getSearchDepth() const { return searchDepth; }
 
 protected:
     // Utility methods for derived classes
     virtual void startSearch() { isSearching = true; }
     virtual void endSearch() { isSearching = false; }
-    virtual void setBestMove(const Move& move) { bestMove = move; }
+    virtual void setBestMove(const DenseMove& move) { bestMove = move; }
 };

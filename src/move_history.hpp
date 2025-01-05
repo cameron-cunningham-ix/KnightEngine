@@ -8,14 +8,14 @@
 
 // Represents a single move in the game history with associated metadata
 struct HistoryEntry {
-    Move move;                      // The move that was played
+    DenseMove move;                 // The move that was played
     std::string san;                // Standard Algebraic Notation representation
     std::string fen;                // FEN position after move
-    std::chrono::milliseconds time; // Time when move was made
+    std::chrono::milliseconds time; // Time when move was made from game start
     std::string comment;            // Optional comment for the move
     std::vector<std::string> nags;  // Numeric Annotation Glyphs (e.g., "!", "?", etc.)
     
-    HistoryEntry(const Move& m, const std::string& s, const std::string& f,
+    HistoryEntry(const DenseMove& m, const std::string& s, const std::string& f,
                  std::chrono::milliseconds t = std::chrono::milliseconds(0),
                  const std::string& c = "", const std::vector<std::string>& n = {})
         : move(m), san(s), fen(f), time(t), comment(c), nags(n) {}
@@ -41,12 +41,12 @@ public:
     explicit MoveHistory(const std::string& initialFEN);
 
     // Core functionality
-    void addMove(const Move& move, const ChessBoard& board, const GameState& state,
+    void addMove(const DenseMove& move, ChessBoard& board,
                 std::chrono::milliseconds timeStamp = std::chrono::milliseconds(0));
     void addComment(const std::string& comment, size_t moveIndex);
     void addNAG(const std::string& nag, size_t moveIndex);
     
-    std::string generateSAN(const Move& move, const ChessBoard& board, const GameState& state) const;
+    std::string generateSAN(const DenseMove& move, ChessBoard& board) const;
 
     // Tag handling
     void setTag(const std::string& name, const std::string& value);
@@ -57,9 +57,9 @@ public:
     std::string toPGN() const;
     bool fromPGN(const std::string& pgn);
 
-    void processMoveToken(const std::string &token, ChessBoard &board, GameState &state);
+    void processMoveToken(const std::string &token, ChessBoard &board);
 
-    std::string getFEN(ChessBoard board, GameState state);
+    std::string getFEN(ChessBoard board);
 
     // Accessors
     const std::vector<HistoryEntry>& getMoves() const { return moves; }
