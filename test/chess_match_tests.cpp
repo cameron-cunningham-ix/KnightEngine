@@ -55,39 +55,49 @@ protected:
     std::unique_ptr<MockPlayer> blackPlayer;
 
     void SetUp() override {
-        // Initialize PEXT
-        PEXT::initialize();
-        // Create default time control: 5 minutes with 3 second increment
+        // Initialize PEXT only once
+        static bool pextInitialized = false;
+        if (!pextInitialized) {
+            PEXT::initialize();
+            pextInitialized = true;
+        }
+    }
+
+    // Helper to create a fresh match
+    void createMatch(const std::vector<DenseMove>& whiteMoves = {}, 
+                    const std::vector<DenseMove>& blackMoves = {}) {
+        // Create players
+        whitePlayer = std::make_unique<MockPlayer>("White", whiteMoves);
+        blackPlayer = std::make_unique<MockPlayer>("Black", blackMoves);
+        
+        // Create time control
         TimeControl tc(std::chrono::minutes(5), std::chrono::seconds(3));
         
-        // Create players
-        whitePlayer = std::make_unique<MockPlayer>("White");
-        blackPlayer = std::make_unique<MockPlayer>("Black");
-        
-        // Create match
+        std::cout << "Creating new match..." << std::endl;
+        // Create match with the players
         match = std::make_unique<ChessMatch>(
             std::unique_ptr<IPlayer>(whitePlayer.release()),
             std::unique_ptr<IPlayer>(blackPlayer.release()),
             tc
         );
     }
-    
-    // Helper to set up a match with specific moves for testing
-    void setupMatchWithMoves(std::vector<DenseMove> whiteMoves, std::vector<DenseMove> blackMoves) {
-        TimeControl tc(std::chrono::minutes(5), std::chrono::seconds(3));
-        whitePlayer = std::make_unique<MockPlayer>("White", whiteMoves);
-        blackPlayer = std::make_unique<MockPlayer>("Black", blackMoves);
-        match = std::make_unique<ChessMatch>(
-            std::unique_ptr<IPlayer>(whitePlayer.release()),
-            std::unique_ptr<IPlayer>(blackPlayer.release()),
-            tc
-        );
+
+    void TearDown() override {
+        match.reset();  // Ensure clean cleanup
     }
 };
 
 // Test match initialization
 TEST_F(ChessMatchTest, Initialization) {
+    // std::ofstream outfile("CMTInit.txt");
+    // // Get original cout buffer
+    // std::streambuf* coutBuf = std::cout.rdbuf();
+    // if (outfile.is_open()) {
+    //     // Redirect
+    //     std::cout.rdbuf(outfile.rdbuf());
+    // }
     // Verify initial match state
+    createMatch();
     EXPECT_TRUE(match->isInProgress());
     EXPECT_EQ(match->getResult(), MatchResult::InProgress);
     EXPECT_EQ(match->getTerminationReason(), TerminationReason::None);
@@ -104,10 +114,15 @@ TEST_F(ChessMatchTest, Initialization) {
     EXPECT_TRUE(state.canCastleWhiteQueenside);
     EXPECT_TRUE(state.canCastleBlackKingside);
     EXPECT_TRUE(state.canCastleBlackQueenside);
+
+    // // Restore cout
+    // std::cout.rdbuf(coutBuf);
+    // outfile.close();
 }
 
 // Test custom starting position 1
 TEST_F(ChessMatchTest, CustomStartingPosition1) {
+    createMatch();
     // Set up a custom position
     std::string customFEN = "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2";
     match->setInitialPosition(customFEN);
@@ -123,6 +138,7 @@ TEST_F(ChessMatchTest, CustomStartingPosition1) {
 
 // Test custom starting psotion 2
 TEST_F(ChessMatchTest, CustomStartingPosition2) {
+    createMatch();
     // Set up a custom position
     std::string customFEN = "k7/8/8/8/8/8/1Q6/K7 w - - 0 1";
     match->setInitialPosition(customFEN);
@@ -141,11 +157,53 @@ TEST_F(ChessMatchTest, CustomStartingPosition2) {
     EXPECT_FALSE(state.canCastleWhiteKingside);
 }
 
+TEST_F(ChessMatchTest, StatePersistence) {
+    createMatch();
+
+    const ChessBoard& board = match->getBoard();
+    std::cout << "Initial state:" << std::endl;
+    std::cout << "White pawns: " << std::hex << board.getWhitePawns() << std::dec << std::endl;
+    std::cout << "Black pawns: " << std::hex << board.getBlackPawns() << std::dec << std::endl;
+    std::cout << "Side to move: " << (board.getSideToMove() == WHITE ? "WHITE" : "BLACK") << std::endl;
+
+    // Make white's move
+    DenseMove whiteMove(W_PAWN, 12, 28);  // e2e4
+    match->getBoard().makeMove(whiteMove, false);
+
+    std::cout << "\nAfter white move:" << std::endl;
+    std::cout << "White pawns: " << std::hex << board.getWhitePawns() << std::dec << std::endl;
+    std::cout << "Black pawns: " << std::hex << board.getBlackPawns() << std::dec << std::endl;
+    std::cout << "Side to move: " << (board.getSideToMove() == WHITE ? "WHITE" : "BLACK") << std::endl;
+
+    // Verify white's move persisted
+    EXPECT_NE(board.getWhitePawns(), 0x000000000000FF00ULL) << "White pawns should have moved";
+    EXPECT_EQ(board.getSideToMove(), BLACK) << "Side should have switched to BLACK";
+
+    // Make black's move
+    DenseMove blackMove(B_PAWN, 52, 36);  // e7e5
+    match->getBoard().makeMove(blackMove, false);
+
+    std::cout << "\nAfter black move:" << std::endl;
+    std::cout << "White pawns: " << std::hex << board.getWhitePawns() << std::dec << std::endl;
+    std::cout << "Black pawns: " << std::hex << board.getBlackPawns() << std::dec << std::endl;
+    std::cout << "Side to move: " << (board.getSideToMove() == WHITE ? "WHITE" : "BLACK") << std::endl;
+
+    // Verify both moves persisted
+    EXPECT_NE(board.getWhitePawns(), 0x000000000000FF00ULL) << "White pawns should still show moved";
+    EXPECT_NE(board.getBlackPawns(), 0x00FF000000000000ULL) << "Black pawns should have moved";
+    EXPECT_EQ(board.getSideToMove(), WHITE) << "Side should have switched back to WHITE";
+}
+
 // Test scholars mate sequence
 TEST_F(ChessMatchTest, ScholarsMate) {
-    testing::internal::CaptureStdout();
-    
-    // Setup moves for scholar's mate
+    std::ofstream outfile("TestOutput/ScholarsMate.txt");
+    // Get original cout buffer
+    std::streambuf* coutBuf = std::cout.rdbuf();
+    if (outfile.is_open()) {
+        // Redirect
+        std::cout.rdbuf(outfile.rdbuf());
+    }
+
     std::vector<DenseMove> whiteMoves = {
         DenseMove(W_PAWN, 12, 28),      // 1. e4
         DenseMove(W_BISHOP, 5, 26),     // 2. Bc4
@@ -156,24 +214,29 @@ TEST_F(ChessMatchTest, ScholarsMate) {
     std::vector<DenseMove> blackMoves = {
         DenseMove(B_PAWN, 52, 36),      // 1... e5
         DenseMove(B_KNIGHT, 62, 45),    // 2... Nc6
-        DenseMove(B_PAWN, 54, 46)       // 3... g6
+        DenseMove(B_PAWN, 55, 47)       // 3... h6
     };
     
-    setupMatchWithMoves(whiteMoves, blackMoves);
-    match->start();
+    // Create match with the moves
+    createMatch(whiteMoves, blackMoves);
+
+    // Verify initial state
+    ASSERT_TRUE(match != nullptr);
+    std::cout << "Initial board state:" << std::endl;
+    printBoard(match->getBoard());
     
-    // Verify match outcome
+    match->start();
+
+    // Verify final state
+    std::cout << "Final board state:" << std::endl;
+    printBoard(match->getBoard());
     EXPECT_FALSE(match->isInProgress());
     EXPECT_EQ(match->getResult(), MatchResult::WhiteWin);
     EXPECT_EQ(match->getTerminationReason(), TerminationReason::Checkmate);
     
-    std::string output = testing::internal::GetCapturedStdout();
-    std::ofstream outfile("ScholarsMate.txt");
-    if (outfile.is_open()) {
-        outfile << output;
-    }
+    // Restore cout
+    std::cout.rdbuf(coutBuf);
     outfile.close();
-
 }
 
 // Test resignation
@@ -184,7 +247,7 @@ TEST_F(ChessMatchTest, Resignation) {
     };
     std::vector<DenseMove> blackMoves = {};  // Empty moves vector will trigger resignation
     
-    setupMatchWithMoves(whiteMoves, blackMoves);
+    createMatch(whiteMoves, blackMoves);
     match->start();
     
     EXPECT_FALSE(match->isInProgress());
@@ -199,7 +262,7 @@ TEST_F(ChessMatchTest, Stalemate) {
     };
     std::vector<DenseMove> blackMoves = {};
     
-    setupMatchWithMoves(whiteMoves, blackMoves);
+    createMatch(whiteMoves, blackMoves);
     // Setup a basic stalemate position
     match->setInitialPosition("k7/8/8/8/8/8/1Q6/K7 w - - 0 1");
     match->start();
@@ -248,7 +311,7 @@ TEST_F(ChessMatchTest, PGNExport1) {
         DenseMove(B_KNIGHT, 62, 45)     // 2... Nf6
     };
     
-    setupMatchWithMoves(whiteMoves, blackMoves);
+    createMatch(whiteMoves, blackMoves);
     match->start();
     
     std::string pgn = match->getPGN();
@@ -263,6 +326,12 @@ TEST_F(ChessMatchTest, PGNExport1) {
 
 // Test PGN export with game result
 TEST_F(ChessMatchTest, PGNExport2) {
+    testing::internal::CaptureStdout();
+
+    std::ofstream outfile("TestOutput/PGNExport2.txt");
+    if (outfile.is_open()) {
+        outfile << "PGNExport2 test: " << std::endl;
+    }
     // Setup a match that ends in checkmate
     std::vector<DenseMove> whiteMoves = {
         DenseMove(W_PAWN, 12, 28),      // 1. e4
@@ -281,16 +350,16 @@ TEST_F(ChessMatchTest, PGNExport2) {
         DenseMove(B_PAWN, 52, 36),      // 1... e5
         DenseMove(B_KNIGHT, 62, 45),    // 2... Nf6
         DenseMove(B_PAWN, 50, 42),      // 3... c6 
-        DenseMove(B_ROOK, 63, 62),      // 4... Rb7
-        DenseMove(B_ROOK, 62, 63),      // 5... Rb8
-        DenseMove(B_ROOK, 63, 62),       // 6... Rb7
+        DenseMove(B_ROOK, 63, 62),      // 4... Rg8
+        DenseMove(B_ROOK, 62, 63),      // 5... Rh8
+        DenseMove(B_ROOK, 63, 62),       // 6... Rg8
         DenseMove(B_KING, 60, 52),       // 7... Ke7
         DenseMove(B_KING, 52, 44),        // 8... Ke6
         DenseMove(B_KING, 44, 36),        // 9... Ke5
         DenseMove(B_KING, 36, 28, D_PAWN)        // 10... Kxe4
     };
     
-    setupMatchWithMoves(whiteMoves, blackMoves);
+    createMatch(whiteMoves, blackMoves);
     match->start();
     
     std::string pgn = match->getPGN();
@@ -300,6 +369,9 @@ TEST_F(ChessMatchTest, PGNExport2) {
     EXPECT_TRUE(pgn.find("[Result \"1-0\"]") != std::string::npos);
     EXPECT_TRUE(pgn.find("1. e4 e5 2. Nf3 Nf6 3. Nxe5 c6 4. Nxc6 Rg8 5. Nxa7 Rh8 6. Nxc8 Rg8 7. Nd6+ Ke7 "
                          "8. Nc8+ Ke6 9. Bc4+ Ke5 10. d4+ Kxe4 11. Qd3#") != std::string::npos);
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
 }
 
 
@@ -342,7 +414,7 @@ TEST_F(ChessMatchTest, ThreefoldRepetition) {
         DenseMove(B_KNIGHT, 45, 62),    // 4... Ng8
     };
     
-    setupMatchWithMoves(whiteMoves, blackMoves);
+    createMatch(whiteMoves, blackMoves);
     match->start();
     
     EXPECT_FALSE(match->isInProgress());
@@ -364,7 +436,7 @@ TEST_F(ChessMatchTest, FiftyMoveRule) {
         DenseMove(B_KING, 40, 41)
     };
     
-    setupMatchWithMoves(whiteMoves, blackMoves);
+    createMatch(whiteMoves, blackMoves);
     match->setInitialPosition("8/8/k7/8/8/8/8/K1R5 w - - 99 75");
     match->start();
     
@@ -381,7 +453,7 @@ TEST_F(ChessMatchTest, InsufficientMaterial) {
     };
     std::vector<DenseMove> blackMoves = {};
     
-    setupMatchWithMoves(whiteMoves, blackMoves);
+    createMatch(whiteMoves, blackMoves);
     // Set up a king vs king position
     match->setInitialPosition("4k3/8/8/8/8/8/8/4K3 w - - 0 1");
     match->start();

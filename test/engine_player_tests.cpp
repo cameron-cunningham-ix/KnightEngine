@@ -4,6 +4,8 @@
 #include "../src/random_engine.hpp"
 #include "../src/pext_bitboard.hpp"
 #include <gtest/gtest.h>
+#include <iostream>
+#include <fstream>
 #include <chrono>
 
 // Mock chess engine for testing
@@ -13,7 +15,7 @@ public:
     
     DenseMove findBestMove(ChessBoard& board, int maxDepth = -1) override {
         isSearching = true;
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));  // Simulate thinking
+        std::this_thread::sleep_for(std::chrono::milliseconds(50*maxDepth));  // Simulate thinking
         isSearching = false;
         return moveToReturn;
     }
@@ -83,6 +85,11 @@ TEST_F(EnginePlayerTest, GetMove) {
 
 // Test time management
 TEST_F(EnginePlayerTest, TimeManagement) {
+    testing::internal::CaptureStdout();
+    std::ofstream outfile("TestOutput/EnginePlayerTest_TimeManagement.txt");
+    if (outfile.is_open()) {
+        outfile << "EnginePlayerTest_TimeManagement.txt:\n";
+    }
     // Create new engine with specific time controls
     auto newMockEngine = std::make_unique<MockEngine>();
     EnginePlayer timeControlledPlayer(
@@ -98,13 +105,16 @@ TEST_F(EnginePlayerTest, TimeManagement) {
     auto duration = std::chrono::steady_clock::now() - startTime;
     
     EXPECT_GE(std::chrono::duration_cast<std::chrono::milliseconds>(duration).count(), 100);
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
 }
 
 // Test UCI protocol commands
 TEST_F(EnginePlayerTest, UCICommands) {
     // Test UCI initialization
     player->uci();
-    EXPECT_TRUE(player->isInitialized());
+    EXPECT_TRUE(player->waitForInitialization());
     
     // Test option setting
     player->setOption("Hash", "32");

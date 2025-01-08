@@ -71,16 +71,23 @@ TEST_F(SANGenerationTest, CheckAndMate) {
 
 // Test pawn promotion
 TEST_F(SANGenerationTest, Promotion) {
-    board.setupPositionFromFEN( "7k/4P3/8/8/8/8/8/4K3 w - - 0 1");
-    
+    // Normal promotion
+    board.setupPositionFromFEN("8/4P3/8/8/8/8/8/k6K w - - 0 1");
     DenseMove promotion(W_PAWN, 52, 60);
     promotion.setPromoteTo(D_QUEEN);
-    EXPECT_EQ("e8=Q+", history.generateSAN(promotion, board));
+    EXPECT_EQ("e8=Q", history.generateSAN(promotion, board));
+
+    // Promotion with check
+    board.setupPositionFromFEN("7k/4P3/8/8/8/8/8/4K3 w - - 0 1");
     
-    board.setupPositionFromFEN( "3r4/4P2k/8/8/8/8/8/4K3 w - - 0 1");
+    DenseMove promotionCheck(W_PAWN, 52, 60);
+    promotionCheck.setPromoteTo(D_QUEEN);
+    EXPECT_EQ("e8=Q+", history.generateSAN(promotionCheck, board));
     
-    DenseMove promotionCapture(W_PAWN, 52, 59);
-    promotion.setPromoteTo(D_QUEEN);
+    board.setupPositionFromFEN("3r4/4P2k/8/8/8/8/8/4K3 w - - 0 1");
+    
+    DenseMove promotionCapture(W_PAWN, 52, 59, D_ROOK);
+    promotionCapture.setPromoteTo(D_QUEEN);
     EXPECT_EQ("exd8=Q", history.generateSAN(promotionCapture, board));
 }
 
@@ -97,7 +104,7 @@ TEST_F(SANGenerationTest, Disambiguation) {
     EXPECT_EQ("Nac1", history.generateSAN(DenseMove(W_KNIGHT, 8, 2), board));
     
     // Test full disambiguation (both file and rank needed)
-    board.setupPositionFromFEN( "5k1K/8/8/8/8/N3N3/8/N3N3 w - - 0 1");
+    board.setupPositionFromFEN("5k1K/8/8/8/8/N3N3/8/N3N3 w - - 0 1");
     EXPECT_EQ("Na1c2", history.generateSAN(DenseMove(W_KNIGHT, 0, 10), board));
     EXPECT_EQ("Ne1c2", history.generateSAN(DenseMove(W_KNIGHT, 4, 10), board));
     EXPECT_EQ("Na3c2", history.generateSAN(DenseMove(W_KNIGHT, 16, 10), board));

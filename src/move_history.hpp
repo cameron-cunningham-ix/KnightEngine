@@ -59,7 +59,7 @@ public:
 
     void processMoveToken(const std::string &token, ChessBoard &board);
 
-    std::string getFEN(ChessBoard board);
+    std::string getFEN(const ChessBoard& board);
 
     // Accessors
     const std::vector<HistoryEntry>& getMoves() const { return moves; }

@@ -6,14 +6,14 @@
 #include <map>
 #include <atomic>
 
-// Base class for all chess engine implementations
+/// @brief Base class for all chess engine implementations
 class ChessEngineBase {
 protected:
     std::string engineName;                // Name of the engine implementation
     std::string engineVersion;             // Version of the engine
     std::string engineAuthor;              // Author of the engine
     std::atomic<bool> isSearching;         // Whether engine is currently searching
-    DenseMove bestMove;                         // Best move found in last search
+    DenseMove bestMove;                    // Best move found in last search
     int searchDepth;                       // Current search depth
     
     // Engine options with their current values

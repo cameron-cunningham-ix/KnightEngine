@@ -28,6 +28,7 @@ DenseMove HumanPlayer::getMove(ChessBoard& board,
         }
 
         // sanToMove checks if the move is legal
+        std::cout << "input: " << input << "\n";
         DenseMove chosenMove = sanToMove(input, board);
 
         if (chosenMove == DenseMove()) {

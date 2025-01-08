@@ -40,11 +40,15 @@ MoveHistory::MoveHistory(const std::string& initialFEN)
 void MoveHistory::addMove(const DenseMove& move, ChessBoard& board,
                          std::chrono::milliseconds timeStamp) {
     // std::cout << "MoveHistory.addMove start\n";
+    // std::cout << "Board side to move: " << board.getSideToMove() << "\n";
     // Generate SAN notation for the move
     std::string san = generateSAN(move, board);
     // std::cout << "MoveHistory.addMove generated SAN: " << san << "\n";
+    // std::cout << "Board side to move: " << board.getSideToMove() << "\n";
+
 
     // Create and add FEN entry
+    // std::cout << "MoveHistory.addMove getting FEN\n";
     std::string fen = getFEN(board);
     // std::cout << "MoveHistory.addMove got FEN: " << fen << "\n";
 
@@ -56,6 +60,8 @@ void MoveHistory::addMove(const DenseMove& move, ChessBoard& board,
 
 // Generate Standard Algebraic Notation for a move
 std::string MoveHistory::generateSAN(const DenseMove& move, ChessBoard& board) const {
+    std::cout << "generateSAN start, board side: " << board.getSideToMove() << "\n";
+    std::cout << move.toString(false) << "\n";
     std::stringstream san;
     // Get move attributes
     PieceType movePiece = move.getPieceType();
@@ -86,6 +92,8 @@ std::string MoveHistory::generateSAN(const DenseMove& move, ChessBoard& board) c
     
     // Get all legal moves
     legalMoves = MoveGenerator::generateLegalMoves(board);
+
+    // std::cout << "generateSAN genLegalMoves, board side: " << board.getSideToMove() << "\n";
 
     for (const DenseMove& candidateMove : legalMoves) {
         if (candidateMove.getPieceType() != movePiece
@@ -152,7 +160,9 @@ std::string MoveHistory::generateSAN(const DenseMove& move, ChessBoard& board) c
     }
 
     // Check for check and checkmate
+    // std::cout << "generateSAN before makeMove, board side: " << board.getSideToMove() << "\n";
     board.makeMove(move, true);
+    // std::cout << "generateSAN after makeMove, board side: " << board.getSideToMove() << "\n";
 
     if (board.isInCheck()) {
         if (isCheckmate(board)) {
@@ -161,6 +171,10 @@ std::string MoveHistory::generateSAN(const DenseMove& move, ChessBoard& board) c
             san << "+";
         }
     }
+    // std::cout << "generateSAN before unmakeMove, board side: " << board.getSideToMove() << "\n";
+    // Unmake move
+    board.unmakeMove(move, true);
+    // std::cout << "generateSAN after unmakeMove, board side: " << board.getSideToMove() << "\n";
     return san.str();
 }
 
@@ -213,7 +227,7 @@ std::string MoveHistory::toPGN() const {
     pgn << "\n";
 
     // Write moves
-    for (size_t i = 0; i < moves.size(); ++i) {
+    for (int i = 0; i < (int)moves.size(); ++i) {
         if (i % 2 == 0) {
             pgn << (i/2 + 1) << ". ";
         }
@@ -290,7 +304,7 @@ bool MoveHistory::fromPGN(const std::string& pgn) {
         }
         
         // Initialize board with starting position
-        ChessBoard board;
+        ChessBoard board = ChessBoard();
         if (!isStandardStart) {
             if (isValidFEN(startingFen)) {
                 board.setupPositionFromFEN(startingFen);
@@ -379,6 +393,7 @@ bool MoveHistory::fromPGN(const std::string& pgn) {
                         else if (currentMove.find('.') == std::string::npos) {
                             // Process as actual move
                             DenseMove move = sanToMove(currentMove, board);
+                            std::cout << "fromPGN move from sanToMove - move: " << move.toString(false) << "\n";
                             
                             // Add move to history
                             addMove(move, board);
@@ -433,42 +448,42 @@ bool MoveHistory::fromPGN(const std::string& pgn) {
     }
 }
 
-// Helper method to process a single move token
-void MoveHistory::processMoveToken(const std::string& token, ChessBoard& board) {
-    // Skip move numbers
-    if (token.find('.') != std::string::npos) return;
+// // Helper method to process a single move token
+// void MoveHistory::processMoveToken(const std::string& token, ChessBoard& board) {
+//     // Skip move numbers
+//     if (token.find('.') != std::string::npos) return;
     
-    // Handle game termination markers
-    if (token == "1-0" || token == "0-1" || token == "1/2-1/2" || token == "*") {
-        setTag("Result", token);
-        return;
-    }
+//     // Handle game termination markers
+//     if (token == "1-0" || token == "0-1" || token == "1/2-1/2" || token == "*") {
+//         setTag("Result", token);
+//         return;
+//     }
     
-    // Handle NAGs (Numeric Annotation Glyphs)
-    if (token[0] == '$') {
-        if (!moves.empty()) {
-            moves.back().nags.push_back(token.substr(1));
-        }
-        return;
-    }
+//     // Handle NAGs (Numeric Annotation Glyphs)
+//     if (token[0] == '$') {
+//         if (!moves.empty()) {
+//             moves.back().nags.push_back(token.substr(1));
+//         }
+//         return;
+//     }
     
-    try {
-        // Convert SAN to move
-        DenseMove move = sanToMove(token, board);
+//     try {
+//         // Convert SAN to move
+//         DenseMove move = sanToMove(token, board);
         
-        // Add move to history
-        addMove(move, board);
+//         // Add move to history
+//         addMove(move, board);
         
-        // Update board position
-        board.makeMove(move, true);
-    } catch (const std::exception& e) {
-        // Log error for debugging
-        std::cerr << "Error processing move: " << token << " - " << e.what() << std::endl;
-        throw;  // Re-throw to handle in fromPGN
-    }
-}
+//         // Update board position
+//         board.makeMove(move, true);
+//     } catch (const std::exception& e) {
+//         // Log error for debugging
+//         std::cerr << "Error processing move: " << token << " - " << e.what() << std::endl;
+//         throw;  // Re-throw to handle in fromPGN
+//     }
+// }
 
-std::string MoveHistory::getFEN(ChessBoard board) {
+std::string MoveHistory::getFEN(const ChessBoard& board) {
     // std::cout << "MoveHistory.getFEN start\n";
     std::string fen;
     

@@ -8,95 +8,108 @@ ChessMatch::ChessMatch(std::unique_ptr<IPlayer> white,
     : whitePlayer(std::move(white)),
       blackPlayer(std::move(black)),
       clock(tc),
+      board(std::make_unique<ChessBoard>()),
       result(MatchResult::InProgress),
       terminationReason(TerminationReason::None),
       isMatchOver(false),
       isPaused(false) {
     
+    // std::cout << "ChessMatch constructor - Board initialized at: " << board.get() << std::endl;
+    // std::cout << "Board initialization check: " << std::endl;
+    // Verify board was created properly
+    if (!board) {
+        throw std::runtime_error("Board failed to initialize");
+    }
+    // Verify board can be accessed
+    try {
+        auto whitePawns = board->getWhitePawns();
+        // std::cout << "Initial white pawns bitboard: " << std::hex << whitePawns << std::dec << std::endl;
+    } catch (const std::exception& e) {
+        std::cout << "Error accessing board: " << e.what() << std::endl;
+        throw;
+    }
     // Set up history with player names
     history.setTag("White", whitePlayer->getName());
     history.setTag("Black", blackPlayer->getName());
+    // std::cout << "ChessMatch constructor complete" << std::endl;
 }
 
 void ChessMatch::start() {
-    // Start the chess clock
     clock.start();
     
     while (!isMatchOver && !isPaused) {
-        // Get the current player
-        IPlayer* currentPlayer = (board.getSideToMove() == WHITE) ?
+        // std::cout << "\nTurn start - Board pointer address: " << board.get() << std::endl;
+        ChessBoard& boardRef = *board;  // Get a reference to the board
+        // std::cout << "Start / before turn:\n";
+        // boardRef.printBoardInfo(true);
+        // boardRef.printStateHistory();
+
+        IPlayer* currentPlayer = (boardRef.getSideToMove() == WHITE) ?
                                 whitePlayer.get() : blackPlayer.get();
-        // std::cout << "ChessMatch.start currentPlayer " << currentPlayer->getName() << "\n";
+        Color prevSide = boardRef.getSideToMove();
+        
         try {
-            // Get move from current player
-            DenseMove move = currentPlayer->getMove(board, clock);
-            // std::cout << "ChessMatch.start move returned " << move.getPieceType() << " from "
-            //     << move.getFrom() << " to " << move.getTo() << "\n";
-            history.addMove(move, board, clock.getWhiteTime());
-            // std::cout << "ChessMatch.start move added to history\n";
+            // Pass the reference to the board, not a copy
+            DenseMove move = currentPlayer->getMove(boardRef, clock);
+            // std::cout << "Before makeMove - Board pointer address: " << board.get() << std::endl;
+            // std::cout << "Move: " << move.toString(false) << std::endl;
+            // std::cout << "Board before history.addMove:\n";
+            // printBoard(boardRef);
+            // Add move to history first
+            history.addMove(move, boardRef, clock.getWhiteTime());
+
+            // std::cout << "Board after history.addMove (should be same as before):\n";
+            // printBoard(boardRef);
             
-            // Make the move
-            board.makeMove(move, false);
-            // std::cout << "ChessMatch.start move made\n";
+            // Make the move on our reference
+            boardRef.makeMove(move, false);
             
-            // Update clock
+            // std::cout << "After makeMove - Board pointer address: " << board.get() << std::endl;
+            // std::cout << "Board after makeMove:\n";
+            // printBoard(boardRef);
+            
+
             clock.makeMove();
-            // std::cout << "ChessMatch.start clock makeMove made\n";
-
             
-            // Notify opponent
-            IPlayer* opponent = (board.currentGameState.sideToMove == WHITE) ? 
-                               whitePlayer.get() : blackPlayer.get();
-            // std::cout << "ChessMatch.start get opp\n";
-            
-            opponent->notifyOpponentMove(move);
-            // std::cout << "ChessMatch.start notified opp\n";
-
-            
-            // Check for game end conditions
-            if (checkForGameEnd()) {
-                // std::cout << "ChessMatch.start game ended\n";
-
-                break;
+            // Check if side switched using our reference
+            if (boardRef.getSideToMove() == prevSide) {
+                std::cout << "ERROR: Side to move did not switch properly" << std::endl;
             }
-
-            // Print board
             
+            IPlayer* opponent = (boardRef.getSideToMove() == WHITE) ? 
+                               whitePlayer.get() : blackPlayer.get();
+            opponent->notifyOpponentMove(move);
             
+            if (checkForGameEnd()) break;
         } catch (const std::exception& e) {
-            // Handle player errors (resignation, invalid moves, etc.)
-            std::cout << "(match::start) Error: " << e.what() << std::endl;
+            std::cout << "Error during move: " << e.what() << std::endl;
             isMatchOver = true;
-            
-            // Determine if this was a resignation
-            result = (board.currentGameState.sideToMove == WHITE) ? 
+            result = (boardRef.getSideToMove() == WHITE) ? 
                      MatchResult::BlackWin : MatchResult::WhiteWin;
-            terminationReason = (board.currentGameState.sideToMove == WHITE) ? 
+            terminationReason = (boardRef.getSideToMove() == WHITE) ? 
                                TerminationReason::WhiteResigned :
                                TerminationReason::BlackResigned;
         }
     }
-    
-    // Stop clock when game ends
     clock.stop();
 }
 
 bool ChessMatch::checkForGameEnd() {
     // std::cout << "ChessMatch checkForGameEnd start\n";
     // Check for checkmate
-    if (isCheckmate(board)) {
+    if (isCheckmate(*board)) {
         // std::cout << "    isCheckmate true\n";
         isMatchOver = true;
-        result = (board.currentGameState.sideToMove == WHITE) ? 
+        result = (board->currentGameState.sideToMove == WHITE) ? 
                  MatchResult::BlackWin : MatchResult::WhiteWin;
         terminationReason = TerminationReason::Checkmate;
         return true;
     }
-        // std::cout << "    isCheckmate false\n";
-
+    // std::cout << "    isCheckmate false\n";
+    // printBoard(*board);
     
     // Check for stalemate
-    if (isStalemate(board)) {
+    if (isStalemate(*board)) {
         // std::cout << "    isStalemate true\n";
         isMatchOver = true;
         result = MatchResult::Draw;
@@ -104,6 +117,7 @@ bool ChessMatch::checkForGameEnd() {
         return true;
     }
     // std::cout << "    isStalemate false\n";
+    // printBoard(*board);
 
     
     // Check for threefold repetition
@@ -118,7 +132,7 @@ bool ChessMatch::checkForGameEnd() {
 
     
     // Check 50-move rule
-    if (board.currentGameState.halfMoveClock >= 100) {
+    if (board->currentGameState.halfMoveClock >= 100) {
         isMatchOver = true;
         result = MatchResult::Draw;
         terminationReason = TerminationReason::FiftyMoveRule;
@@ -191,7 +205,8 @@ void ChessMatch::setTimeControl(const TimeControl& tc) {
 void ChessMatch::setInitialPosition(const std::string& fen) {
     // Set up a custom starting position - only allowed before match starts
     if (!clock.isClockRunning()) {
-        board.setupPositionFromFEN(fen);
+        board = std::make_unique<ChessBoard>(); // Create new board
+        board->setupPositionFromFEN(fen);
         history = MoveHistory(fen);  // Reset history with new starting position
         
         // Update player names in history
@@ -300,10 +315,10 @@ bool ChessMatch::hasInsufficientMaterial() const {
     }
 
     // Count pieces for each side
-    int whiteBishops = std::count(lastMoveFEN.begin(), lastMoveFEN.end(), 'B');
-    int blackBishops = std::count(lastMoveFEN.begin(), lastMoveFEN.end(), 'b');
-    int whiteKnights = std::count(lastMoveFEN.begin(), lastMoveFEN.end(), 'N');
-    int blackKnights = std::count(lastMoveFEN.begin(), lastMoveFEN.end(), 'n');
+    int whiteBishops = (int)std::count(lastMoveFEN.begin(), lastMoveFEN.end(), 'B');
+    int blackBishops = (int)std::count(lastMoveFEN.begin(), lastMoveFEN.end(), 'b');
+    int whiteKnights = (int)std::count(lastMoveFEN.begin(), lastMoveFEN.end(), 'N');
+    int blackKnights = (int)std::count(lastMoveFEN.begin(), lastMoveFEN.end(), 'n');
 
     // If either side has both a knight and a bishop, there's sufficient material
     if ((whiteBishops > 0 && whiteKnights > 0) || 
@@ -324,9 +339,9 @@ bool ChessMatch::hasInsufficientMaterial() const {
         
         // Scan the board for bishops
         for (int i = 0; i < 64; i++) {
-            if (board.getPieceAt(i) == W_BISHOP) {
+            if (board->getPieceAt(i) == W_BISHOP) {
                 whiteBishopSquares.push_back(i);
-            } else if (board.getPieceAt(i) == B_BISHOP) {
+            } else if (board->getPieceAt(i) == B_BISHOP) {
                 blackBishopSquares.push_back(i);
             }
         }

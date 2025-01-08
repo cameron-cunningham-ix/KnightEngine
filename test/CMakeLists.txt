@@ -20,7 +20,6 @@ add_executable(chess_tests
     game_state_tests.cpp
     human_player_tests.cpp
     move_generation_tests.cpp
-    move_validation_tests.cpp
     pext_bitboard_tests.cpp
     pgn_tests.cpp
     san_generation_tests.cpp

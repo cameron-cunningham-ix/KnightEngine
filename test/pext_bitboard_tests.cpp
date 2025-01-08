@@ -27,14 +27,14 @@ class PEXTTest : public ::testing::Test {
 };
 
 TEST_F(PEXTTest, GetRookAttacks) {
-    std::ofstream outfile("rookMoves.txt");
+    std::ofstream outfile("TestOutput/rookMoves.txt");
     if (outfile.is_open()) {
         outfile << "Rook moves: " << std::endl;
     }
     std::cout.rdbuf(outfile.rdbuf());
 
     for (int square = 0; square < 64; square++) {
-        int size = PEXT::rookMoves[square].size();
+        int size = (int)PEXT::rookMoves[square].size();
         for (int index = 0; index < size; index++) {
             std::cout << "square " << square << " index " << index << " - " << std::bitset<12>(index) << "\n";
             printBBLine(PEXT::rookMoves[square][index]);
@@ -43,7 +43,7 @@ TEST_F(PEXTTest, GetRookAttacks) {
 }
 
 TEST_F(PEXTTest, RookAttacks) {
-    std::ofstream outfile("rookMoves.txt");
+    std::ofstream outfile("TestOutput/rookMoves.txt");
     if (outfile.is_open()) {
         outfile << "Rook moves: " << std::endl;
     }
@@ -58,7 +58,7 @@ TEST_F(PEXTTest, RookAttacks) {
 }
 
 TEST_F(PEXTTest, BishopAttacks) {
-    std::ofstream outfile("bishopMoves.txt");
+    std::ofstream outfile("TestOutput/bishopMoves.txt");
     if (outfile.is_open()) {
         outfile << "Bishop moves: " << std::endl;
     }

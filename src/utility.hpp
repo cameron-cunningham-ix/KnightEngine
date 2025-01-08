@@ -79,7 +79,7 @@ bool isValidFEN(const std::string& fen);
 int countLegalMoves(ChessBoard& board);
 bool isCheckmate(ChessBoard& board);
 bool isStalemate(ChessBoard& board);
-U64 perft(ChessBoard& board, int depth);
+U64 perft(ChessBoard& board, int maxDepth, int depth, bool displaySubPerft = false);
 PerftMetrics calcPerftMetrics(ChessBoard& board, int depth);
 void setupTestPosition(ChessBoard& board, const std::string& positionName);
 bool verifyAttackPattern(const ChessBoard& board, int square, 

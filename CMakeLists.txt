@@ -43,6 +43,7 @@ add_library(KnightEngine
     src/pext_bitboard.cpp
     src/pext_bitboard.hpp
     src/random_engine.hpp
+    src/types.cpp
     src/types.hpp
     src/utility.cpp
     src/utility.hpp
@@ -70,6 +71,7 @@ target_link_libraries(KnightEngineApp PRIVATE
 # Enable testing
 enable_testing()
 add_subdirectory(test)
+file(MAKE_DIRECTORY build/TestOutput)
 
 include(FetchContent)
 FetchContent_Declare(

@@ -1,5 +1,5 @@
 #include "utility.hpp"
-
+#include "types.hpp"
 
 bool IsWithinBoard(int index) {
     return index >= 0 && index < 64;
@@ -58,6 +58,29 @@ std::string indexToAlgebraic(int index) {
     
     return std::string(1, file) + std::string(1, rank);
 }
+/// @return Returns string of simple algebraic form of move
+std::string DenseMove::toAlgebraic() const {
+    std::string result = indexToAlgebraic(getFrom()) + indexToAlgebraic(getTo());
+    if (getPromoteDense() != D_EMPTY) {
+        switch(getPromoteDense()) {
+            case D_KNIGHT:
+                result += "n";
+                break;
+            case D_BISHOP:
+                result += "b";
+                break;
+            case D_ROOK:
+                result += "r";
+                break;
+            case D_QUEEN:
+                result += "q";
+                break;
+            default:
+                break;
+        }
+    }
+    return result;
+}
 
 bool isValidFEN(const std::string& fen) {
     
@@ -113,11 +136,12 @@ bool isValidFEN(const std::string& fen) {
 // Count legal moves in a position
 int countLegalMoves(ChessBoard& board) {
     std::vector<DenseMove> moves = MoveGenerator::generateLegalMoves(board);
-    return moves.size();
+    return (int)moves.size();
 }
 
 // Verify if position is checkmate
 bool isCheckmate(ChessBoard& board) {
+    // std::cout << "isCheckmate start\n";
     // Check if king is in check
     if (!board.isInCheck()) {
         return false;  // Not even in check
@@ -139,7 +163,7 @@ bool isStalemate(ChessBoard& board) {
     // std::cout << "isStalemate start\n";
     // Generate all possible moves
     std::vector<DenseMove> moves = MoveGenerator::generateLegalMoves(board);
-    // std::cout << "    got moves\n";
+    // printBoard(board);
     // If any legal move exists, it's not stalemate
     if (moves.size() > 0) {
         // std::cout << "    moves size > 0, no stalemate\n";
@@ -161,21 +185,38 @@ bool isStalemate(ChessBoard& board) {
 // @param state: Current game state (castling rights, en passant, etc.)
 // @param depth: How many moves deep to calculate
 // @return: Number of possible positions at given depth
-uint64_t perft(ChessBoard& board, int depth) {
-    // Base case - when we reach desired depth, count this position
-    if (depth == 0) return 1ULL;
+U64 perft(ChessBoard& board, int maxDepth, int depth, bool displaySubPerft) {
     
-    uint64_t nodes = 0;
+    U64 nodes = 0;
     
     // Get all possible moves from current position
     std::vector<DenseMove> moves = MoveGenerator::generateLegalMoves(board);
+    // Base case - when we reach desired depth, count this position
+    if (depth == 1) return (U64)moves.size();
     
     // Try each move
     for (const DenseMove& move : moves) {
+        // std::cout << "depth " << depth << " move " << move.toString(false) << "\n";
+        
+        // if (depth == 2 && move.getPieceType() == W_KING) {
+        //     std::cout << move.toAlgebraic() << "\n";
+        // }
+        // if (depth == 1) {
+        //     std::cout << "    " << move.toString(false) << "\n";
+        // }
+
         // Make the move on the board
         board.makeMove(move, true);
+
+        // Get perft for new sub position
+        U64 sub = perft(board, maxDepth, depth - 1, displaySubPerft);
+        
+        if (displaySubPerft && maxDepth == depth) {
+            std::cout << move.toAlgebraic() << ": " << sub << "\n";
+        }
+
         // Recurse with temporary position and updated state
-        nodes += perft(board, depth - 1);
+        nodes += sub;
         // Unmake the move
         board.unmakeMove(move, true);
     }
@@ -296,111 +337,124 @@ DenseMove sanToMove(const std::string& san, ChessBoard& board) {
         return DenseMove();
     }
 
-    // Get state
-    Color sideToMove = board.currentGameState.sideToMove;
-    
-    // Handle castling moves
-    if (san == "O-O") {  // Kingside castle
-        int from = sideToMove == WHITE ? 4 : 60;   // e1 or e8
-        int to = sideToMove == WHITE ? 6 : 62;     // g1 or g8
-        DenseMove move(sideToMove == WHITE ? W_KING : B_KING, from, to,
-                       D_EMPTY, true);
-        return move;
-    }
-    if (san == "O-O-O") {  // Queenside castle
-        int from = sideToMove == WHITE ? 4 : 60;   // e1 or e8
-        int to = sideToMove == WHITE ? 2 : 58;     // c1 or c8
-        DenseMove move(sideToMove == WHITE ? W_KING : B_KING, from, to,
-                       D_EMPTY, true);
-        return move;
-    }
-
-    // Remove check/mate symbols for parsing
-    std::string s = san;
-    bool isCheck = (s.back() == '+');
-    bool isMate = (s.back() == '#');
-    if (isCheck || isMate) {
-        s.pop_back();
-    }
-
     // Initialize move components
     PieceType pieceType;
     int fromFile = -1, fromRank = -1;
     int toFile = -1, toRank = -1;
     bool isCapture = false;
+    bool isCastle = false;
     bool isPromotion = false;
-    PieceType promoteTo = static_cast<PieceType>(-1);        
+    PieceType promoteTo = PieceType::EMPTY;
+    // Get state
+    Color sideToMove = board.currentGameState.sideToMove;
 
-    // Get piece type from first character if uppercase, otherwise assume pawn
-    if (std::isupper(s[0])) {
-        char piece = s[0];
-        if (fenToPiece.find(piece) == fenToPiece.end()) {
-            return DenseMove();  // Invalid piece character
-        }
-        pieceType = sideToMove == WHITE ? 
-            fenToPiece.at(piece) : static_cast<PieceType>(fenToPiece.at(piece) + 6);
+    DenseMove move = DenseMove();
+    
+    // Handle castling moves
+    if (san == "O-O") {  // Kingside castle
+        pieceType = sideToMove == WHITE ? W_KING : B_KING;
+        int from = sideToMove == WHITE ? 4 : 60;   // e1 or e8
+        int to = sideToMove == WHITE ? 6 : 62;     // g1 or g8
+        fromFile = from % 8;
+        toFile = to % 8;
+        fromRank = from / 8;
+        toRank = to / 8;
+        isCastle = true;
+        move = DenseMove(pieceType, from, to, D_EMPTY, true);
+    } else if (san == "O-O-O") {  // Queenside castle
+        pieceType = sideToMove == WHITE ? W_KING : B_KING;
+        int from = sideToMove == WHITE ? 4 : 60;   // e1 or e8
+        int to = sideToMove == WHITE ? 2 : 58;     // c1 or c8
+        fromFile = from % 8;
+        toFile = to % 8;
+        fromRank = from / 8;
+        toRank = to / 8;
+        isCastle = true;
+        move = (pieceType, from, to, D_EMPTY, true);
     } else {
-        pieceType = sideToMove == WHITE ? W_PAWN : B_PAWN;
-        toFile = s[0] - 'a';    // Will be updated if needed by the parsing loop
-        if (toFile < 0 || toFile > 7) {
-            return DenseMove();  // Invalid file
+        // Remove check/mate symbols for parsing
+        std::string s = san;
+        bool isCheck = (s.back() == '+');
+        bool isMate = (s.back() == '#');
+        if (isCheck || isMate) {
+            s.pop_back();
+        }
+
+
+        // Get piece type from first character if uppercase, otherwise assume pawn (ignore castling since it's already set)
+        if (std::isupper(s[0]) && s[0] != 'O') {
+            std::cout << "uppercase first char: " << s[0] << "\n";
+            char piece = s[0];
+            if (fenToPiece.find(piece) == fenToPiece.end()) {
+                std::cout << "char not found in fenToPiece\n";
+                return DenseMove();  // Invalid piece character
+            }
+            pieceType = sideToMove == WHITE ? 
+                fenToPiece.at(piece) : static_cast<PieceType>(fenToPiece.at(piece) + 8);
+        } else if (s[0] != 'O') {
+            pieceType = sideToMove == WHITE ? W_PAWN : B_PAWN;
+            toFile = s[0] - 'a';    // Will be updated if needed by the parsing loop
+            if (toFile < 0 || toFile > 7) {
+                return DenseMove();  // Invalid file
+            }
+        }
+
+        // Parse the rest of the move string
+        size_t idx = 1;
+        while (idx < s.length()) {
+            char c = s[idx];
+            
+            // Parse files (a-h)
+            if (std::islower(c) && c >= 'a' && c <= 'h' && c != 'x') {
+                if (toFile == -1) {
+                    toFile = c - 'a';
+                } else {
+                    fromFile = toFile;
+                    toFile = c - 'a';
+                }
+            }
+            // Parse capture symbol
+            else if (c == 'x') {
+                isCapture = true;
+            }
+            // Parse ranks (1-8)
+            else if (std::isdigit(c) && c >= '1' && c <= '8') {
+                if (toRank == -1) {
+                    toRank = c - '1';
+                } else {
+                    fromRank = toRank;
+                    toRank = c - '1';
+                }
+            }
+            // Parse promotion
+            else if (c == '=') {
+                if (idx + 1 >= s.length()) {
+                    return DenseMove();  // Missing promotion piece
+                }
+                isPromotion = true;
+                char promPiece = s[idx + 1];
+                switch (promPiece) {
+                    case 'Q':
+                        promoteTo = sideToMove == WHITE ? W_QUEEN : B_QUEEN;
+                        break;
+                    case 'R':
+                        promoteTo = sideToMove == WHITE ? W_ROOK : B_ROOK;
+                        break;
+                    case 'B':
+                        promoteTo = sideToMove == WHITE ? W_BISHOP : B_BISHOP;
+                        break;
+                    case 'N':
+                        promoteTo = sideToMove == WHITE ? W_KNIGHT : B_KNIGHT;
+                        break;
+                    default:
+                        return DenseMove();  // Invalid promotion piece
+                }
+                idx++;  // Skip the promotion piece character
+            }
+            idx++;
         }
     }
 
-    // Parse the rest of the move string
-    size_t idx = 1;
-    while (idx < s.length()) {
-        char c = s[idx];
-        
-        // Parse files (a-h)
-        if (std::islower(c) && c >= 'a' && c <= 'h' && c != 'x') {
-            if (toFile == -1) {
-                toFile = c - 'a';
-            } else {
-                fromFile = toFile;
-                toFile = c - 'a';
-            }
-        }
-        // Parse capture symbol
-        else if (c == 'x') {
-            isCapture = true;
-        }
-        // Parse ranks (1-8)
-        else if (std::isdigit(c) && c >= '1' && c <= '8') {
-            if (toRank == -1) {
-                toRank = c - '1';
-            } else {
-                fromRank = toRank;
-                toRank = c - '1';
-            }
-        }
-        // Parse promotion
-        else if (c == '=') {
-            if (idx + 1 >= s.length()) {
-                return DenseMove();  // Missing promotion piece
-            }
-            isPromotion = true;
-            char promPiece = s[idx + 1];
-            switch (promPiece) {
-                case 'Q':
-                    promoteTo = sideToMove == WHITE ? W_QUEEN : B_QUEEN;
-                    break;
-                case 'R':
-                    promoteTo = sideToMove == WHITE ? W_ROOK : B_ROOK;
-                    break;
-                case 'B':
-                    promoteTo = sideToMove == WHITE ? W_BISHOP : B_BISHOP;
-                    break;
-                case 'N':
-                    promoteTo = sideToMove == WHITE ? W_KNIGHT : B_KNIGHT;
-                    break;
-                default:
-                    return DenseMove();  // Invalid promotion piece
-            }
-            idx++;  // Skip the promotion piece character
-        }
-        idx++;
-    }
 
     // Validate parsed coordinates
     if (toFile == -1 || toRank == -1) {
@@ -414,7 +468,7 @@ DenseMove sanToMove(const std::string& san, ChessBoard& board) {
         // Check basic move properties
         if (candidate.getPieceType() != pieceType || 
             candidate.getTo() != toFile + toRank * 8 ||
-            candidate.getCaptDense() != isCapture) {
+            candidate.isCapture() != isCapture) {
             continue;
         }
 
@@ -427,10 +481,14 @@ DenseMove sanToMove(const std::string& san, ChessBoard& board) {
         }
 
         // Check promotion
-        if (candidate.getPromotePiece() != isPromotion) {
+        if (candidate.isPromotion() != isPromotion) {
             continue;
         }
         if (isPromotion && promoteTo != candidate.getPromotePiece()) {
+            continue;
+        }
+        // Check castling
+        if (candidate.isCastle() != isCastle) {
             continue;
         }
 
@@ -442,6 +500,8 @@ DenseMove sanToMove(const std::string& san, ChessBoard& board) {
 
 // Helper function to visualize the chess board in terminal
 void printBoard(const ChessBoard& board) {
+    // Print side to move
+    std::cout << "Side to move: " << board.getSideToMove() << "\n";
     // Print column labels
     std::cout << "\n   a b c d e f g h\n";
     std::cout << "   ---------------\n";

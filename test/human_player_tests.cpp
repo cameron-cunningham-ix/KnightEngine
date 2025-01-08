@@ -3,6 +3,8 @@
 #include "../src/utility.hpp"
 #include "../src/pext_bitboard.hpp"
 #include <gtest/gtest.h>
+#include <iostream>
+#include <fstream>
 #include <sstream>
 #include <chrono>
 
@@ -95,6 +97,14 @@ TEST_F(HumanPlayerTest, PawnCapture) {
 
 // Test pawn promotion
 TEST_F(HumanPlayerTest, PawnPromotion) {
+    // testing::internal::CaptureStdout();
+    std::streambuf* coutBuf = std::cout.rdbuf();
+    std::ofstream outfile("TestOutput/HumanPlayerTest_PawnPromotion.txt");
+    if (outfile.is_open()) {
+        outfile << "TestOutput/HumanPlayerTest_PawnPromotion.txt\n";
+        std::cout.rdbuf(outfile.rdbuf());
+    }
+
     board.setupPositionFromFEN("8/4P3/8/8/8/8/8/k6K w - - 0 1");
     
     DenseMove move = simulateInput("e8=Q");
@@ -102,9 +112,14 @@ TEST_F(HumanPlayerTest, PawnPromotion) {
     EXPECT_EQ(move.getPieceType(), W_PAWN);
     EXPECT_EQ(move.getFrom(), 52);  // e7
     EXPECT_EQ(move.getTo(), 60);    // e8
-    EXPECT_FALSE(move.getCaptDense());
+    EXPECT_TRUE(move.getCaptDense() == D_EMPTY);
     EXPECT_TRUE(move.getPromoteDense() == D_QUEEN);
     EXPECT_TRUE(move.getPromotePiece() == W_QUEEN);
+
+    // std::string output = testing::internal::GetCapturedStdout();
+    // outfile << output;
+    std::cout.rdbuf(coutBuf);
+    outfile.close();
 }
 
 // Test pawn promotion with capture
@@ -146,21 +161,39 @@ TEST_F(HumanPlayerTest, BishopMoves) {
 
 // Test castling
 TEST_F(HumanPlayerTest, Castling) {
+    // White to move
     board.setupPositionFromFEN("r3k2r/pppqbppp/2np1n2/2b1p3/2B1P3/2NP1N2/PPPBQPPP/R3K2R w KQkq - 6 8");
     
     // Test kingside castling
-    DenseMove kingsideCastle = simulateInput("O-O");
-    EXPECT_EQ(kingsideCastle.getPieceType(), W_KING);
-    EXPECT_EQ(kingsideCastle.getFrom(), 4);
-    EXPECT_EQ(kingsideCastle.getTo(), 6);
-    EXPECT_TRUE(kingsideCastle.isCastle());
+    DenseMove WKingsideCastle = simulateInput("O-O");
+    EXPECT_EQ(WKingsideCastle.getPieceType(), W_KING);
+    EXPECT_EQ(WKingsideCastle.getFrom(), 4);
+    EXPECT_EQ(WKingsideCastle.getTo(), 6);
+    EXPECT_TRUE(WKingsideCastle.isCastle());
     
     // Test queenside castling
-    DenseMove queensideCastle = simulateInput("O-O-O");
-    EXPECT_EQ(queensideCastle.getPieceType(), B_KING);
-    EXPECT_EQ(queensideCastle.getFrom(), 60);
-    EXPECT_EQ(queensideCastle.getTo(), 58);
-    EXPECT_TRUE(queensideCastle.isCastle());
+    DenseMove WQueensideCastle = simulateInput("O-O-O");
+    EXPECT_EQ(WQueensideCastle.getPieceType(), W_KING);
+    EXPECT_EQ(WQueensideCastle.getFrom(), 4);
+    EXPECT_EQ(WQueensideCastle.getTo(), 2);
+    EXPECT_TRUE(WQueensideCastle.isCastle());
+
+    // Black to move
+    board.setupPositionFromFEN("r3k2r/pppqbppp/2np1n2/2b1p3/2B1P3/2NP1N2/PPPBQPPP/R3K2R b KQkq - 6 8");
+    
+    // Test kingside castling
+    DenseMove BKingsideCastle = simulateInput("O-O");
+    EXPECT_EQ(BKingsideCastle.getPieceType(), B_KING);
+    EXPECT_EQ(BKingsideCastle.getFrom(), 60);
+    EXPECT_EQ(BKingsideCastle.getTo(), 62);
+    EXPECT_TRUE(BKingsideCastle.isCastle());
+    
+    // Test queenside castling
+    DenseMove BQueensideCastle = simulateInput("O-O-O");
+    EXPECT_EQ(BQueensideCastle.getPieceType(), B_KING);
+    EXPECT_EQ(BQueensideCastle.getFrom(), 60);
+    EXPECT_EQ(BQueensideCastle.getTo(), 58);
+    EXPECT_TRUE(BQueensideCastle.isCastle());
 }
 
 // Test invalid input handling

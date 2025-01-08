@@ -12,7 +12,7 @@ EnginePlayer::EnginePlayer(std::unique_ptr<ChessEngineBase> engineImpl,
     , initialized(false)
     , thinking(false)
     , shouldQuit(false) {
-    // Start UCI thread
+    // Start UCI thread for engine player
     uciThread = std::thread(&EnginePlayer::uciLoop, this);
 }
 
@@ -107,6 +107,11 @@ void EnginePlayer::quit() {
     cv.notify_all();
 }
 
+bool EnginePlayer::isInitialized() const {
+    std::lock_guard<std::mutex> lock(mutex);
+    return initialized;
+}
+
 // bool EnginePlayer::hasOption(const std::string& name) const {
 //     return options.count(name) > 0;
 // }
@@ -133,6 +138,7 @@ int EnginePlayer::calculateSearchDepth(const ChessClock& clock) const {
     return std::clamp(depth, 1, engine->getSearchDepth());
 }
 
+/// @brief 
 void EnginePlayer::uciLoop() {
     while (!shouldQuit) {
         std::unique_lock<std::mutex> lock(mutex);

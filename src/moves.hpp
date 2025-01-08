@@ -22,5 +22,3 @@ public:
     static std::vector<DenseMove> generateLegalMoves(ChessBoard &board);
 };
 
-// Board position helper function declarations
-void printMove(const Move &move);

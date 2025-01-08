@@ -20,13 +20,13 @@ private:
     // UCI-specific members
     bool initialized;                         // Whether UCI mode is initialized
     bool thinking;                            // Whether engine is calculating
-    DenseMove bestMove;                            // Best move from last search
-    DenseMove ponderMove;                          // Ponder move from last search
+    DenseMove bestMove;                       // Best move from last search
+    DenseMove ponderMove;                     // Ponder move from last search
     std::map<std::string, Option> options;    // Engine options
     
     // Thread management for UCI
     std::thread uciThread;                   // Thread for UCI communication
-    std::mutex mutex;                        // Mutex for thread synchronization
+    mutable std::mutex mutex;                // Mutex for thread synchronization
     std::condition_variable cv;              // Condition variable for synchronization
     std::queue<std::string> commandQueue;    // Queue of UCI commands to process
     bool shouldQuit;                         // Whether engine should quit
@@ -69,9 +69,19 @@ public:
     void stop() override;
     void quit() override;
     
-    bool isInitialized() const override { return initialized; }
+    bool isInitialized() const override;
     bool isThinking() const override { return thinking; }
     bool hasOption(const std::string& name) const override { return options.find(name) != options.end(); }
+    bool waitForInitialization(std::chrono::milliseconds timeout = std::chrono::seconds(5)) {
+        auto start = std::chrono::steady_clock::now();
+        while (!isInitialized()) {
+            if (std::chrono::steady_clock::now() - start > timeout) {
+                return false;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        return true;
+    }
     
     std::string getAuthor() const override { return engine->getAuthor(); }
     DenseMove getBestMove() const override { return bestMove; }

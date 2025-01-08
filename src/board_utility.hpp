@@ -1,6 +1,7 @@
 #include "types.hpp"
 
-class BoardUtility {
+/// @brief Board Utility class
+class BUTIL {
 public:
 
     static const int indexToRank(int index) { return index / 8; }
@@ -8,7 +9,7 @@ public:
     static const U64 indexRankMask(int index) { return RankMask << ((index / 8)*8); }
     static const U64 indexFileMask(int index) { return FileMask << (index % 8); }
 
-    // RaMaskk masks
+    // Rank masks
 
 
     static const U64 RankMask = 0xFF;
@@ -36,9 +37,9 @@ public:
     // Castling masks
 
     static const U64 W_ShortCastleMask =    0x0000000000000060;
-    static const U64 W_LongCastleMask =     0x0000000000000006;
+    static const U64 W_LongCastleMask =     0x000000000000000E;
     static const U64 B_ShortCastleMask =    0x6000000000000000;
-    static const U64 B_LongCastleMask =     0x0600000000000000;
+    static const U64 B_LongCastleMask =     0x0E00000000000000;
 
     // Square indices
 

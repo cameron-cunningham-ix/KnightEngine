@@ -3,6 +3,8 @@
 #include <stdexcept>
 #include <array>
 #include <bitset>
+#include <format>
+
 
 typedef unsigned long long U64;     // Used for bitboards
 typedef unsigned int U32;           // Used for dense move representation
@@ -40,6 +42,13 @@ enum DenseType : int {
     D_QUEEN = 5,      // 5 - 101
     D_KING = 6        // 6 - 110
 };
+
+std::string colorToString(Color color);
+std::string denseTypeToString(DenseType type);
+std::string pieceTypeToString(PieceType type);
+
+
+
 // Masks for extracting fields from dense move representation
 
 const U32 moveMask_DType =     0b000000000000000000000111;
@@ -125,9 +134,11 @@ struct DenseMove {
     PieceType getCaptPiece() const {
         int piece = (data & moveMask_CaptType) >> 16;
         if (piece == 0) return PieceType::EMPTY;
-        piece |= (data & moveMask_Color);
+        piece |= getColor() == WHITE ? 0b1000 : 0b0;    // If moving piece is white, captured piece is black and vice versa
         return static_cast<PieceType>(piece);
     }
+    /// @return True if capture is not empty
+    bool isCapture() const { return getCaptDense() != D_EMPTY; }
     /// @return True if this is a castling move, false otherwise
     bool isCastle() const { return (data & moveMask_IsCastle) >> 19; }
     /// @return True if this is an en passant move, false otherwise
@@ -146,46 +157,42 @@ struct DenseMove {
         piece |= (data & moveMask_Color);
         return static_cast<PieceType>(piece);
     }
+    /// @return True if promotion type is not empty
+    bool isPromotion() const { return getPromoteDense() != D_EMPTY; }
     /// @brief Setter for promotion type; useful for pawn promotions
     /// @param promoteTo 
     void setPromoteTo(DenseType promoteTo) {
         data &= ~moveMask_PromoTo;
-        data |= (promoteTo << 23);
+        data |= (promoteTo << 21);
     }
-};
+    /// @param isBrief If true, returns a shortened version. If false, returns all values
+    /// @return String representation of the move
+    std::string toString(bool isBrief) const {
+        std::string result = std::format("{} from {} to {}\n", 
+                                         pieceTypeToString(getPieceType()),
+                                         getFrom(), getTo());
 
-
-// Move struct using normal attributes
-struct Move {
-    PieceType piece;
-    int from;
-    int to;
-    bool isCapture;
-    bool isPromotion;
-    bool isCastle;
-    bool isEnPassant;
-    PieceType promoteTo;
-    
-    Move(PieceType p, int f, int t, bool cap = false, bool prom = false) :
-        piece(p), from(f), to(t), isCapture(cap), isPromotion(prom),
-        isCastle(false), isEnPassant(false), promoteTo(PieceType::W_QUEEN) {}
-
-    // Default constructor
-    Move() : piece(W_PAWN), from(-1), to(-1), isCapture(false), isPromotion(false),
-             isCastle(false), isEnPassant(false), promoteTo(W_QUEEN) {}
-
-    bool operator==(const Move& other) const {
-        return piece == other.piece && from == other.from && to == other.to &&
-               isCapture == other.isCapture && isPromotion == other.isPromotion &&
-               isCastle == other.isCastle && isEnPassant == other.isEnPassant &&
-               promoteTo == other.promoteTo;
+        if (isBrief) return result;
+        else {
+            std::string add = std::format(" - isCapture: {}" 
+                                          " captured: {} isCastle: {}" 
+                                          " isEnPass: {} isPromo: {}" 
+                                          " Promo Piece: {}\n",
+                                          isCapture(), pieceTypeToString(getCaptPiece()),
+                                          isCastle(), isEnPassant(),
+                                          isPromotion(), pieceTypeToString(getPromotePiece()));
+            result.append(add);
+        }
+        return result;
     }
+    std::string toAlgebraic() const;
 };
 
 /// @brief Struct representing the current state of the game.
 /// Contains information about castling rights, en passant square, side to move, etc.
 /// Used in ChessBoard class.
 struct GameState {
+public:
     // Castling rights for each color and side
     bool canCastleWhiteKingside;   // White king's side (h1)
     bool canCastleWhiteQueenside;  // White queen's side (a1)
@@ -217,4 +224,21 @@ struct GameState {
         oppColor(BLACK),
         halfMoveClock(0),
         fullMoveNumber(1) {}
+    
+    std::string toString() {
+        std::string rights;
+        if (canCastleWhiteKingside) rights.append("K");
+        if (canCastleWhiteQueenside) rights.append("Q");
+        if (canCastleBlackKingside) rights.append("k");
+        if (canCastleBlackQueenside) rights.append("q");
+        if (!canCastleWhiteKingside & !canCastleWhiteQueenside &
+            !canCastleBlackKingside & !canCastleBlackQueenside) {
+                rights = "-";
+        }
+        std::string result = std::format("side: {} opp: {} {} {} {} {}",
+        colorToString(sideToMove), colorToString(oppColor), rights,
+        enPassantSquare, halfMoveClock, fullMoveNumber);
+
+        return result;
+    }
 };

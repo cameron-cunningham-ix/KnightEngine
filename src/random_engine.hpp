@@ -15,15 +15,13 @@ public:
     DenseMove findBestMove(ChessBoard& board, 
                            int maxDepth = -1) override {
         startSearch();
-
         // Generate all legal moves
         std::vector<DenseMove> moves = MoveGenerator::generateLegalMoves(board);
-        std::vector<DenseMove> legalMoves;
 
         // Select random move
-        if (!legalMoves.empty()) {
-            std::uniform_int_distribution<size_t> dist(0, legalMoves.size() - 1);
-            bestMove = legalMoves[dist(rng)];
+        if (!moves.empty()) {
+            std::uniform_int_distribution<size_t> dist(0, moves.size() - 1);
+            bestMove = moves[dist(rng)];
         }
 
         endSearch();

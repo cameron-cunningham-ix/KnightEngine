@@ -42,6 +42,7 @@ public:
     U64 getAllPieces() const;
     U64 getEmptySquares() const;
     U64 getAttacksToKing(Color side) const;
+    U64 getAttacksForSide(Color side) const;
     U64 getOrthogonalOpp(Color side) const;
     U64 getDiagonalOpp(Color side) const;
     // King square getters
@@ -73,11 +74,13 @@ public:
     void printBB(int i);
     void printBB(U64 bitb);
     void printBoardInfo(bool fullInfo = true);
+    void printStateHistory();
 
 private:
     U64 pieceBB[7];         // Bitboards for each piece type corresponding to the DenseType enum
     U64 colorBB[2];         // Bitboards of all white pieces and all black pieces
     U64 attacksToKings[2];  // Bitboards for the current attack masks to the kings
+    U64 attacksBB[2];       // Bitboards for the current attack masks of each side
     /* Board keeps a cached check value rather than just calculating it per move and storing 
      * that value since there are instances where we 
      *  
@@ -109,4 +112,5 @@ private:
     void addPiece(int square, PieceType piece);
 
     bool calculateIsInCheck();
+    void calculateAttacksForSide(Color side);
 };

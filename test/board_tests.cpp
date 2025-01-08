@@ -210,7 +210,7 @@ TEST_F(ChessBoardTest, GetDenseTypeAt) {
 TEST_F(ChessBoardTest, MakeMove1) {
     testing::internal::CaptureStdout();
 
-    std::ofstream outfile("MakeMove1.txt");
+    std::ofstream outfile("TestOutput/MakeMove1.txt");
     if (outfile.is_open()) {
         outfile << "MakeMove1 test: " << std::endl;
     }
@@ -218,98 +218,98 @@ TEST_F(ChessBoardTest, MakeMove1) {
     board.setupPositionFromFEN("1qrnb2k/5ppp/8/8/8/8/PPP5/K2BNRQ1 w - - 0 1");
     board.printBoardInfo(false);
     
-    board.makeMove(DenseMove(W_PAWN, BoardUtility::A2, BoardUtility::A3), false);
+    board.makeMove(DenseMove(W_PAWN, BUTIL::A2, BUTIL::A3), false);
     outfile << "White pawn move\n";
     board.printBoardInfo(false);
 
-    board.unmakeMove(DenseMove(W_PAWN, BoardUtility::A2, BoardUtility::A3), false);
+    board.unmakeMove(DenseMove(W_PAWN, BUTIL::A2, BUTIL::A3), false);
     outfile << "White pawn move unmade\nAll pieces: ";
     board.printBoardInfo(false);
 
-    board.makeMove(DenseMove(B_PAWN, BoardUtility::H7, BoardUtility::H6), false);
+    board.makeMove(DenseMove(B_PAWN, BUTIL::H7, BUTIL::H6), false);
     outfile << "Black pawn move\nAll pieces: ";
     board.printBoardInfo(false);
 
-    board.unmakeMove(DenseMove(B_PAWN, BoardUtility::H7, BoardUtility::H6), false);
+    board.unmakeMove(DenseMove(B_PAWN, BUTIL::H7, BUTIL::H6), false);
     outfile << "Black pawn move unmade\nAll pieces: ";
     board.printBoardInfo(false);
 
-    board.makeMove(DenseMove(W_BISHOP, BoardUtility::D1, BoardUtility::E2), false);
+    board.makeMove(DenseMove(W_BISHOP, BUTIL::D1, BUTIL::E2), false);
     outfile << "White bishop move\nAll pieces: ";
     board.printBoardInfo(false);
 
-    board.unmakeMove(DenseMove(W_BISHOP, BoardUtility::D1, BoardUtility::E2), false);
+    board.unmakeMove(DenseMove(W_BISHOP, BUTIL::D1, BUTIL::E2), false);
     outfile << "White bishop move unmade\nAll pieces: ";
     board.printBoardInfo(false);
 
-    board.makeMove(DenseMove(B_BISHOP, BoardUtility::E8, BoardUtility::D7), false);
+    board.makeMove(DenseMove(B_BISHOP, BUTIL::E8, BUTIL::D7), false);
     outfile << "Black bishop move\nAll pieces: ";
     board.printBoardInfo(false);
 
-    board.unmakeMove(DenseMove(B_BISHOP, BoardUtility::E8, BoardUtility::D7), false);
+    board.unmakeMove(DenseMove(B_BISHOP, BUTIL::E8, BUTIL::D7), false);
     outfile << "Black bishop move unmade\nAll pieces: ";
     board.printBoardInfo(false);
 
-    board.makeMove(DenseMove(W_KNIGHT, BoardUtility::E1, BoardUtility::F3), false);
+    board.makeMove(DenseMove(W_KNIGHT, BUTIL::E1, BUTIL::F3), false);
     outfile << "White knight move\nAll pieces: ";
     board.printBoardInfo(false);
 
-    board.unmakeMove(DenseMove(W_KNIGHT, BoardUtility::E1, BoardUtility::F3), false);
+    board.unmakeMove(DenseMove(W_KNIGHT, BUTIL::E1, BUTIL::F3), false);
     outfile << "White knight move unmade\nAll pieces: ";
     board.printBoardInfo(false);
 
-    board.makeMove(DenseMove(B_KNIGHT, BoardUtility::D8, BoardUtility::E6), false);
+    board.makeMove(DenseMove(B_KNIGHT, BUTIL::D8, BUTIL::E6), false);
     outfile << "Black knight move\nAll pieces: ";
     board.printBoardInfo(false);
     
-    board.unmakeMove(DenseMove(B_KNIGHT, BoardUtility::D8, BoardUtility::E6), false);
+    board.unmakeMove(DenseMove(B_KNIGHT, BUTIL::D8, BUTIL::E6), false);
     outfile << "Black knight move unmade\nAll pieces: ";
     board.printBoardInfo(false);
 
-    board.makeMove(DenseMove(W_ROOK, BoardUtility::F1, BoardUtility::F2), false);
+    board.makeMove(DenseMove(W_ROOK, BUTIL::F1, BUTIL::F2), false);
     outfile << "White rook move\nAll pieces: ";
     board.printBoardInfo(false);
 
-    board.unmakeMove(DenseMove(W_ROOK, BoardUtility::F1, BoardUtility::F2), false);
+    board.unmakeMove(DenseMove(W_ROOK, BUTIL::F1, BUTIL::F2), false);
     outfile << "White rook move unmade\nAll pieces: ";
     board.printBoardInfo(false);
 
-    board.makeMove(DenseMove(B_ROOK, BoardUtility::C8, BoardUtility::C7), false);
+    board.makeMove(DenseMove(B_ROOK, BUTIL::C8, BUTIL::C7), false);
     outfile << "Black rook move\nAll pieces: ";
     board.printBoardInfo(false);
 
-    board.unmakeMove(DenseMove(B_ROOK, BoardUtility::C8, BoardUtility::C7), false);
+    board.unmakeMove(DenseMove(B_ROOK, BUTIL::C8, BUTIL::C7), false);
     outfile << "Black rook move unmade\nAll pieces: ";
     board.printBoardInfo(false);
 
-    board.makeMove(DenseMove(W_QUEEN, BoardUtility::G1, BoardUtility::G3), false);
+    board.makeMove(DenseMove(W_QUEEN, BUTIL::G1, BUTIL::G3), false);
     outfile << "White queen move\nAll pieces: ";
     board.printBoardInfo(false);
 
-    board.unmakeMove(DenseMove(W_QUEEN, BoardUtility::G1, BoardUtility::G3), false);
+    board.unmakeMove(DenseMove(W_QUEEN, BUTIL::G1, BUTIL::G3), false);
     outfile << "White queen move unmade\nAll pieces: ";
     board.printBoardInfo(false);
 
 
-    board.makeMove(DenseMove(B_QUEEN, BoardUtility::B8, BoardUtility::B5), false);
+    board.makeMove(DenseMove(B_QUEEN, BUTIL::B8, BUTIL::B5), false);
     outfile << "Black queen move\nAll pieces: ";
     board.printBoardInfo(false);
 
-    board.unmakeMove(DenseMove(B_QUEEN, BoardUtility::B8, BoardUtility::B5), false);
+    board.unmakeMove(DenseMove(B_QUEEN, BUTIL::B8, BUTIL::B5), false);
     outfile << "Black queen move unmade\nAll pieces: ";
     board.printBoardInfo(false);
 
 
-    board.makeMove(DenseMove(W_KING, BoardUtility::A1, BoardUtility::B1), false);
+    board.makeMove(DenseMove(W_KING, BUTIL::A1, BUTIL::B1), false);
     outfile << "White king move\nAll pieces: ";
     board.printBoardInfo(false);
 
-    board.unmakeMove(DenseMove(W_KING, BoardUtility::A1, BoardUtility::B1), false);
+    board.unmakeMove(DenseMove(W_KING, BUTIL::A1, BUTIL::B1), false);
     outfile << "White king move unmade\nAll pieces: ";
     board.printBoardInfo(false);
 
 
-    DenseMove b_king(B_KING, BoardUtility::H8, BoardUtility::G8);
+    DenseMove b_king(B_KING, BUTIL::H8, BUTIL::G8);
     outfile << "B King Move: \n";
     outfile << " DType " << b_king.getDenseType() <<
          " PType " << b_king.getPieceType() <<
@@ -333,13 +333,90 @@ TEST_F(ChessBoardTest, MakeMove1) {
     outfile.close();
 }
 
-// Test attacks to kings
-TEST_F(ChessBoardTest, GetAttacksToKing1) {
-    // Initial position, no attacks either side
-    EXPECT_EQ(board.getAttacksToKing(WHITE), 0ULL);
-    EXPECT_EQ(board.getAttacksToKing(BLACK), 0ULL);
+// Test makeMove and unmakeMove captures
+TEST_F(ChessBoardTest, MakeMove2) {
+    testing::internal::CaptureStdout();
 
+    std::ofstream outfile("TestOutput/MakeMove2.txt");
+    if (outfile.is_open()) {
+        outfile << "MakeMove2 test: " << std::endl;
+    }
+    // Test position, lots of possible moves
+    board.setupPositionFromFEN("1qrnb2k/5ppp/8/8/8/8/PPP5/K2BNRQ1 w - - 0 1");
+    printBoard(board);
+    board.printBoardInfo(true);
 
+    DenseMove W_RookCapt(W_ROOK, BUTIL::F1, BUTIL::F7, D_PAWN);
+    DenseMove B_KnightCapt(B_KNIGHT, BUTIL::D8, BUTIL::F7, D_ROOK);
+
+    board.makeMove(W_RookCapt, false);
+    printBoard(board);
+    board.printBoardInfo(true);
+
+    board.makeMove(B_KnightCapt, false);
+    printBoard(board);
+    board.printBoardInfo(true);
+
+    board.unmakeMove(B_KnightCapt, false);
+    printBoard(board);
+    board.printBoardInfo(true);
+
+    board.unmakeMove(W_RookCapt, false);
+    printBoard(board);
+    board.printBoardInfo(true);
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
+}
+
+// Test makeMove and unmakeMove captures
+TEST_F(ChessBoardTest, MakeMove3) {
+    testing::internal::CaptureStdout();
+
+    std::ofstream outfile("TestOutput/MakeMove3.txt");
+    if (outfile.is_open()) {
+        outfile << "MakeMove3 test: " << std::endl;
+    }
+    // Test position, lots of possible moves
+    board.setupPositionFromFEN("k7/pppq1Q2/5rr1/2p1p2b/1PnP2B1/5RR1/PPPN4/K7 w - - 0 1");
+    printBoard(board);
+    board.printBoardInfo(true);
+
+    DenseMove W_PawnCapt1(W_PAWN, BUTIL::B4, BUTIL::C5, D_PAWN);
+    DenseMove W_PawnCapt2(W_PAWN, BUTIL::D4, BUTIL::E5, D_PAWN);
+    DenseMove W_KnightCapt(W_KNIGHT, BUTIL::D2, BUTIL::C4, D_KNIGHT);
+    DenseMove W_BishopCapt1(W_BISHOP, BUTIL::G4, BUTIL::H5, D_BISHOP);
+    DenseMove W_BishopCapt2(W_BISHOP, BUTIL::G4, BUTIL::D7, D_QUEEN);
+    DenseMove W_RookCapt(W_ROOK, BUTIL::F3, BUTIL::F6, D_ROOK);
+    DenseMove W_QueenCapt1(W_QUEEN, BUTIL::F7, BUTIL::D7, D_QUEEN);
+
+    DenseMove B_PawnCapt1(B_PAWN, BUTIL::C5, BUTIL::B4, D_PAWN);
+    DenseMove B_PawnCapt2(W_PAWN, BUTIL::E5, BUTIL::D4, D_PAWN);
+    DenseMove B_KnightCapt(B_KNIGHT, BUTIL::C4, BUTIL::D2, D_KNIGHT);
+    DenseMove B_BishopCapt1(B_BISHOP, BUTIL::H5, BUTIL::G4, D_BISHOP);
+    DenseMove B_RookCapt(B_ROOK, BUTIL::F6, BUTIL::F3, D_ROOK);
+    DenseMove B_QueenCapt1(B_QUEEN, BUTIL::D7, BUTIL::F7, D_QUEEN);
+
+    board.makeMove(W_PawnCapt1, false);
+    printBoard(board);
+    board.printBoardInfo(true);
+
+    board.makeMove(B_KnightCapt, false);
+    printBoard(board);
+    board.printBoardInfo(true);
+
+    board.unmakeMove(B_KnightCapt, false);
+    printBoard(board);
+    board.printBoardInfo(true);
+
+    board.unmakeMove(W_RookCapt, false);
+    printBoard(board);
+    board.printBoardInfo(true);
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
 }
 
 TEST_F(ChessBoardTest, GetKingSquare1) {
@@ -349,18 +426,18 @@ TEST_F(ChessBoardTest, GetKingSquare1) {
     
     // Random position
     board.setupPositionFromFEN("rnbq1bnr/pppp1ppp/5k2/4p3/4P3/3K4/PPPP1PPP/RNBQ1BNR w - - 4 4");
-    EXPECT_EQ(board.getWhiteKingSquare(), BoardUtility::D3);
-    EXPECT_EQ(board.getBlackKingSquare(), BoardUtility::F6);
+    EXPECT_EQ(board.getWhiteKingSquare(), BUTIL::D3);
+    EXPECT_EQ(board.getBlackKingSquare(), BUTIL::F6);
     // Check after makeMove
-    board.makeMove(DenseMove(W_KING, BoardUtility::D3, BoardUtility::C4), false);
-    EXPECT_EQ(board.getWhiteKingSquare(), BoardUtility::C4);
-    board.makeMove(DenseMove(B_KING, BoardUtility::F6, BoardUtility::G6), false);
+    board.makeMove(DenseMove(W_KING, BUTIL::D3, BUTIL::C4), false);
+    EXPECT_EQ(board.getWhiteKingSquare(), BUTIL::C4);
+    board.makeMove(DenseMove(B_KING, BUTIL::F6, BUTIL::G6), false);
     // Check after unmakeMove
-    board.unmakeMove(DenseMove(B_KING, BoardUtility::F6, BoardUtility::G6), false);
-    EXPECT_EQ(board.getBlackKingSquare(), BoardUtility::F6);
+    board.unmakeMove(DenseMove(B_KING, BUTIL::F6, BUTIL::G6), false);
+    EXPECT_EQ(board.getBlackKingSquare(), BUTIL::F6);
 
-    board.unmakeMove(DenseMove(W_KING, BoardUtility::D3, BoardUtility::C4), false);
-    EXPECT_EQ(board.getWhiteKingSquare(), BoardUtility::D3);
+    board.unmakeMove(DenseMove(W_KING, BUTIL::D3, BUTIL::C4), false);
+    EXPECT_EQ(board.getWhiteKingSquare(), BUTIL::D3);
 }
 
 // Test basic OppAttacksToSquare
@@ -434,7 +511,7 @@ TEST_F(ChessBoardTest, GameState4) {
     EXPECT_EQ(board.currentGameState.sideToMove, WHITE);
     EXPECT_EQ(board.getSideToMove(), WHITE);
     EXPECT_EQ(board.getOppSide(), BLACK);
-    EXPECT_EQ(board.currentGameState.enPassantSquare, BoardUtility::C6);    // Square behind pawn
+    EXPECT_EQ(board.currentGameState.enPassantSquare, BUTIL::C6);    // Square behind pawn
     EXPECT_EQ(board.currentGameState.fullMoveNumber, 4);
     EXPECT_EQ(board.currentGameState.halfMoveClock, 0);
     EXPECT_EQ(board.currentGameState.canCastleWhiteKingside, true);
@@ -462,7 +539,7 @@ TEST_F(ChessBoardTest, GameState5) {
 // Test game state from play
 TEST_F(ChessBoardTest, GameState6) {
     // Starting position
-    board.makeMove(DenseMove(W_PAWN, BoardUtility::E2, BoardUtility::E3), true);
+    board.makeMove(DenseMove(W_PAWN, BUTIL::E2, BUTIL::E3), true);
     EXPECT_EQ(board.currentGameState.sideToMove, BLACK);
     EXPECT_EQ(board.getSideToMove(), BLACK);
     EXPECT_EQ(board.getOppSide(), WHITE);
@@ -474,11 +551,11 @@ TEST_F(ChessBoardTest, GameState6) {
     EXPECT_EQ(board.currentGameState.canCastleBlackKingside, true);
     EXPECT_EQ(board.currentGameState.canCastleBlackQueenside, true);
 
-    board.makeMove(DenseMove(B_PAWN, BoardUtility::E7, BoardUtility::E5), true);
+    board.makeMove(DenseMove(B_PAWN, BUTIL::E7, BUTIL::E5), true);
     EXPECT_EQ(board.currentGameState.sideToMove, WHITE);
     EXPECT_EQ(board.getSideToMove(), WHITE);
     EXPECT_EQ(board.getOppSide(), BLACK);
-    EXPECT_EQ(board.currentGameState.enPassantSquare, BoardUtility::E6);    // Square behind pawn
+    EXPECT_EQ(board.currentGameState.enPassantSquare, BUTIL::E6);    // Square behind pawn
     EXPECT_EQ(board.currentGameState.fullMoveNumber, 2);
     EXPECT_EQ(board.currentGameState.halfMoveClock, 0);
     EXPECT_EQ(board.currentGameState.canCastleWhiteKingside, true);
@@ -486,7 +563,7 @@ TEST_F(ChessBoardTest, GameState6) {
     EXPECT_EQ(board.currentGameState.canCastleBlackKingside, true);
     EXPECT_EQ(board.currentGameState.canCastleBlackQueenside, true);
 
-    board.unmakeMove(DenseMove(B_PAWN, BoardUtility::E7, BoardUtility::E5), true);
+    board.unmakeMove(DenseMove(B_PAWN, BUTIL::E7, BUTIL::E5), true);
     EXPECT_EQ(board.currentGameState.sideToMove, BLACK);
     EXPECT_EQ(board.getSideToMove(), BLACK);
     EXPECT_EQ(board.getOppSide(), WHITE);
@@ -526,37 +603,37 @@ TEST_F(ChessBoardTest, IsInCheck1) {
 
 // Test checks in play states
 TEST_F(ChessBoardTest, IsInCheck2) {
-    board.makeMove(DenseMove(W_PAWN, BoardUtility::E2, BoardUtility::E4), false);
+    board.makeMove(DenseMove(W_PAWN, BUTIL::E2, BUTIL::E4), false);
     EXPECT_EQ(board.isInCheck(), false);
     EXPECT_EQ(board.isSideInCheck(WHITE), false);
     EXPECT_EQ(board.isSideInCheck(BLACK), false);
     EXPECT_EQ(board.getCheckCount(), 0);
 
-    board.makeMove(DenseMove(B_PAWN, BoardUtility::E7, BoardUtility::E5), false);
+    board.makeMove(DenseMove(B_PAWN, BUTIL::E7, BUTIL::E5), false);
     EXPECT_EQ(board.isInCheck(), false);
     EXPECT_EQ(board.isSideInCheck(WHITE), false);
     EXPECT_EQ(board.isSideInCheck(BLACK), false);
     EXPECT_EQ(board.getCheckCount(), 0);
 
-    board.makeMove(DenseMove(W_BISHOP, BoardUtility::F1, BoardUtility::B5), false);
+    board.makeMove(DenseMove(W_BISHOP, BUTIL::F1, BUTIL::B5), false);
     EXPECT_EQ(board.isInCheck(), false);
     EXPECT_EQ(board.isSideInCheck(WHITE), false);
     EXPECT_EQ(board.isSideInCheck(BLACK), false);
     EXPECT_EQ(board.getCheckCount(), 0);
 
-    board.makeMove(DenseMove(B_BISHOP, BoardUtility::F8, BoardUtility::B4), false);
+    board.makeMove(DenseMove(B_BISHOP, BUTIL::F8, BUTIL::B4), false);
     EXPECT_EQ(board.isInCheck(), false);
     EXPECT_EQ(board.isSideInCheck(WHITE), false);
     EXPECT_EQ(board.isSideInCheck(BLACK), false);
     EXPECT_EQ(board.getCheckCount(), 0);
 
-    board.makeMove(DenseMove(W_BISHOP, BoardUtility::B5, BoardUtility::D7, D_PAWN), false);
+    board.makeMove(DenseMove(W_BISHOP, BUTIL::B5, BUTIL::D7, D_PAWN), false);
     EXPECT_EQ(board.isInCheck(), true);
     EXPECT_EQ(board.isSideInCheck(WHITE), false);
     EXPECT_EQ(board.isSideInCheck(BLACK), true);
     EXPECT_EQ(board.getCheckCount(), 1);
 
-    board.unmakeMove(DenseMove(W_BISHOP, BoardUtility::B5, BoardUtility::D7, D_PAWN), false);
+    board.unmakeMove(DenseMove(W_BISHOP, BUTIL::B5, BUTIL::D7, D_PAWN), false);
     EXPECT_EQ(board.isInCheck(), false);
     EXPECT_EQ(board.isSideInCheck(WHITE), false);
     EXPECT_EQ(board.isSideInCheck(BLACK), false);

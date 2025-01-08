@@ -36,7 +36,7 @@ enum class TerminationReason {
 class ChessMatch {
 private:
     // Core game components
-    ChessBoard board;
+    std::unique_ptr<ChessBoard> board;
     MoveHistory history;
     ChessClock clock;
     
@@ -74,9 +74,18 @@ public:
     MatchResult getResult() const { return result; }
     TerminationReason getTerminationReason() const { return terminationReason; }
     
+
+    bool isBoardValid() const {
+        return board != nullptr && board->getWhitePawns() == 0x000000000000FF00ULL;
+    }
     // Access to game components (const only)
-    const ChessBoard& getBoard() const { return board; }
-    const GameState& getState() const { return board.currentGameState; }
+    ChessBoard& getBoard() const { 
+        if (!board) {
+            throw std::runtime_error("Attemping to access null board");
+        }
+        return *board;
+    }
+    const GameState& getState() const { return board->currentGameState; }
     const MoveHistory& getHistory() const { return history; }
     const ChessClock& getClock() const { return clock; }
     static std::string getCurrentDate();
