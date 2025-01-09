@@ -2,7 +2,7 @@
 #include "board_utility.hpp"
 
 // Define static members
-
+bool PEXT::initialized = false;
 /// @brief Relevant occupancy masks for rooks (excludes edge squares)
 std::array<U64, 64> PEXT::rookMasks;
 /// @brief Relevant occupancy masks for bishops (excludes edge squares)
@@ -14,6 +14,8 @@ std::array<std::vector<U64>, 64> PEXT::bishopMoves;
 
 /// @brief Initializes rookMoves and bishopMoves arrays
 void PEXT::initialize() {
+    // If PEXT has already been initialized before, you can return
+    if (initialized) return;
     // Initialize attack masks and move tables
     for (int square = 0; square < 64; square++) {
         rookMasks[square] = generateRookMask(square);
@@ -39,6 +41,7 @@ void PEXT::initialize() {
             bishopMoves[square][occ] = generateBishopAttacks(square, actualOcc);
         }
     }
+    initialized = true;
 }
 /// @brief 
 /// @param square 

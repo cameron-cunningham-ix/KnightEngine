@@ -55,12 +55,8 @@ protected:
     std::unique_ptr<MockPlayer> blackPlayer;
 
     void SetUp() override {
-        // Initialize PEXT only once
-        static bool pextInitialized = false;
-        if (!pextInitialized) {
-            PEXT::initialize();
-            pextInitialized = true;
-        }
+        // Initialize PEXT 
+        PEXT::initialize();
     }
 
     // Helper to create a fresh match
@@ -84,6 +80,8 @@ protected:
 
     void TearDown() override {
         match.reset();  // Ensure clean cleanup
+        whitePlayer.reset();
+        blackPlayer.reset();
     }
 };
 

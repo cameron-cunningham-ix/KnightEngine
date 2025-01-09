@@ -8,6 +8,12 @@
 !src/**
 !test/
 !test/**
+!benchmarks/
+!benchmarks/**
+!bench_output/
+!bench_output/**
+!meta/
+!meta/**
 
 # Ignore build directories anywhere
 **/build/

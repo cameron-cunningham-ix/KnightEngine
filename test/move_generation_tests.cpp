@@ -15,6 +15,11 @@ protected:
         board = ChessBoard();
     }
 
+    void TearDown() override {
+        moves.clear();
+        moves = std::vector<DenseMove>();
+    }
+
     // Helper function to find specific move in generated moves
     bool containsMove(const std::vector<DenseMove>& moves, int from, int to) {
         return std::any_of(moves.begin(), moves.end(),

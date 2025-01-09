@@ -6,24 +6,30 @@
 #include <vector>
 
 /// @brief Class representing a current state of a chess board, including game state and
-/// move history
+/// previous played moves. 
+/// 
 class ChessBoard 
 {
 public:
     /// @brief Default constructor, sets standard position
     ChessBoard();
-
+    /// @brief Sets board and state to position defined by fen string
+    /// @param fen 
+    /// @note If FEN string is invalid, sets board to standard position
     void setupPositionFromFEN(const std::string &fen);
+    /// @return Returns FEN string of the current position of the board
     std::string getFEN();
+    /// @brief Prints FEN string of the current position to std::cout
     void printFEN();
     // Current board state
     GameState currentGameState;
     // History of game states
-    std::vector<GameState> stateHistory;
+    std::array<GameState, MAX_PLY> stateHistory;
     // History of moves
-    std::vector<DenseMove> moveHistory;
+    std::array<DenseMove, MAX_PLY> moveHistory;
 
     // Bitboard getters
+
     U64 getPieceSet(PieceType pt) const;
     U64 getWhitePawns() const;
     U64 getWhiteKnights() const;
@@ -41,6 +47,8 @@ public:
     U64 getBlackPieces() const;
     U64 getAllPieces() const;
     U64 getEmptySquares() const;
+    /// @param side 
+    /// @return 
     U64 getAttacksToKing(Color side) const;
     U64 getAttacksForSide(Color side) const;
     U64 getOrthogonalOpp(Color side) const;
@@ -90,6 +98,7 @@ private:
     // King squares - 0 = WHITE, 1 - BLACK for easy calculating
     int kingSquares[2];
     int checkingCount;          // The number of pieces currently checking the current side's king
+    int plyIndex;               // Current ply; used to index into stateHistory and moveHistory
 
     
 

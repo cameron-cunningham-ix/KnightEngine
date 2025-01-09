@@ -8,8 +8,8 @@
 #include <stdlib.h>
 
 
-/// @brief  Default constructor; initialize all bitboards
 ChessBoard::ChessBoard() {
+    // Initializes all bitboards and game state
     initializeWhiteBB();
     initializeBlackBB();
     initializeEmptyBB();
@@ -22,11 +22,8 @@ ChessBoard::ChessBoard() {
     initializeGameState();
 }
 
-/// @brief Set up a board based on the given FEN string.
-/// If FEN is invalid, sets up standard position
-/// @param fen 
 void ChessBoard::setupPositionFromFEN(const std::string& fen) {
-    // Clear all attributes
+    // Clear all board attributes
     for (int i = 0; i < 7; i++) {
         pieceBB[i] = 0ULL;
     }
@@ -47,16 +44,17 @@ void ChessBoard::setupPositionFromFEN(const std::string& fen) {
 
     std::stringstream ss(fen);
     std::string position, playerToMove, castlingRights, enPassant, halfTurns, fullTurns;
-    ss >> position >> playerToMove >> castlingRights >> enPassant >> halfTurns >> fullTurns;  // Get parts of FEN notation
+    // Get parts of FEN notation
+    ss >> position >> playerToMove >> castlingRights >> enPassant >> halfTurns >> fullTurns;
     
     int square = 56;  // Start from 8th rank (a8 is 56)
     
     // Parse position of FEN
     for (char c : position) {
-        // square should only be zero when the FEN is invalid; set to default position
+        // Square should only be zero when the FEN is invalid; set to default position
         if (square < 0) {
             setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-            std::cout << "Invalid FEN\nSet to default position\n";
+            std::cerr << "Invalid FEN\nSet to default position\n";
             return;
         }
         if (c == '/') {
@@ -103,16 +101,13 @@ void ChessBoard::setupPositionFromFEN(const std::string& fen) {
     std::from_chars(halfTurns.data(), halfTurns.data()+halfTurns.size(), currentGameState.halfMoveClock);
     // Parse full move number
     std::from_chars(fullTurns.data(), fullTurns.data()+fullTurns.size(), currentGameState.fullMoveNumber);
-    // Pop standard history
-    stateHistory.pop_back();
-    // Add initial state to history
-    stateHistory.push_back(currentGameState);
-    currentGameState = stateHistory.back();
+    // Replace standard starting state
+    stateHistory[0] = currentGameState;
     // Calculate attacks
     // calculateAttacksForSide(WHITE);
     // calculateAttacksForSide(BLACK);
 }
-/// @return String of the current FEN notation of the board 
+
 std::string ChessBoard::getFEN() {
     std::string fen;
     
@@ -160,8 +155,10 @@ std::string ChessBoard::getFEN() {
     if (currentGameState.canCastleWhiteQueenside) fen.append("Q");
     if (currentGameState.canCastleBlackKingside) fen.append("k");
     if (currentGameState.canCastleBlackQueenside) fen.append("q");
-    if (!currentGameState.canCastleWhiteKingside && !currentGameState.canCastleWhiteQueenside &&
-        !currentGameState.canCastleBlackKingside && !currentGameState.canCastleBlackQueenside) fen.append("-");
+    if (!currentGameState.canCastleWhiteKingside && 
+        !currentGameState.canCastleWhiteQueenside &&
+        !currentGameState.canCastleBlackKingside &&
+        !currentGameState.canCastleBlackQueenside) fen.append("-");
     // FEN En Passant
     fen.append(" ");
     if (currentGameState.enPassantSquare == -1) fen.append("-");
@@ -175,7 +172,7 @@ std::string ChessBoard::getFEN() {
 
     return fen;
 }
-/// @brief Print FEN notation of current board to std out
+
 void ChessBoard::printFEN() {
     std::cout << std::format("\n(ChessBoard printFEN) {}\n", getFEN());
 }
@@ -194,50 +191,31 @@ U64 ChessBoard::getPieceSet(PieceType pt) const {
 /// @param to 
 /// @param piece 
 void ChessBoard::movePiece(int from, int to, PieceType piece) {
-    U64 fromToBB = (1ULL << from) | (1ULL << to);  // BB with both squares set
-    // std:: cout << "ChessBoard.movePiece fromToBB:\n";
-    // printBB(fromToBB);
+    // BB with both squares set
+    U64 fromToBB = (1ULL << from) | (1ULL << to);
     // Get color and piece type
-    bool isWhite = piece <= W_KING;
+    int pieceColor = colorCode(piece);
     int pieceType = pieceCode(piece);
 
-    // std::cout << "ChessBoard.movePiece color " << isWhite 
-            //   << " piece " << pieceType << "\n";
-
-    // std:: cout << "ChessBoard.movePiece og colorBB:\n";
-    // printBB(colorBB[isWhite ? 0 : 1]);
-
-    // Update color bitboard (white or black)
-    colorBB[isWhite ? 0 : 1] ^= fromToBB;
-
-    // std:: cout << "ChessBoard.movePiece new colorBB:\n";
-    // printBB(colorBB[isWhite ? 0 : 1]);
-
-    // std:: cout << "ChessBoard.movePiece og pieceBB:\n";
-    // printBB(pieceBB[pieceType]);
+    // Update color bitboard
+    colorBB[pieceColor] ^= fromToBB;
 
     // Update piece type bitboard (pawn, knight, etc.)
     pieceBB[pieceType] ^= fromToBB;
-
-    // std:: cout << "ChessBoard.movePiece new pieceBB:\n";
-    // printBB(pieceBB[pieceType]);
 
     // Update empty squares bitboard
     pieceBB[D_EMPTY] = (~colorBB[WHITE]) & (~colorBB[BLACK]);
     // If king moved, update king square
     if (piece == W_KING) {
         kingSquares[WHITE] = to;
-        // std::cout << "ChessBoard.movePiece - kingSquares[WHITE] = " << kingSquares[WHITE] << "\n";
     } 
     else if (piece == B_KING) kingSquares[BLACK] = to;
-    // std::cout << "ChessBoard.movePiece - kingSquares[BLACK] = " << kingSquares[BLACK] << "\n";
 }
 /// @brief Helper function to remove a piece from the board
 /// @param square 
 /// @param piece 
 void ChessBoard::removePiece(int square, PieceType piece) {
-    // std::cout << "removing piece " << piece << " at square " << square << "\n";
-    // Bitboard with only the square bit 0
+    // Bitboard with only the 'square' index bit 0
     U64 clearSquareBB = ~(1ULL << square);
 
     // Get color and piece type
@@ -264,13 +242,9 @@ void ChessBoard::addPiece(int square, PieceType piece) {
 
     // Set bit in color bitboard
     colorBB[isWhite ? 0 : 1] |= squareBB;
-    // std::cout << "addPiece color: \n";
-    // printBitboard(colorBB[isWhite ? 0 : 1]);
 
     // Set bit in piece type bitboard
     pieceBB[pieceType] |= squareBB;
-    // std::cout << "addPiece type: \n";
-    // printBitboard(pieceBB[pieceType]);
 
     // Clear bit in empty squares bitboard
     pieceBB[D_EMPTY] &= ~squareBB;
@@ -280,14 +254,10 @@ void ChessBoard::addPiece(int square, PieceType piece) {
 bool ChessBoard::calculateIsInCheck() {
     // Get current side to move
     Color sideToMove = currentGameState.sideToMove;
-    // std::cout << "calculateIsInCheck side: " << sideToMove << "\n";
     // Get side's king square
     int kingSquare = kingSquares[sideToMove];
-    // std::cout << "calculateIsInCheck kingSquare: " << kingSquare << "\n";
 
-    // Occupancy
     U64 occupancy = getAllPieces();
-    // Clear attacksToKings[Color] and checkingCount
     attacksToKings[sideToMove] = 0ULL;
     checkingCount = 0;
     // Get sliding piece bitboards
@@ -333,9 +303,7 @@ bool ChessBoard::calculateIsInCheck() {
 }
 
 void ChessBoard::calculateAttacksForSide(Color side) {
-    // Occupancy
     U64 occupancy = getAllPieces();
-    // Clear attacksToKings[Color] and checkingCount
     attacksBB[side] = 0ULL;
     // Get sliding piece bitboards
     U64 oppOrthoSliders = side == BLACK ? 
@@ -465,23 +433,22 @@ U64 ChessBoard::getDiagonalOpp(Color side) const {
     return side == WHITE ? getBlackBishops() | getBlackQueens() :
                            getWhiteBishops() | getWhiteQueens();
 }
-/// @return Return the square index of the white king
+/// @return The square index of the white king
 int ChessBoard::getWhiteKingSquare() const {
     return kingSquares[WHITE];
 }
-/// @return Return the square index of the black king 
+/// @return The square index of the black king 
 int ChessBoard::getBlackKingSquare() const {
     return kingSquares[BLACK];
 }
-Color ChessBoard::getSideToMove() const
-{
+/// @return The color of the current player
+Color ChessBoard::getSideToMove() const {
     return currentGameState.sideToMove;
 }
-Color ChessBoard::getOppSide() const
-{
+/// @return The color of the color opposite of current player
+Color ChessBoard::getOppSide() const {
     return currentGameState.oppColor;
 }
-/// @brief
 /// @param index
 /// @return PieceType at square index. If index is invalid, returns INVALID
 PieceType ChessBoard::getPieceAt(int index) const {
@@ -576,12 +543,9 @@ bool ChessBoard::isInCheck() {
     hasCachedInCheckValue = true;
     return cachedInCheckValue;
 }
-/// @brief 
 /// @param side 
-/// @return 
+/// @return True if 'side' is currently attacked / checked by opposing side
 bool ChessBoard::isSideInCheck(Color side) {
-    // std::cout << "ChessBoard.isSideInCheck start\n side " << side << "\n"
-    //           << "    kingSquares[side] " << kingSquares[side] << "\n";
     return OppAttacksToSquare(kingSquares[side], side);
 }
 /// @return Number of pieces checking current side's king
@@ -630,19 +594,19 @@ void ChessBoard::initializeKingsBB() {
 void ChessBoard::initializeGameState() {
     // New GameState
     currentGameState = GameState();
+    plyIndex = 0;
     // Store initial state onto stateHistory
-    stateHistory.push_back(currentGameState);
+    stateHistory[plyIndex] = currentGameState;
     // Initialize cached check values as false, otherwise they have garbage values
     hasCachedInCheckValue = false;
     cachedInCheckValue = false;
+    checkingCount = 0;
 }
 /// @brief Find any opponent pieces that are attacking square 'index'
 /// @param index Index of square 
 /// @param colorOfKing 
 /// @return Bitboard of any opposite side pieces attacking this square
 U64 ChessBoard::OppAttacksToSquare(int index, Color colorOfKing) const {
-    // std::cout << "ChessBoard.OppAttacksToSquare start\n    index "
-    //           << index << " color " << colorOfKing << "\n";
     if (index < 0 || index > 63) return 0ULL;
     // Get opposing pieces based on king's color
     U64 opPawns, opKnights, opBQ, opRQ, opK, occupancy;
@@ -673,7 +637,7 @@ U64 ChessBoard::OppAttacksToSquare(int index, Color colorOfKing) const {
 }
 /// @brief Make a move on the board.
 /// Note: This function does not check validity. It should only be used with known
-/// legal moves from MoveGeneration.
+/// legal moves from MoveGeneration, or to check for legal moves within MoveGeneration
 /// @param move
 /// @param searching If searching, move is not added to moveHistory.
 void ChessBoard::makeMove(DenseMove move, bool searching) {
@@ -691,7 +655,6 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
     if (capturedPiece != PieceType::EMPTY) {
         // Normal capture
         if (!isEnPass) {
-            // std::cout << "makeMove remove piece - move " << move.toString(false);
             removePiece(to, capturedPiece);
         }
         // En passant capture
@@ -720,7 +683,6 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
     }
     // Handle promotion
     if (promoPiece != PieceType::EMPTY) {
-        // std::cout << "makeMove promotion - remove piece " << promoPiece << "\n";
         // Remove pawn from source square
         removePiece(from, movedPiece);
         // Add promoted piece to destination square
@@ -751,7 +713,6 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
         currentGameState.canCastleBlackQueenside = false;
     }
     if (from == 63 || to == 63) {
-        // std::cout << "    set bks to false\n";
         currentGameState.canCastleBlackKingside = false;
     }
 
@@ -784,15 +745,17 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
     if (currentGameState.sideToMove == WHITE) {
         currentGameState.fullMoveNumber++;
     }
+    
+    plyIndex++;
     // Add new state to history
-    stateHistory.push_back(currentGameState);
+    stateHistory[plyIndex] = currentGameState;
     
     // New position check value not cached
     hasCachedInCheckValue = false;
     cachedInCheckValue = false;
 
     if (!searching) {
-        moveHistory.push_back(move);
+        moveHistory[plyIndex] = move;
     }
     // calculateAttacksForSide(WHITE);
     // calculateAttacksForSide(BLACK);
@@ -804,10 +767,14 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
 /// @param move
 /// @param searching If not searching, latest move is removed from moveHistory
 void ChessBoard::unmakeMove(DenseMove move, bool searching) {
-    // Pop last state, should be state made from this move
-    stateHistory.pop_back();
+    // If not searching, clear last played move
+    if (!searching) {
+        moveHistory[plyIndex] = {};
+    }
+    // Clear last state and move plyIndex back to last state
+    stateHistory[plyIndex--] = {};
     // Get previous state
-    currentGameState = stateHistory.back();
+    currentGameState = stateHistory[plyIndex];
 
     Color undoSide = currentGameState.sideToMove;
 
@@ -834,10 +801,8 @@ void ChessBoard::unmakeMove(DenseMove move, bool searching) {
 
     // Undo captures and en passant
     if (undoCapturedPiece != PieceType::EMPTY) {
-        // std::cout << "unmakeMove undo capture: " << move.toString(false);
         // Normal capture
         if (!undoEnPass) {
-            // std::cout << "not en pass\n";
             addPiece(movedTo, undoCapturedPiece);
         }
         // En passant capture
@@ -867,12 +832,6 @@ void ChessBoard::unmakeMove(DenseMove move, bool searching) {
     
     // New position check value not cached
     hasCachedInCheckValue = false;
-
-    if (!searching) {
-        moveHistory.emplace_back(move);
-    }
-    // calculateAttacksForSide(WHITE);
-    // calculateAttacksForSide(BLACK);
 }
 /// @brief Prints a piece bitboard to the console
 /// @param i corresponds to DenseType enum
@@ -940,7 +899,7 @@ void ChessBoard::printBoardInfo(bool fullInfo) {
 
 void ChessBoard::printStateHistory() {
     std::cout << "\n\nBoard history\n\n";
-    for (int i = 0; i < (int)stateHistory.size(); i++) {
+    for (int i = 0; i < plyIndex; i++) {
         std::cout << stateHistory[i].toString() << "\n";
     }
     std::cout << "\n\n";

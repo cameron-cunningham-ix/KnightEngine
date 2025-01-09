@@ -1,8 +1,10 @@
 #pragma once
 
 #include "chess_engine_base.hpp"
+#include "board_utility.hpp"
 #include <algorithm>
 
+/// @brief 
 class MaterialEngine : public ChessEngineBase {
 private:
     // Piece values (centipawns)
@@ -31,6 +33,7 @@ public:
         // Generate all legal moves
         std::vector<DenseMove> moves = MoveGenerator::generateLegalMoves(board);
         
+        // 
         int bestScore = board.currentGameState.sideToMove == WHITE ? -999999 : 999999;
         DenseMove bestMove;
 
@@ -113,15 +116,15 @@ private:
             
             // Check for doubled pawns
             int file = square % 8;
-            U64 fileMask = 0x0101010101010101ULL << file;
+            U64 fileMask = BUTIL::FileMask << file;
             if (popcount(fileMask & pawns) > 1) {
                 score += DOUBLED_PAWN_PENALTY;
             }
 
             // Check for isolated pawns
             U64 adjacentFiles = 0;
-            if (file > 0) adjacentFiles |= 0x0101010101010101ULL << (file - 1);
-            if (file < 7) adjacentFiles |= 0x0101010101010101ULL << (file + 1);
+            if (file > 0) adjacentFiles |= BUTIL::FileMask << (file - 1);
+            if (file < 7) adjacentFiles |= BUTIL::FileMask << (file + 1);
             if (!(adjacentFiles & pawns)) {
                 score += ISOLATED_PAWN_PENALTY;
             }

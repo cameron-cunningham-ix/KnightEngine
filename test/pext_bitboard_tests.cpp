@@ -1,8 +1,8 @@
+#include "../src/pext_bitboard.hpp"
+#include "../src/utility.hpp"
 #include <gtest/gtest.h>
 #include <iostream>
 #include <fstream>
-#include "../src/pext_bitboard.hpp"
-#include "../src/utility.hpp"
 
 /// @brief Generate a random U64 number based on seed
 /// @return 
@@ -28,6 +28,7 @@ class PEXTTest : public ::testing::Test {
 
 TEST_F(PEXTTest, GetRookAttacks) {
     std::ofstream outfile("TestOutput/rookMoves.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
     if (outfile.is_open()) {
         outfile << "Rook moves: " << std::endl;
     }
@@ -40,10 +41,14 @@ TEST_F(PEXTTest, GetRookAttacks) {
             printBBLine(PEXT::rookMoves[square][index]);
         }
     }
+
+    std::cout.rdbuf(coutBuf);
+    outfile.close();
 }
 
 TEST_F(PEXTTest, RookAttacks) {
     std::ofstream outfile("TestOutput/rookMoves.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
     if (outfile.is_open()) {
         outfile << "Rook moves: " << std::endl;
     }
@@ -55,10 +60,13 @@ TEST_F(PEXTTest, RookAttacks) {
         U64 attacks = PEXT::getRookAttacks(square, random);
         printBitboard(attacks); 
     }
+    std::cout.rdbuf(coutBuf);
+    outfile.close();
 }
 
 TEST_F(PEXTTest, BishopAttacks) {
     std::ofstream outfile("TestOutput/bishopMoves.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
     if (outfile.is_open()) {
         outfile << "Bishop moves: " << std::endl;
     }
@@ -70,4 +78,6 @@ TEST_F(PEXTTest, BishopAttacks) {
         U64 attacks = PEXT::getBishopAttacks(square, random);
         printBitboard(attacks); 
     }
+    std::cout.rdbuf(coutBuf);
+    outfile.close();
 }

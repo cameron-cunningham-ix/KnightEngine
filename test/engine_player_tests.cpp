@@ -53,6 +53,11 @@ protected:
         mockEngine = std::make_unique<MockEngine>();
         player = std::make_unique<EnginePlayer>(std::move(mockEngine));
     }
+
+    void TearDown() override {
+        player.reset();
+        mockEngine.reset();
+    }
 };
 
 // Test basic initialization

@@ -25,4 +25,5 @@ public:
     static U64 generateRookAttacks(int square, U64 occupancy);
     static U64 generateBishopAttacks(int square, U64 occupancy);
 
+    static bool initialized;
 };

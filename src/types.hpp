@@ -5,6 +5,8 @@
 #include <bitset>
 #include <format>
 
+const int MAX_PLY = 512;
+const int MAX_MOVES = 218;
 
 typedef unsigned long long U64;     // Used for bitboards
 typedef unsigned int U32;           // Used for dense move representation
@@ -60,6 +62,7 @@ const U32 moveMask_CaptType =  0b000001110000000000000000;
 const U32 moveMask_IsCastle =  0b000010000000000000000000;
 const U32 moveMask_IsEnPass =  0b000100000000000000000000;
 const U32 moveMask_PromoTo =   0b111000000000000000000000;
+
 // Move struct using one unsigned 32-bit integer
 struct DenseMove {
     // Int structure:

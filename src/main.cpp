@@ -2,6 +2,7 @@
 #include "human_player.hpp"
 #include "engine_player.hpp"
 #include "random_engine.hpp"
+#include "material_engine.hpp"
 #include <iostream>
 #include <string>
 #include <thread>
@@ -42,6 +43,7 @@ int main() {
     std::cout << "Select player type for White:\n";
     std::cout << "1. Human Player\n";
     std::cout << "2. Random Engine\n";
+    std::cout << "3. Simple Material Engine\n";
     std::cout << "Choice: ";
     int whiteChoice;
     std::cin >> whiteChoice;
@@ -50,6 +52,7 @@ int main() {
     std::cout << "\nSelect player type for Black:\n";
     std::cout << "1. Human Player\n";
     std::cout << "2. Random Engine\n";
+    std::cout << "3. Simple Material Engine\n";
     std::cout << "Choice: ";
     int blackChoice;
     std::cin >> blackChoice;
@@ -62,9 +65,12 @@ int main() {
         std::string whiteName;
         std::getline(std::cin, whiteName);
         whitePlayer = std::make_unique<HumanPlayer>(whiteName);
-    } else {
+    } else if (whiteChoice == 2) {
         auto randomEngine = std::make_unique<RandomEngine>();
         whitePlayer = std::make_unique<EnginePlayer>(std::move(randomEngine));
+    } else {
+        auto materialEngine = std::make_unique<MaterialEngine>();
+        whitePlayer = std::make_unique<EnginePlayer>(std::move(materialEngine));
     }
 
     // Create black player
@@ -74,9 +80,12 @@ int main() {
         std::string blackName;
         std::getline(std::cin, blackName);
         blackPlayer = std::make_unique<HumanPlayer>(blackName);
-    } else {
+    } else if (blackChoice == 2) {
         auto randomEngine = std::make_unique<RandomEngine>();
         blackPlayer = std::make_unique<EnginePlayer>(std::move(randomEngine));
+    } else {
+        auto materialEngine = std::make_unique<MaterialEngine>();
+        blackPlayer = std::make_unique<EnginePlayer>(std::move(materialEngine));
     }
     
     // Create and start the match

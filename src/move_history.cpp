@@ -60,8 +60,8 @@ void MoveHistory::addMove(const DenseMove& move, ChessBoard& board,
 
 // Generate Standard Algebraic Notation for a move
 std::string MoveHistory::generateSAN(const DenseMove& move, ChessBoard& board) const {
-    std::cout << "generateSAN start, board side: " << board.getSideToMove() << "\n";
-    std::cout << move.toString(false) << "\n";
+    // std::cout << "generateSAN start, board side: " << board.getSideToMove() << "\n";
+    // std::cout << move.toString(false) << "\n";
     std::stringstream san;
     // Get move attributes
     PieceType movePiece = move.getPieceType();

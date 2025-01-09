@@ -1,4 +1,5 @@
 #include "chess_match.hpp"
+#include "pext_bitboard.hpp"
 #include <chrono>
 #include <ctime>
 
@@ -35,6 +36,8 @@ ChessMatch::ChessMatch(std::unique_ptr<IPlayer> white,
 }
 
 void ChessMatch::start() {
+    // Initialize PEXT
+    PEXT::initialize();
     clock.start();
     
     while (!isMatchOver && !isPaused) {

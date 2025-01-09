@@ -236,18 +236,18 @@ TEST_F(UtilityTest, PerftD4CalcInitial) {
     EXPECT_EQ(perft(board, 4, 4), 197281ULL);      // Depth 4
 }
 
-// // Test perft function for initial board
-// TEST_F(UtilityTest, PerftD5CalcInitial) {
-//     // Test initial position at different depths
-//     board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
-//     EXPECT_EQ(perft(board, 5), 4865609ULL);     // Depth 5
-// }
+// Test perft function for initial board
+TEST_F(UtilityTest, PerftD5CalcInitial) {
+    // Test initial position at different depths
+    board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
+    EXPECT_EQ(perft(board, 5, 5), 4865609ULL);     // Depth 5
+}
 
 // // Test perft function for initial board
 // TEST_F(UtilityTest, PerftD6CalcInitial) {
 //     // Test initial position at different depths
 //     board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
-//     EXPECT_EQ(perft(board, 6), 119060324ULL);   // Depth 6
+//     EXPECT_EQ(perft(board, 6, 6), 119060324ULL);   // Depth 6
 // }
 
 // // Test perft function for initial board

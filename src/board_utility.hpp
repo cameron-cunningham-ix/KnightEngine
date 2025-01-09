@@ -12,27 +12,27 @@ public:
     // Rank masks
 
 
-    static const U64 RankMask = 0xFF;
-    static const U64 Rank1 = 0xFF;
-    static const U64 Rank2 = 0xFF00;
-    static const U64 Rank3 = 0xFF0000;
-    static const U64 Rank4 = 0xFF000000;
-    static const U64 Rank5 = 0xFF00000000;
-    static const U64 Rank6 = 0xFF0000000000;
-    static const U64 Rank7 = 0xFF000000000000;
-    static const U64 Rank8 = 0xFF00000000000000;
+    static const U64 RankMask = 0xFFULL;
+    static const U64 Rank1 = 0xFFULL;
+    static const U64 Rank2 = 0xFF00ULL;
+    static const U64 Rank3 = 0xFF0000ULL;
+    static const U64 Rank4 = 0xFF000000ULL;
+    static const U64 Rank5 = 0xFF00000000ULL;
+    static const U64 Rank6 = 0xFF0000000000ULL;
+    static const U64 Rank7 = 0xFF000000000000ULL;
+    static const U64 Rank8 = 0xFF00000000000000ULL;
 
     // File masks
 
-    static const U64 FileMask = 0x0101010101010101;
-    static const U64 FileA = 0x0101010101010101;
-    static const U64 FileB = 0x0202020202020202;
-    static const U64 FileC = 0x0404040404040404;
-    static const U64 FileD = 0x0808080808080808;
-    static const U64 FileE = 0x1010101010101010;
-    static const U64 FileF = 0x2020202020202020;
-    static const U64 FileG = 0x4040404040404040;
-    static const U64 FileH = 0x8080808080808080;
+    static const U64 FileMask = 0x0101010101010101ULL;
+    static const U64 FileA = 0x0101010101010101ULL;
+    static const U64 FileB = 0x0202020202020202ULL;
+    static const U64 FileC = 0x0404040404040404ULL;
+    static const U64 FileD = 0x0808080808080808ULL;
+    static const U64 FileE = 0x1010101010101010ULL;
+    static const U64 FileF = 0x2020202020202020ULL;
+    static const U64 FileG = 0x4040404040404040ULL;
+    static const U64 FileH = 0x8080808080808080ULL;
 
     // Castling masks
 

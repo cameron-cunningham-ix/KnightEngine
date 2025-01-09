@@ -73,10 +73,24 @@ enable_testing()
 add_subdirectory(test)
 file(MAKE_DIRECTORY build/TestOutput)
 
+# Enable benchmarking
 include(FetchContent)
 FetchContent_Declare(
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG release-1.12.1  # or another stable release
+    GIT_TAG release-1.12.1
 )
 FetchContent_MakeAvailable(googletest)
+
+
+FetchContent_Declare(
+    benchmark
+    GIT_REPOSITORY https://github.com/google/benchmark.git
+    GIT_TAG v1.8.3  # Use the latest stable version
+)
+set(BENCHMARK_ENABLE_TESTING OFF)
+FetchContent_MakeAvailable(benchmark)
+
+# Create benchmarks directory
+add_subdirectory(benchmarks)
+file(MAKE_DIRECTORY build/BenchOutput)

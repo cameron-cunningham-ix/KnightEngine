@@ -46,6 +46,8 @@ protected:
         // Restore original input/output
         std::cin.rdbuf(originalCin);
         std::cout.rdbuf(originalCout);
+        player.reset();
+        clock.reset();
     }
     
     // Helper to simulate user input and get move

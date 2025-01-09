@@ -15,6 +15,10 @@ protected:
         board = ChessBoard();
     }
 
+    void TearDown() override {
+        
+    }
+
     // Helper to verify move count
     void verifyMoveCount(const std::string& pgn, size_t expectedMoves) {
         ASSERT_TRUE(history.fromPGN(pgn)) << "Failed to parse PGN";
