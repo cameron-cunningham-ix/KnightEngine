@@ -545,7 +545,7 @@ bool ChessBoard::isInCheck() {
 }
 /// @param side 
 /// @return True if 'side' is currently attacked / checked by opposing side
-bool ChessBoard::isSideInCheck(Color side) {
+bool ChessBoard::isSideInCheck(Color side) const {
     return OppAttacksToSquare(kingSquares[side], side);
 }
 /// @return Number of pieces checking current side's king

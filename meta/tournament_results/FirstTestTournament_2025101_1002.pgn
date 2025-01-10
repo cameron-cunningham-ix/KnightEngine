@@ -1,0 +1,16 @@
+[Event "First Test Tournament"]
+[Site "?"]
+[Date "2025.01.10"]
+[Round "1"]
+[White "Material Engine 0.2"]
+[Black "Random Engine 1.0"]
+[Result "0-1"]
+[GameDuration "00:00:11"]
+[GameEndTime "2025-01-10T10:03:27.755 Eastern Standard Time"]
+[GameStartTime "2025-01-10T10:03:16.093 Eastern Standard Time"]
+[PlyCount "0"]
+[Termination "abandoned"]
+[TimeControl "40/60+1"]
+
+{White disconnects} 0-1
+

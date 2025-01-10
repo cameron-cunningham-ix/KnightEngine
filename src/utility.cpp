@@ -169,10 +169,8 @@ bool isStalemate(ChessBoard& board) {
     // printBoard(board);
     // If any legal move exists, it's not stalemate
     if (moves[0] != DenseMove()) {
-        std::cout << "    moves size > 0, no stalemate\n";
         return false;
     }
-    std::cout << "    moves size <= 0, possible stalemate\n";
 
     // Check if king is in check
     if (board.isInCheck()) {

@@ -14,6 +14,8 @@
 !bench_output/**
 !meta/
 !meta/**
+!engine/
+!engine/**
 
 # Ignore build directories anywhere
 **/build/

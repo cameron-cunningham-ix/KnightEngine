@@ -203,7 +203,6 @@ void EnginePlayer::processCommand(const std::string& cmd) {
             // Find best move using parameters
             // For now, just use base engine search
             ChessBoard board;  // Need to track current position
-            GameState state;
             bestMove = engine->findBestMove(board);
             thinking = false;
             sendResponse("bestmove " + moveToUCI(bestMove));

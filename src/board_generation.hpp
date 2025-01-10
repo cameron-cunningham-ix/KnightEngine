@@ -67,7 +67,7 @@ public:
     // Whether current side to move is in check
     bool isInCheck();
     // Whether 'side' is in check
-    bool isSideInCheck(Color side);
+    bool isSideInCheck(Color side) const;
     // How many pieces are checking current side's king
     int getCheckCount() const;
 

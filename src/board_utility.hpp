@@ -4,10 +4,10 @@
 class BUTIL {
 public:
 
-    static const int indexToRank(int index) { return index / 8; }
-    static const int indexToFile(int index) { return index % 8; }
-    static const U64 indexRankMask(int index) { return RankMask << ((index / 8)*8); }
-    static const U64 indexFileMask(int index) { return FileMask << (index % 8); }
+    inline static const int indexToRank(int index) { return index / 8; }
+    inline static const int squareToFileIndex(int index) { return index % 8; }
+    inline static const U64 indexRankMask(int index) { return RankMask << ((index / 8)*8); }
+    inline static const U64 indexFileMask(int index) { return FileMask << (index % 8); }
 
     // Rank masks
 

@@ -4,6 +4,7 @@
 #include "board_generation.hpp"
 #include "moves.hpp"
 #include <iostream>
+#include <immintrin.h>
 #include <string>
 #include <sstream>
 #include <format>
@@ -89,15 +90,7 @@ void printBoard(const ChessBoard& board);
 U64 setBitsBetween(int startIndex, int endIndex, int direction = 0);
 
 inline int popcount(U64 x) {
-    #if defined(__GNUC__) || defined(__clang__)
-        return __builtin_popcountll(x);
-    #else
-        // Fallback implementation using bit manipulation
-        x = x - ((x >> 1) & 0x5555555555555555);
-        x = (x & 0x3333333333333333) + ((x >> 2) & 0x3333333333333333);
-        x = (x + (x >> 4)) & 0x0F0F0F0F0F0F0F0F;
-        return (x * 0x0101010101010101) >> 56;
-    #endif
+    return (int)_mm_popcnt_u64(x);
 }
 
 

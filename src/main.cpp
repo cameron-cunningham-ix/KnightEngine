@@ -1,13 +1,11 @@
 #include "chess_match.hpp"
 #include "human_player.hpp"
 #include "engine_player.hpp"
-#include "random_engine.hpp"
-#include "material_engine.hpp"
+#include "../engine/random_engine.hpp"
+#include "../engine/material_engine.hpp"
 #include <iostream>
 #include <string>
 #include <thread>
-
-
 
 // Helper function to print current game status
 void printGameStatus(ChessMatch& match) {
@@ -67,9 +65,11 @@ int main() {
         whitePlayer = std::make_unique<HumanPlayer>(whiteName);
     } else if (whiteChoice == 2) {
         auto randomEngine = std::make_unique<RandomEngine>();
+        randomEngine->setSide(WHITE);
         whitePlayer = std::make_unique<EnginePlayer>(std::move(randomEngine));
     } else {
         auto materialEngine = std::make_unique<MaterialEngine>();
+        materialEngine->setSide(WHITE);
         whitePlayer = std::make_unique<EnginePlayer>(std::move(materialEngine));
     }
 
@@ -82,9 +82,11 @@ int main() {
         blackPlayer = std::make_unique<HumanPlayer>(blackName);
     } else if (blackChoice == 2) {
         auto randomEngine = std::make_unique<RandomEngine>();
+        randomEngine->setSide(BLACK);
         blackPlayer = std::make_unique<EnginePlayer>(std::move(randomEngine));
     } else {
         auto materialEngine = std::make_unique<MaterialEngine>();
+        materialEngine->setSide(BLACK);
         blackPlayer = std::make_unique<EnginePlayer>(std::move(materialEngine));
     }
     

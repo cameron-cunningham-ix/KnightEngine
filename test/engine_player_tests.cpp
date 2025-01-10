@@ -1,7 +1,7 @@
 // test/engine_player_tests.cpp
+#include "../engine/random_engine.hpp"
+#include "../engine/material_engine.hpp"
 #include "../src/engine_player.hpp"
-#include "../src/material_engine.hpp"
-#include "../src/random_engine.hpp"
 #include "../src/pext_bitboard.hpp"
 #include <gtest/gtest.h>
 #include <iostream>

@@ -35,18 +35,18 @@ add_library(KnightEngine
     src/human_player.hpp
     src/i_chess_engine.hpp
     src/i_player.hpp
-    src/material_engine.hpp
     src/move_history.cpp
     src/move_history.hpp
     src/moves.cpp
     src/moves.hpp
     src/pext_bitboard.cpp
     src/pext_bitboard.hpp
-    src/random_engine.hpp
     src/types.cpp
     src/types.hpp
     src/utility.cpp
     src/utility.hpp
+    engine/random_engine.hpp
+    engine/material_engine.hpp
 )
 
 # Include directories
@@ -94,3 +94,43 @@ FetchContent_MakeAvailable(benchmark)
 # Create benchmarks directory
 add_subdirectory(benchmarks)
 file(MAKE_DIRECTORY build/BenchOutput)
+
+
+# Create UCI handler library
+add_library(uci_handler
+    engine/uci/uci_handler.cpp
+    engine/uci/uci_handler.hpp
+)
+
+target_link_libraries(uci_handler PUBLIC
+    KnightEngine
+)
+
+# Create UCI engine executables
+add_executable(random_engine
+    engine/uci/random_engine_main.cpp
+)
+
+add_executable(material_engine
+    engine/uci/material_engine_main.cpp
+)
+
+# Link against the chess engine library and UCI handler
+target_link_libraries(random_engine PRIVATE 
+    KnightEngine
+    uci_handler
+)
+
+target_link_libraries(material_engine PRIVATE 
+    KnightEngine
+    uci_handler
+)
+
+# Set properties for the engine executables
+set_target_properties(random_engine PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/engines
+)
+
+set_target_properties(material_engine PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/engines
+)
