@@ -43,9 +43,9 @@ DenseMove HumanPlayer::getMove(ChessBoard& board,
 void HumanPlayer::notifyOpponentMove(const DenseMove& move) {
     // Human players don't need to process opponent moves
     // But we could print them here if desired
-    std::cout << "Opponent played: " << move.getPieceType()
-              << " from " << move.getFrom()
-              << " to " << move.getTo() << std::endl;
+    // std::cout << "Opponent played: " << move.getPieceType()
+    //           << " from " << move.getFrom()
+    //           << " to " << move.getTo() << std::endl;
 }
 
 void HumanPlayer::onGameEnd() {

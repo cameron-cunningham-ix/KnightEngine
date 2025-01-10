@@ -117,7 +117,6 @@ int main() {
         // Only update display if something has changed
         if (currentState.sideToMove != lastState.sideToMove ||
             currentBoard.getAllPieces() != lastBoard.getAllPieces()) {
-            printBoard(currentBoard);
             printGameStatus(match);
             
             // Update our tracked state

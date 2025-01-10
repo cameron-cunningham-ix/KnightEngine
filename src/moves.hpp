@@ -12,13 +12,13 @@ class MoveGenerator {
 private:
     
     // Move generation functions
-    static void generatePawnMoves(const ChessBoard& board, std::array<DenseMove, MAX_MOVES>& moves, int& moveIndex);
-    static void generateEnPassantMoves(const ChessBoard &board, std::array<DenseMove, MAX_MOVES>& moves, int& moveIndex);
-    static void generateCastlingMoves(const ChessBoard& board, std::array<DenseMove, MAX_MOVES>& moves, int& moveIndex);
-    static void generatePieceMoves(const ChessBoard &board, std::array<DenseMove, MAX_MOVES>& moves, int& moveIndex, PieceType piece);
-    static std::array<DenseMove, MAX_MOVES> generatePsuedoMoves(ChessBoard &board);
+    static void generatePawnMoves(const ChessBoard& board, std::array<DenseMove, MAX_MOVES>& moves, int& moveNum);
+    static void generateEnPassantMoves(const ChessBoard &board, std::array<DenseMove, MAX_MOVES>& moves, int& moveNum);
+    static void generateCastlingMoves(const ChessBoard& board, std::array<DenseMove, MAX_MOVES>& moves, int& moveNum);
+    static void generatePieceMoves(const ChessBoard &board, std::array<DenseMove, MAX_MOVES>& moves, int& moveNum, PieceType piece);
     
 public:
-    static std::array<DenseMove, MAX_MOVES> generateLegalMoves(ChessBoard &board);
+    static std::array<DenseMove, MAX_MOVES> generatePsuedoMoves(const ChessBoard &board, int& moveNum);
+    static std::array<DenseMove, MAX_MOVES> generateLegalMoves(ChessBoard &board, int& moveNum);
 };
 

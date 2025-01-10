@@ -24,7 +24,7 @@ public:
     // Current board state
     GameState currentGameState;
     // History of game states
-    std::array<GameState, MAX_PLY> stateHistory;
+    std::array<GameState, MAX_PLY> stateHistory; /// STACK
     // History of moves
     std::array<DenseMove, MAX_PLY> moveHistory;
 

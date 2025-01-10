@@ -33,12 +33,12 @@ static void BM_PerftD5Init(benchmark::State& state) {
 }
 BENCHMARK(BM_PerftD5Init);
 
-// // Benchmark perft 6 on initial position
-// static void BM_PerftD6Init(benchmark::State& state) {
-//     ChessBoard board = ChessBoard();
-//     for (auto _ : state) {
-//         U64 nodes = perft(board, 6, 6, false);
-//         benchmark::DoNotOptimize(nodes);
-//     }
-// }
-// BENCHMARK(BM_PerftD6Init);
+// Benchmark perft 6 on initial position
+static void BM_PerftD6Init(benchmark::State& state) {
+    ChessBoard board = ChessBoard();
+    for (auto _ : state) {
+        U64 nodes = perft(board, 6, 6, false);
+        benchmark::DoNotOptimize(nodes);
+    }
+}
+BENCHMARK(BM_PerftD6Init);

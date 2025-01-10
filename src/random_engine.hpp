@@ -16,11 +16,12 @@ public:
                            int maxDepth = -1) override {
         startSearch();
         // Generate all legal moves
-        std::vector<DenseMove> moves = MoveGenerator::generateLegalMoves(board);
+        int moveNum = 0;
+        std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
 
         // Select random move
-        if (!moves.empty()) {
-            std::uniform_int_distribution<size_t> dist(0, moves.size() - 1);
+        if (moves[0] != DenseMove()) {
+            std::uniform_int_distribution<size_t> dist(0, moveNum - 1);
             bestMove = moves[dist(rng)];
         }
 

@@ -31,17 +31,18 @@ public:
         int actualDepth = (maxDepth > 0) ? maxDepth : searchDepth;
         
         // Generate all legal moves
-        std::vector<DenseMove> moves = MoveGenerator::generateLegalMoves(board);
+        int moveNum = 0;
+        std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
         
         // 
         int bestScore = board.currentGameState.sideToMove == WHITE ? -999999 : 999999;
         DenseMove bestMove;
 
         // Evaluate each move
-        for (const DenseMove& move : moves) {
+        for (int i = 0; i < moveNum; i++) {
             // Make move on temporary board
             ChessBoard tempBoard = board;
-            tempBoard.makeMove(move, true);
+            tempBoard.makeMove(moves[i], true);
 
             // Evaluate resulting position
             int score = -alphaBeta(tempBoard, actualDepth - 1, 
@@ -51,7 +52,7 @@ public:
             if ((board.currentGameState.sideToMove == WHITE && score > bestScore) ||
                 (board.currentGameState.sideToMove == BLACK && score < bestScore)) {
                 bestScore = score;
-                bestMove = move;
+                bestMove = moves[i];
             }
         }
 
@@ -142,13 +143,14 @@ private:
             return evaluatePosition(board);
         }
 
-        std::vector<DenseMove> moves = MoveGenerator::generateLegalMoves(board);
+        int moveNum = 0;
+        std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
 
         if (maximizing) {
             int maxEval = -999999;
-            for (const DenseMove& move : moves) {
+            for (int i = 0; i < moveNum; i++) {
                 ChessBoard tempBoard = board;
-                tempBoard.makeMove(move, true);
+                tempBoard.makeMove(moves[i], true);
 
                 int eval = alphaBeta(tempBoard, depth - 1, alpha, beta, false);
                 maxEval = std::max(maxEval, eval);
@@ -158,9 +160,9 @@ private:
             return maxEval;
         } else {
             int minEval = 999999;
-            for (const DenseMove& move : moves) {
+            for (int i = 0; i < moveNum; i++) {
                 ChessBoard tempBoard = board;
-                tempBoard.makeMove(move, true);
+                tempBoard.makeMove(moves[i], true);
 
                 int eval = alphaBeta(tempBoard, depth - 1, alpha, beta, true);
                 minEval = std::min(minEval, eval);

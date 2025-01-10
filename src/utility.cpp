@@ -135,8 +135,9 @@ bool isValidFEN(const std::string& fen) {
 
 // Count legal moves in a position
 int countLegalMoves(ChessBoard& board) {
-    std::vector<DenseMove> moves = MoveGenerator::generateLegalMoves(board);
-    return (int)moves.size();
+    int moveNum = 0;
+    std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
+    return moveNum;
 }
 
 // Verify if position is checkmate
@@ -148,10 +149,11 @@ bool isCheckmate(ChessBoard& board) {
     }
     
     // Generate all possible moves
-    std::vector<DenseMove> moves = MoveGenerator::generateLegalMoves(board);
+    int moveNum = 0;
+    std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
     
     // If any legal move exists, it's not checkmate
-    if (moves.size() > 0) {
+    if (moves[0] != DenseMove()) {
         return false;
     }
     
@@ -162,14 +164,15 @@ bool isCheckmate(ChessBoard& board) {
 bool isStalemate(ChessBoard& board) {
     // std::cout << "isStalemate start\n";
     // Generate all possible moves
-    std::vector<DenseMove> moves = MoveGenerator::generateLegalMoves(board);
+    int moveNum = 0;
+    std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
     // printBoard(board);
     // If any legal move exists, it's not stalemate
-    if (moves.size() > 0) {
-        // std::cout << "    moves size > 0, no stalemate\n";
+    if (moves[0] != DenseMove()) {
+        std::cout << "    moves size > 0, no stalemate\n";
         return false;
     }
-    // std::cout << "    moves size <= 0, possible stalemate\n";
+    std::cout << "    moves size <= 0, possible stalemate\n";
 
     // Check if king is in check
     if (board.isInCheck()) {
@@ -179,46 +182,39 @@ bool isStalemate(ChessBoard& board) {
     return true;  // No legal moves and king is not in check = stalemate
 }
 
-// Calculates the number of possible positions after a certain number of moves (depth)
-// Used for testing move generation accuracy
-// @param board: Current chess board position
-// @param state: Current game state (castling rights, en passant, etc.)
-// @param depth: How many moves deep to calculate
-// @return: Number of possible positions at given depth
+/// @brief Calculates the number of possible positions after a certain number of moves (depth)
+/// Used for testing move generation accuracy
+/// @param board: Current chess board position
+/// @param state: Current game state (castling rights, en passant, etc.)
+/// @param depth: How many moves deep to calculate
+/// @return: Number of possible positions at given depth
 U64 perft(ChessBoard& board, int maxDepth, int depth, bool displaySubPerft) {
     
     U64 nodes = 0;
-    
+    int moveNum = 0;
+    if (depth == 0) return 1ULL;
     // Get all possible moves from current position
-    std::vector<DenseMove> moves = MoveGenerator::generateLegalMoves(board);
+    std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generatePsuedoMoves(board, moveNum);
     // Base case - when we reach desired depth, count this position
-    if (depth == 1) return (U64)moves.size();
     
     // Try each move
-    for (const DenseMove& move : moves) {
-        // std::cout << "depth " << depth << " move " << move.toString(false) << "\n";
-        
-        // if (depth == 2 && move.getPieceType() == W_KING) {
-        //     std::cout << move.toAlgebraic() << "\n";
-        // }
-        // if (depth == 1) {
-        //     std::cout << "    " << move.toString(false) << "\n";
-        // }
-
+    for (int i = 0; i < moveNum; i++) {
+        U64 sub;
         // Make the move on the board
-        board.makeMove(move, true);
+        board.makeMove(moves[i], true);
 
-        // Get perft for new sub position
-        U64 sub = perft(board, maxDepth, depth - 1, displaySubPerft);
-        
-        if (displaySubPerft && maxDepth == depth) {
-            std::cout << move.toAlgebraic() << ": " << sub << "\n";
+        // See if the move left its own side in check
+        if (!board.isSideInCheck(board.getOppSide())) {
+            // Get perft for new sub position
+            sub = perft(board, maxDepth, depth - 1, displaySubPerft);
+            nodes += sub;
+            if (displaySubPerft && maxDepth == depth) {
+                std::cout << moves[i].toAlgebraic() << ": " << sub << "\n";
+            }
         }
-
-        // Recurse with temporary position and updated state
-        nodes += sub;
+    
         // Unmake the move
-        board.unmakeMove(move, true);
+        board.unmakeMove(moves[i], true);
     }
     
     return nodes;
@@ -383,10 +379,8 @@ DenseMove sanToMove(const std::string& san, ChessBoard& board) {
 
         // Get piece type from first character if uppercase, otherwise assume pawn (ignore castling since it's already set)
         if (std::isupper(s[0]) && s[0] != 'O') {
-            std::cout << "uppercase first char: " << s[0] << "\n";
             char piece = s[0];
             if (fenToPiece.find(piece) == fenToPiece.end()) {
-                std::cout << "char not found in fenToPiece\n";
                 return DenseMove();  // Invalid piece character
             }
             pieceType = sideToMove == WHITE ? 
@@ -460,11 +454,12 @@ DenseMove sanToMove(const std::string& san, ChessBoard& board) {
     if (toFile == -1 || toRank == -1) {
         return DenseMove();  // Missing destination square
     }
-
+    int moveNum = 0;
     // Find matching legal move
-    std::vector<DenseMove> candidates = MoveGenerator::generateLegalMoves(board);
+    std::array<DenseMove, MAX_MOVES> candidates = MoveGenerator::generateLegalMoves(board, moveNum);
 
-    for (DenseMove candidate : candidates) {
+    for (int i = 0; i < moveNum; i++) {
+        DenseMove candidate = candidates[i];
         // Check basic move properties
         if (candidate.getPieceType() != pieceType || 
             candidate.getTo() != toFile + toRank * 8 ||

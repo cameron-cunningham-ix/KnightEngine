@@ -87,15 +87,17 @@ std::string MoveHistory::generateSAN(const DenseMove& move, ChessBoard& board) c
     }
 
     // Check for move ambiguity
-    std::vector<DenseMove> legalMoves;
+    std::array<DenseMove, MAX_MOVES> legalMoves;
     std::vector<DenseMove> ambiguousMoves;
     
     // Get all legal moves
-    legalMoves = MoveGenerator::generateLegalMoves(board);
+    int moveNum = 0;
+    legalMoves = MoveGenerator::generateLegalMoves(board, moveNum);
 
     // std::cout << "generateSAN genLegalMoves, board side: " << board.getSideToMove() << "\n";
 
-    for (const DenseMove& candidateMove : legalMoves) {
+    for (int i = 0; i < moveNum; i++) {
+        DenseMove candidateMove = legalMoves[i];
         if (candidateMove.getPieceType() != movePiece
             || candidateMove.getTo() != move.getTo()) {
             continue;
@@ -393,7 +395,7 @@ bool MoveHistory::fromPGN(const std::string& pgn) {
                         else if (currentMove.find('.') == std::string::npos) {
                             // Process as actual move
                             DenseMove move = sanToMove(currentMove, board);
-                            std::cout << "fromPGN move from sanToMove - move: " << move.toString(false) << "\n";
+                            // std::cout << "fromPGN move from sanToMove - move: " << move.toString(false) << "\n";
                             
                             // Add move to history
                             addMove(move, board);

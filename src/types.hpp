@@ -65,7 +65,7 @@ const U32 moveMask_PromoTo =   0b111000000000000000000000;
 
 // Move struct using one unsigned 32-bit integer
 struct DenseMove {
-    // Int structure:
+    // Int structure [24 bits]:
     // [3b]      [1b]       [1b]       [3b]            [6b] [6b]   [1b]    [3b]
     // [PromoTo] [isEnPass] [isCastle] [CaptDenseType] [To] [From] [Color] [DenseType]
     U32 data;

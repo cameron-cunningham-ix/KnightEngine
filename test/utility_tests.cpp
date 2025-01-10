@@ -243,12 +243,12 @@ TEST_F(UtilityTest, PerftD5CalcInitial) {
     EXPECT_EQ(perft(board, 5, 5), 4865609ULL);     // Depth 5
 }
 
-// // Test perft function for initial board
-// TEST_F(UtilityTest, PerftD6CalcInitial) {
-//     // Test initial position at different depths
-//     board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
-//     EXPECT_EQ(perft(board, 6, 6), 119060324ULL);   // Depth 6
-// }
+// Test perft function for initial board
+TEST_F(UtilityTest, PerftD6CalcInitial) {
+    // Test initial position at different depths
+    board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
+    EXPECT_EQ(perft(board, 6, 6), 119060324ULL);   // Depth 6
+}
 
 // // Test perft function for initial board
 // TEST_F(UtilityTest, PerftD7CalcInitial) {
@@ -290,11 +290,6 @@ TEST_F(UtilityTest, PerftD1CalcKiwiPete_e5g6) {
     
     board.setupPositionFromFEN("r3k2r/p1ppqpb1/bn2pnN1/3P4/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1");
     EXPECT_EQ(perft(board, 1, 1, true), 42ULL);   // Depth 1
-
-    std::vector<DenseMove> moves = MoveGenerator::generateLegalMoves(board);
-    for (const DenseMove& move : moves) {
-        std::cout << "move: " << move.toString(false) << "\n";
-    }
 
     std::cout.rdbuf(coutBuf);
     outfile.close();

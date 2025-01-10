@@ -1,0 +1,26 @@
+2025-01-09T15:37:04-05:00
+Running build\benchmarks\Debug\chess_benchmarks.exe
+DESKTOP-GHDFV7H
+CPU Caches:
+  L1 Data {'type': 'Data', 'level': 1, 'size': 32768, 'num_sharing': 2}
+  L1 Instruction {'type': 'Instruction', 'level': 1, 'size': 32768, 'num_sharing': 2}
+  L2 Unified {'type': 'Unified', 'level': 2, 'size': 262144, 'num_sharing': 2}
+  L3 Unified {'type': 'Unified', 'level': 3, 'size': 9437184, 'num_sharing': 12}
+***WARNING*** Library was built as DEBUG. Timings may be affected.
+------------------------------------------------------------------------------------------------------------------------
+Benchmark                 Time         CPU          Iterations   Allocs/Iter  MaxBytes     TotalAlloc   HeapGrowth  
+------------------------------------------------------------------------------------------------------------------------
+BM_PerftD5Init            1.5 s        1.5 s        1            16.00        992          1016         888         
+BM_PerftD3Init            2.8 ms       2.8 ms       249          1.00         992          1016         888         
+BM_FENParsing             21.8 us      22.2 us      37333        11.12        4832         6152         4728        
+BM_KiwipeteMoveGen        11.9 us      12.0 us      56000        1.88         1371         1491         1251        
+BM_MGMakeUnmakeNoSearch   8.6 us       8.6 us       74667        1.12         1056         1080         936         
+BM_MGMakeUnmakeSearch     8.5 us       8.5 us       89600        1.12         1056         1080         936         
+BM_PerftD1Init            6.1 us       6.1 us       112000       1.00         992          1016         888         
+BM_InitialMoveGen         5.5 us       5.3 us       112000       1.12         1056         1080         936         
+BM_QueenAttacks           1.6 us       1.7 us       497778       1.00         992          1016         888         
+BM_BishopAttacks          831.2 ns     837.1 ns     896000       1.12         1056         1080         936         
+BM_RookAttacks            765.7 ns     767.3 ns     896000       1.00         992          1016         888         
+BM_MakeMoveInit           144.4 ns     141.3 ns     4977778      1.00         992          1016         888         
+BM_AttkCalcInit           54.0 ns      53.0 ns      11200000     1.00         992          1016         888         
+BM_IsInCheck              10.5 ns      10.5 ns      74666667     1.75         1306         1426         1202        

@@ -141,13 +141,14 @@ TEST_F(ExecutionTimeTest, ChessBoardAttacksToSquareMulti) {
 // Test execution time of makeMove and unmakeMove
 TEST_F(ExecutionTimeTest, MakeMoveD1) {
     setupTestPosition(board, "kiwipete");
-    std::vector<DenseMove> moves = MoveGenerator::generateLegalMoves(board);
+    int moveNum = 0;
+    std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
     ChessBoard tempBoard = board;
 
     auto start = std::chrono::high_resolution_clock::now();
-    for(const DenseMove& move : moves) {
-        board.makeMove(move, true);
-        board.unmakeMove(move, true);
+    for(int i = 0; i < moveNum; i++) {
+        board.makeMove(moves[i], true);
+        board.unmakeMove(moves[i], true);
     }
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
