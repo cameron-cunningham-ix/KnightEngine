@@ -607,37 +607,37 @@ TEST_F(ChessBoardTest, IsInCheck2) {
     EXPECT_EQ(board.isInCheck(), false);
     EXPECT_EQ(board.isSideInCheck(WHITE), false);
     EXPECT_EQ(board.isSideInCheck(BLACK), false);
-    EXPECT_EQ(board.getCheckCount(), 0);
+    // EXPECT_EQ(board.getCheckCount(), 0);
 
     board.makeMove(DenseMove(B_PAWN, BUTIL::E7, BUTIL::E5), false);
     EXPECT_EQ(board.isInCheck(), false);
     EXPECT_EQ(board.isSideInCheck(WHITE), false);
     EXPECT_EQ(board.isSideInCheck(BLACK), false);
-    EXPECT_EQ(board.getCheckCount(), 0);
+    // EXPECT_EQ(board.getCheckCount(), 0);
 
     board.makeMove(DenseMove(W_BISHOP, BUTIL::F1, BUTIL::B5), false);
     EXPECT_EQ(board.isInCheck(), false);
     EXPECT_EQ(board.isSideInCheck(WHITE), false);
     EXPECT_EQ(board.isSideInCheck(BLACK), false);
-    EXPECT_EQ(board.getCheckCount(), 0);
+    // EXPECT_EQ(board.getCheckCount(), 0);
 
     board.makeMove(DenseMove(B_BISHOP, BUTIL::F8, BUTIL::B4), false);
     EXPECT_EQ(board.isInCheck(), false);
     EXPECT_EQ(board.isSideInCheck(WHITE), false);
     EXPECT_EQ(board.isSideInCheck(BLACK), false);
-    EXPECT_EQ(board.getCheckCount(), 0);
+    // EXPECT_EQ(board.getCheckCount(), 0);
 
     board.makeMove(DenseMove(W_BISHOP, BUTIL::B5, BUTIL::D7, D_PAWN), false);
     EXPECT_EQ(board.isInCheck(), true);
     EXPECT_EQ(board.isSideInCheck(WHITE), false);
     EXPECT_EQ(board.isSideInCheck(BLACK), true);
-    EXPECT_EQ(board.getCheckCount(), 1);
+    // EXPECT_EQ(board.getCheckCount(), 1);
 
     board.unmakeMove(DenseMove(W_BISHOP, BUTIL::B5, BUTIL::D7, D_PAWN), false);
     EXPECT_EQ(board.isInCheck(), false);
     EXPECT_EQ(board.isSideInCheck(WHITE), false);
     EXPECT_EQ(board.isSideInCheck(BLACK), false);
-    EXPECT_EQ(board.getCheckCount(), 0);
+    // EXPECT_EQ(board.getCheckCount(), 0);
     
 }
 

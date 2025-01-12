@@ -95,7 +95,9 @@ void MoveGenerator::generatePawnMoves(const ChessBoard& board, std::array<DenseM
         while (doublePushes) {
             // Can only move two squares if on starting row
             int targetSquare = std::countr_zero(doublePushes);
-            moves[moveNum++] = (DenseMove(W_PAWN, targetSquare - 16, targetSquare));
+            DenseMove move = DenseMove(W_PAWN, targetSquare - 16, targetSquare);
+            move.setCastleRights(currCastleRights);
+            moves[moveNum++] = move;
             doublePushes &= (doublePushes - 1);
         }
     }
@@ -115,6 +117,7 @@ void MoveGenerator::generatePawnMoves(const ChessBoard& board, std::array<DenseM
                 if (targetSquare >= 0 && targetSquare < 8) {
                     DenseMove promoteMove = DenseMove(B_PAWN, index, targetSquare, 
                                                       board.getDenseTypeAt(targetSquare));
+                    promoteMove.setCastleRights(currCastleRights);
                     promoteMove.setPromoteTo(D_KNIGHT);
                     moves[moveNum++] = promoteMove;
                     promoteMove.setPromoteTo(D_BISHOP);
@@ -125,8 +128,10 @@ void MoveGenerator::generatePawnMoves(const ChessBoard& board, std::array<DenseM
                     moves[moveNum++] = promoteMove;
                 }
                 else {
-                    moves[moveNum++] = (DenseMove(B_PAWN, index, targetSquare,
-                                              board.getDenseTypeAt(targetSquare)));
+                    DenseMove move = DenseMove(B_PAWN, index, targetSquare,
+                                              board.getDenseTypeAt(targetSquare));
+                    move.setCastleRights(currCastleRights);
+                    moves[moveNum++] = move;
                 }
                 attackMask &= (attackMask - 1);     // Clear the least significant bit
             }
@@ -147,6 +152,7 @@ void MoveGenerator::generatePawnMoves(const ChessBoard& board, std::array<DenseM
             if (targetSquare >= 0 && targetSquare < 8) {
                 DenseMove promoteMove = DenseMove(B_PAWN, targetSquare + 8, targetSquare, 
                                                       board.getDenseTypeAt(targetSquare));
+                promoteMove.setCastleRights(currCastleRights);
                 promoteMove.setPromoteTo(D_KNIGHT);
                 moves[moveNum++] = promoteMove;
                 promoteMove.setPromoteTo(D_BISHOP);
@@ -157,7 +163,9 @@ void MoveGenerator::generatePawnMoves(const ChessBoard& board, std::array<DenseM
                 moves[moveNum++] = promoteMove;
             } 
             else {
-                moves[moveNum++] = (DenseMove(B_PAWN, targetSquare + 8, targetSquare));
+                DenseMove move = DenseMove(B_PAWN, targetSquare + 8, targetSquare);
+                move.setCastleRights(currCastleRights);
+                moves[moveNum++] = move;
             }
             singlePushes &= (singlePushes - 1);
         }
@@ -165,7 +173,9 @@ void MoveGenerator::generatePawnMoves(const ChessBoard& board, std::array<DenseM
         while (doublePushes) {
             // Can only move two squares if on starting row
             int targetSquare = std::countr_zero(doublePushes);
-            moves[moveNum++] = (DenseMove(B_PAWN, targetSquare + 16, targetSquare));
+            DenseMove move = DenseMove(B_PAWN, targetSquare + 16, targetSquare);
+            move.setCastleRights(currCastleRights);
+            moves[moveNum++] = move;
             doublePushes &= (doublePushes - 1);
         }
     }    
@@ -175,11 +185,12 @@ void MoveGenerator::generatePawnMoves(const ChessBoard& board, std::array<DenseM
 /// @param board 
 /// @param moves 
 void MoveGenerator::generateEnPassantMoves(const ChessBoard &board, std::array<DenseMove, MAX_MOVES>& moves, int& moveNum) {
-    // Get current state
-    Color sideToMove = board.currentGameState.sideToMove;
     int enPassSquare = board.currentGameState.enPassantSquare;
     // If no en passant square is available, return
     if (enPassSquare == -1) return;
+    // Get current state
+    Color sideToMove = board.currentGameState.sideToMove;
+    int currCastleRights = board.currentGameState.getCastleRights();
 
     // Get pawns that could potentially make en passant capture
     if (sideToMove == WHITE) {
@@ -189,7 +200,9 @@ void MoveGenerator::generateEnPassantMoves(const ChessBoard &board, std::array<D
         // For each white pawn that can make the capture
         while (epCaptors) {
             int from = std::countr_zero(epCaptors);  // Get index of capturing pawn
-            DenseMove move(W_PAWN, from, enPassSquare, D_PAWN, false, true);
+            DenseMove move(W_PAWN, from, enPassSquare, D_PAWN,
+                         false, true, D_EMPTY, currCastleRights);
+            
             moves[moveNum++] = move;
             epCaptors &= (epCaptors - 1);  // Clear least significant bit
         }
@@ -200,7 +213,8 @@ void MoveGenerator::generateEnPassantMoves(const ChessBoard &board, std::array<D
         // For each black pawn that can make the capture
         while (epCaptors) {
             int from = std::countr_zero(epCaptors);  // Get index of capturing pawn
-            DenseMove move(B_PAWN, from, enPassSquare, D_PAWN, false, true);
+            DenseMove move(B_PAWN, from, enPassSquare, D_PAWN,
+                         false, true, D_EMPTY, currCastleRights);
             moves[moveNum++] = move;
             epCaptors &= (epCaptors - 1);  // Clear least significant bit
         }
@@ -211,43 +225,51 @@ void MoveGenerator::generateEnPassantMoves(const ChessBoard &board, std::array<D
 /// @param state 
 /// @param moves 
 void MoveGenerator::generateCastlingMoves(const ChessBoard& board, std::array<DenseMove, MAX_MOVES>& moves, int& moveNum) {
-    // Get current side color
     Color sideToMove = board.getSideToMove();
-    // Get board occupancy
-    U64 occupancy = board.getAllPieces();
-    // Get enemy attacks to starting 
+    // Get enemy attacks to starting square
     U64 enemyAttacks = board.OppAttacksToSquare(sideToMove == WHITE ? 4 : 60, sideToMove);
     // Kings cannot castle out of check
     if (enemyAttacks) return;
 
+    // Castling right info in moves is for rebuilding state in unmakeMove;
+    // therefore moves take current castling rights unchanged
+    int currCastleRights = board.currentGameState.getCastleRights();
+    // Get board occupancy
+    U64 occupancy = board.getAllPieces();
+
     if (sideToMove == WHITE) {
-        // If white still has kingside castle rights and there's no pieces or attacks in between
+        // If white still has kingside castle rights and there's no pieces
+        // or attacks in between
         if (board.currentGameState.canCastleWhiteKingside &&
             (occupancy & BUTIL::W_ShortCastleMask) == 0 &&
             board.OppAttacksToSquare(5, WHITE) == 0) {
-            DenseMove move(W_KING, 4, 6, D_EMPTY, true);
+            DenseMove move(W_KING, 4, 6, D_EMPTY, true, false, D_EMPTY,
+                        currCastleRights);
             moves[moveNum++] = move;
         }
-        // If white still has queenside castle rights and there's no pieces or attacks in between
+        // If white still has queenside castle rights
         if (board.currentGameState.canCastleWhiteQueenside &&
             (occupancy & BUTIL::W_LongCastleMask) == 0 &&
             board.OppAttacksToSquare(3, WHITE) == 0) {
-            DenseMove move(W_KING, 4, 2, D_EMPTY, true);
+            DenseMove move(W_KING, 4, 2, D_EMPTY, true, false, D_EMPTY, 
+                        currCastleRights);
             moves[moveNum++] = move;
         }
     } else {
-        // If black still has kingside castle rights and there's no pieces or attacks in between
+        // If black still has kingside castle rights
         if (board.currentGameState.canCastleBlackKingside &&
             (occupancy & BUTIL::B_ShortCastleMask) == 0 &&
             board.OppAttacksToSquare(61, BLACK) == 0) {
-            DenseMove move(B_KING, 60, 62, D_EMPTY, true);
+            DenseMove move(B_KING, 60, 62, D_EMPTY, true, false, D_EMPTY,
+                        currCastleRights);
             moves[moveNum++] = move;
         }
-        // If black still has queenside castle rights and there's no pieces or attacks in between
+        // If black still has queenside castle rights
         if (board.currentGameState.canCastleBlackQueenside &&
             (occupancy & BUTIL::B_LongCastleMask) == 0 &&
             board.OppAttacksToSquare(59, BLACK) == 0) {
-            DenseMove move(B_KING, 60, 58, D_EMPTY, true);
+            DenseMove move(B_KING, 60, 58, D_EMPTY, true, false, D_EMPTY,
+                        currCastleRights);
             moves[moveNum++] = move;
         }
     }
@@ -257,136 +279,292 @@ void MoveGenerator::generateCastlingMoves(const ChessBoard& board, std::array<De
 /// @param board 
 /// @param moves 
 /// @param piece 
-void MoveGenerator::generatePieceMoves(const ChessBoard &board, std::array<DenseMove, MAX_MOVES>& moves, int& moveNum, PieceType piece) {
+void MoveGenerator::generatePieceMoves(const ChessBoard &board, std::array<DenseMove, MAX_MOVES>& moves, int& moveNum) {
     // std::cout << "MoveGen.genPieceMoves start\n    piece " << piece << "\n";
     U64 pieceBB;
-    U64 opposition = board.getSideToMove() == WHITE ? board.getBlackPieces() : 
-                                                      board.getWhitePieces();
-    U64 friendlyOccupancy = board.getSideToMove() == WHITE ? board.getWhitePieces() : 
-                                                             board.getBlackPieces();
+    Color sideToMove = board.getSideToMove();
     U64 occupancy = board.getAllPieces();
     U64 emptySquares = board.getEmptySquares();
+    int currCastleRights = board.currentGameState.getCastleRights();
 
-    // std::cout << "    bitboards\nopposition\n";
-    // printBitboard(opposition);
-    // std::cout << "    friendlyOccupancy\n";
-    // printBitboard(friendlyOccupancy);
-    // std::cout << "    occupancy\n";
-    // printBitboard(occupancy);
-    // std::cout << "    emptySquares\n";
-    // printBitboard(emptySquares);
-
-
-    switch (piece) {
-        case W_PAWN:
-            // Pawns have their own function
-            return;
-            break;
-        case W_KNIGHT:
-            pieceBB = board.getWhiteKnights();
-            break;
-        case W_BISHOP:
-            pieceBB = board.getWhiteBishops();
-            break;
-        case W_ROOK:
-            pieceBB = board.getWhiteRooks();
-            break;
-        case W_QUEEN:
-            pieceBB = board.getWhiteQueens();
-            break;
-        case W_KING:
-            pieceBB = board.getWhiteKings();
-            break;
-        case B_PAWN:
-            // Pawns have their own function
-            return;
-            break;
-        case B_KNIGHT:
-            pieceBB = board.getBlackKnights();
-            break;
-        case B_BISHOP:
-            pieceBB = board.getBlackBishops();
-            break;
-        case B_ROOK:
-            pieceBB = board.getBlackRooks();
-            break;
-        case B_QUEEN:
-            pieceBB = board.getBlackQueens();
-            break;
-        case B_KING:
-            pieceBB = board.getBlackKings();
-            break;
-        default:
-            // Handle invalid piece type or error case
-            break;
-    }
-
-
-    while (pieceBB) {
-        int index = std::countr_zero(pieceBB);     // Get index of the lowest set bit
-        // Use precomputed attack mask for bishops
-        
+    if (sideToMove == WHITE) {
+        U64 opposition = board.getBlackPieces();
+        // Mask of attacks from index
         U64 attackMask;
-        switch (piece) {
-            case W_KNIGHT:
-            case B_KNIGHT:
-                attackMask = ATKMASK_KNIGHT[index];
-                break;
-            case W_BISHOP:
-            case B_BISHOP:
-                attackMask = ATKMASK_BISHOP[index];
-                break;
-            case W_ROOK:
-            case B_ROOK:
-                attackMask = ATKMASK_ROOK[index];
-                break;
-            case W_QUEEN:
-            case B_QUEEN:
-                attackMask = ATKMASK_QUEEN[index];
-                break;
-            case W_KING:
-            case B_KING:
-                attackMask = ATKMASK_KING[index];
-                break;
-            default:
-                // Handle invalid piece type or error case
-                break;
+        // Actual attacks from index
+        U64 attacks;
+        // Free spaces from index
+        U64 freeSpace;
+
+        // Knights
+        pieceBB = board.getWhiteKnights();
+        while (pieceBB) {
+            int index = std::countr_zero(pieceBB);
+            attackMask = ATKMASK_KNIGHT[index];
+            attacks = attackMask & opposition;
+            freeSpace = attackMask & emptySquares;
+
+            while (attacks) {
+                int targetSquare = std::countr_zero(attacks);
+                moves[moveNum++] = DenseMove(W_KNIGHT, index, targetSquare, 
+                                board.getDenseTypeAt(targetSquare), false, false,
+                                D_EMPTY, currCastleRights);
+                attacks &= (attacks - 1);
+            }
+            while (freeSpace) {
+                int targetSquare = std::countr_zero(freeSpace);
+                moves[moveNum++] = DenseMove(W_KNIGHT, index, targetSquare, 
+                                D_EMPTY, false, false, D_EMPTY, currCastleRights);
+                freeSpace &= (freeSpace - 1);
+            }
+            pieceBB &= (pieceBB - 1);
         }
-        // Bitboard of all possible attacks
-        U64 attacks = attackMask & opposition;
-        // Bitboard of all non-capturing moves
-        U64 freeSpace = attackMask & emptySquares;
-        
-        if (piece == W_ROOK || piece == B_ROOK) {
-            U64 blocked = PEXT::getRookAttacks(index, occupancy);
-            attacks &= blocked;
-            freeSpace &= blocked;
-        }
-        
-        if (piece == W_BISHOP || piece == B_BISHOP) {
+        // Bishops
+        pieceBB = board.getWhiteBishops();
+        while (pieceBB) {
+            int index = std::countr_zero(pieceBB);
+            attackMask = ATKMASK_BISHOP[index];
+            attacks = attackMask & opposition;
+            freeSpace = attackMask & emptySquares;
+
+            // Lines of attack for bishop
             U64 blocked = PEXT::getBishopAttacks(index, occupancy);
             attacks &= blocked;
             freeSpace &= blocked;
-        }
 
-        if (piece == W_QUEEN || piece == B_QUEEN){
-            U64 blocked = PEXT::getRookAttacks(index, occupancy) | PEXT::getBishopAttacks(index, occupancy);
+            while (attacks) {
+                int targetSquare = std::countr_zero(attacks);
+                moves[moveNum++] = DenseMove(W_BISHOP, index, targetSquare, 
+                                board.getDenseTypeAt(targetSquare), false, false,
+                                D_EMPTY, currCastleRights);
+                attacks &= (attacks - 1);
+            }
+            while (freeSpace) {
+                int targetSquare = std::countr_zero(freeSpace);
+                moves[moveNum++] = DenseMove(W_BISHOP, index, targetSquare, 
+                                D_EMPTY, false, false, D_EMPTY, currCastleRights);
+                freeSpace &= (freeSpace - 1);
+            }
+            pieceBB &= (pieceBB - 1);
+        }
+        // Rooks
+        pieceBB = board.getWhiteRooks();
+        while (pieceBB) {
+            int index = std::countr_zero(pieceBB);
+            attackMask = ATKMASK_ROOK[index];
+            attacks = attackMask & opposition;
+            freeSpace = attackMask & emptySquares;
+
+            // Lines of attack for rook
+            U64 blocked = PEXT::getRookAttacks(index, occupancy);
             attacks &= blocked;
             freeSpace &= blocked;
-        }
-        
-        while (attacks) {
-            int targetSquare = std::countr_zero(attacks);       // Get index of the lowest set bit
-            moves[moveNum++] = DenseMove(piece, index, targetSquare, board.getDenseTypeAt(targetSquare));
-            attacks &= (attacks - 1);
-        }
 
-        while (freeSpace) {
-            int targetSquare = std::countr_zero(freeSpace);     // Get index of the lowest set bit
-            moves[moveNum++] = DenseMove(piece, index, targetSquare);
-            freeSpace &= (freeSpace - 1);
+            while (attacks) {
+                int targetSquare = std::countr_zero(attacks);
+                moves[moveNum++] = DenseMove(W_ROOK, index, targetSquare, 
+                                board.getDenseTypeAt(targetSquare), false, false,
+                                D_EMPTY, currCastleRights);
+                attacks &= (attacks - 1);
+            }
+            while (freeSpace) {
+                int targetSquare = std::countr_zero(freeSpace);
+                moves[moveNum++] = DenseMove(W_ROOK, index, targetSquare, 
+                                D_EMPTY, false, false, D_EMPTY, currCastleRights);
+                freeSpace &= (freeSpace - 1);
+            }
+            pieceBB &= (pieceBB - 1);
         }
-        pieceBB &= (pieceBB - 1);
+        // Queens
+        pieceBB = board.getWhiteQueens();
+        while (pieceBB) {
+            int index = std::countr_zero(pieceBB);
+            attackMask = ATKMASK_QUEEN[index];
+            attacks = attackMask & opposition;
+            freeSpace = attackMask & emptySquares;
+
+            // Lines of attack for queen
+            U64 blocked = PEXT::getBishopAttacks(index, occupancy) | PEXT::getRookAttacks(index, occupancy);
+            attacks &= blocked;
+            freeSpace &= blocked;
+
+            while (attacks) {
+                int targetSquare = std::countr_zero(attacks);
+                moves[moveNum++] = DenseMove(W_QUEEN, index, targetSquare, 
+                                board.getDenseTypeAt(targetSquare), false, false,
+                                D_EMPTY, currCastleRights);
+                attacks &= (attacks - 1);
+            }
+            while (freeSpace) {
+                int targetSquare = std::countr_zero(freeSpace);
+                moves[moveNum++] = DenseMove(W_QUEEN, index, targetSquare, 
+                                D_EMPTY, false, false, D_EMPTY, currCastleRights);
+                freeSpace &= (freeSpace - 1);
+            }
+            pieceBB &= (pieceBB - 1);
+        }
+        // King
+        pieceBB = board.getWhiteKings();
+        while (pieceBB) {
+            int index = std::countr_zero(pieceBB);
+            attackMask = ATKMASK_KING[index];
+            attacks = attackMask & opposition;
+            freeSpace = attackMask & emptySquares;
+
+            while (attacks) {
+                int targetSquare = std::countr_zero(attacks);
+                moves[moveNum++] = DenseMove(W_KING, index, targetSquare, 
+                                board.getDenseTypeAt(targetSquare), false, false,
+                                D_EMPTY, currCastleRights);
+                attacks &= (attacks - 1);
+            }
+            while (freeSpace) {
+                int targetSquare = std::countr_zero(freeSpace);
+                moves[moveNum++] = DenseMove(W_KING, index, targetSquare, 
+                                D_EMPTY, false, false, D_EMPTY, currCastleRights);
+                freeSpace &= (freeSpace - 1);
+            }
+            pieceBB &= (pieceBB - 1);
+        }
+    } else {
+        U64 opposition = board.getWhitePieces();
+        // Mask of attacks from index
+        U64 attackMask;
+        // Actual attacks from index
+        U64 attacks;
+        // Free spaces from index
+        U64 freeSpace;
+
+        // Knights
+        pieceBB = board.getBlackKnights();
+        while (pieceBB) {
+            int index = std::countr_zero(pieceBB);
+            attackMask = ATKMASK_KNIGHT[index];
+            attacks = attackMask & opposition;
+            freeSpace = attackMask & emptySquares;
+
+            while (attacks) {
+                int targetSquare = std::countr_zero(attacks);
+                moves[moveNum++] = DenseMove(B_KNIGHT, index, targetSquare, 
+                                board.getDenseTypeAt(targetSquare), false, false,
+                                D_EMPTY, currCastleRights);
+                attacks &= (attacks - 1);
+            }
+            while (freeSpace) {
+                int targetSquare = std::countr_zero(freeSpace);
+                moves[moveNum++] = DenseMove(B_KNIGHT, index, targetSquare, 
+                                D_EMPTY, false, false, D_EMPTY, currCastleRights);
+                freeSpace &= (freeSpace - 1);
+            }
+            pieceBB &= (pieceBB - 1);
+        }
+        // Bishops
+        pieceBB = board.getBlackBishops();
+        while (pieceBB) {
+            int index = std::countr_zero(pieceBB);
+            attackMask = ATKMASK_BISHOP[index];
+            attacks = attackMask & opposition;
+            freeSpace = attackMask & emptySquares;
+
+            // Lines of attack for bishop
+            U64 blocked = PEXT::getBishopAttacks(index, occupancy);
+            attacks &= blocked;
+            freeSpace &= blocked;
+
+            while (attacks) {
+                int targetSquare = std::countr_zero(attacks);
+                moves[moveNum++] = DenseMove(B_BISHOP, index, targetSquare, 
+                                board.getDenseTypeAt(targetSquare), false, false,
+                                D_EMPTY, currCastleRights);
+                attacks &= (attacks - 1);
+            }
+            while (freeSpace) {
+                int targetSquare = std::countr_zero(freeSpace);
+                moves[moveNum++] = DenseMove(B_BISHOP, index, targetSquare, 
+                                D_EMPTY, false, false, D_EMPTY, currCastleRights);
+                freeSpace &= (freeSpace - 1);
+            }
+            pieceBB &= (pieceBB - 1);
+        }
+        // Rooks
+        pieceBB = board.getBlackRooks();
+        while (pieceBB) {
+            int index = std::countr_zero(pieceBB);
+            attackMask = ATKMASK_ROOK[index];
+            attacks = attackMask & opposition;
+            freeSpace = attackMask & emptySquares;
+
+            // Lines of attack for rook
+            U64 blocked = PEXT::getRookAttacks(index, occupancy);
+            attacks &= blocked;
+            freeSpace &= blocked;
+
+            while (attacks) {
+                int targetSquare = std::countr_zero(attacks);
+                moves[moveNum++] = DenseMove(B_ROOK, index, targetSquare, 
+                                board.getDenseTypeAt(targetSquare), false, false,
+                                D_EMPTY, currCastleRights);
+                attacks &= (attacks - 1);
+            }
+            while (freeSpace) {
+                int targetSquare = std::countr_zero(freeSpace);
+                moves[moveNum++] = DenseMove(B_ROOK, index, targetSquare, 
+                                D_EMPTY, false, false, D_EMPTY, currCastleRights);
+                freeSpace &= (freeSpace - 1);
+            }
+            pieceBB &= (pieceBB - 1);
+        }
+        // Queens
+        pieceBB = board.getBlackQueens();
+        while (pieceBB) {
+            int index = std::countr_zero(pieceBB);
+            attackMask = ATKMASK_QUEEN[index];
+            attacks = attackMask & opposition;
+            freeSpace = attackMask & emptySquares;
+
+            // Lines of attack for queen
+            U64 blocked = PEXT::getBishopAttacks(index, occupancy) | PEXT::getRookAttacks(index, occupancy);
+            attacks &= blocked;
+            freeSpace &= blocked;
+
+            while (attacks) {
+                int targetSquare = std::countr_zero(attacks);
+                moves[moveNum++] = DenseMove(B_QUEEN, index, targetSquare, 
+                                board.getDenseTypeAt(targetSquare), false, false,
+                                D_EMPTY, currCastleRights);
+                attacks &= (attacks - 1);
+            }
+            while (freeSpace) {
+                int targetSquare = std::countr_zero(freeSpace);
+                moves[moveNum++] = DenseMove(B_QUEEN, index, targetSquare, 
+                                D_EMPTY, false, false, D_EMPTY, currCastleRights);
+                freeSpace &= (freeSpace - 1);
+            }
+            pieceBB &= (pieceBB - 1);
+        }
+        // King
+        pieceBB = board.getBlackKings();
+        while (pieceBB) {
+            int index = std::countr_zero(pieceBB);
+            attackMask = ATKMASK_KING[index];
+            attacks = attackMask & opposition;
+            freeSpace = attackMask & emptySquares;
+
+            while (attacks) {
+                int targetSquare = std::countr_zero(attacks);
+                moves[moveNum++] = DenseMove(B_KING, index, targetSquare, 
+                                board.getDenseTypeAt(targetSquare), false, false,
+                                D_EMPTY, currCastleRights);
+                attacks &= (attacks - 1);
+            }
+            while (freeSpace) {
+                int targetSquare = std::countr_zero(freeSpace);
+                moves[moveNum++] = DenseMove(B_KING, index, targetSquare, 
+                                D_EMPTY, false, false, D_EMPTY, currCastleRights);
+                freeSpace &= (freeSpace - 1);
+            }
+            pieceBB &= (pieceBB - 1);
+        }
     }
 }
 
@@ -397,31 +575,11 @@ void MoveGenerator::generatePieceMoves(const ChessBoard &board, std::array<Dense
 std::array<DenseMove, MAX_MOVES> MoveGenerator::generatePsuedoMoves(const ChessBoard &board, int& moveNum) {
     // Move list to be returned
     std::array<DenseMove, MAX_MOVES> move_list = {};
-    // Current side's color
-    Color sideToMove = board.getSideToMove();
-    // If current side's king is in double check, only the king can move 
-    if (board.getCheckCount() == 2) {
-        // std::cout << "genPsuedoMoves getCheckCount == 2\n";
-        MoveGenerator::generatePieceMoves(board, move_list, moveNum,
-                                          sideToMove == WHITE ? W_KING : B_KING);
-    }
+    
     MoveGenerator::generatePawnMoves(board, move_list, moveNum);
     MoveGenerator::generateEnPassantMoves(board, move_list, moveNum);
     MoveGenerator::generateCastlingMoves(board, move_list, moveNum);
-    if (board.currentGameState.sideToMove == WHITE) {
-        MoveGenerator::generatePieceMoves(board, move_list, moveNum, W_KNIGHT);
-        MoveGenerator::generatePieceMoves(board, move_list, moveNum, W_BISHOP);
-        MoveGenerator::generatePieceMoves(board, move_list, moveNum, W_ROOK);
-        MoveGenerator::generatePieceMoves(board, move_list, moveNum, W_QUEEN);
-        MoveGenerator::generatePieceMoves(board, move_list, moveNum, W_KING);
-    }
-    else {
-        MoveGenerator::generatePieceMoves(board, move_list, moveNum, B_KNIGHT);
-        MoveGenerator::generatePieceMoves(board, move_list, moveNum, B_BISHOP);
-        MoveGenerator::generatePieceMoves(board, move_list, moveNum, B_ROOK);
-        MoveGenerator::generatePieceMoves(board, move_list, moveNum, B_QUEEN);
-        MoveGenerator::generatePieceMoves(board, move_list, moveNum, B_KING);
-    }
+    MoveGenerator::generatePieceMoves(board, move_list, moveNum);
     
     return move_list;
 }

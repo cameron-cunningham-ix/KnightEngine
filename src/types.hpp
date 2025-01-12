@@ -70,7 +70,7 @@ struct DenseMove {
     // U32 structure [28 relevant bits]:
     // [3 bits]    [3 bits] [1 bit] [3 bits]  [6 bits] [6 bits] [1 bit]    [1 bit]    [4 bits]       [4 bits]
     // [Capt Type] [DType]  [Color] [PromoTo] [From]   [To]     [IsCastle] [isEnPass] [CastleRights] [Unused]
-    // This way important moves (captures and high value pieces) can be easily sorted by highest to lowest value
+    // This way important moves (checks, captures and high value pieces) can be easily sorted by highest to lowest value
     U32 data;
 
     /// @brief Default constructor - 0, will correspond with EMPTY PieceType
@@ -83,7 +83,7 @@ struct DenseMove {
               DenseType promoteTo = DenseType::D_EMPTY,
               int castleRights = 0b1111) {
         if (from < 0 || from > 63 || to < 0 || to > 63) {
-            throw std::invalid_argument("Invalid square index");
+            throw std::invalid_argument("Invalid square index 1");
         }
         data = 0;
         data |= (castleRights << 4);
@@ -104,7 +104,7 @@ struct DenseMove {
               DenseType promoteTo = DenseType::D_EMPTY,
               int castleRights = 0b1111) {
         if (from < 0 || from > 63 || to < 0 || to > 63) {
-            throw std::invalid_argument("Invalid square index");
+            throw std::invalid_argument("Invalid square index 2");
         }
         data = 0;
         data |= (castleRights << 4);
@@ -263,10 +263,10 @@ public:
     
     int getCastleRights() const {
         int rights = 0;
-        rights  |= (canCastleWhiteKingside << 3)
-                | (canCastleWhiteQueenside << 2)
-                | (canCastleBlackKingside << 1)
-                | (canCastleBlackQueenside);
+        rights  += (canCastleWhiteKingside * 8)
+                + (canCastleWhiteQueenside * 4)
+                + (canCastleBlackKingside * 2)
+                + (canCastleBlackQueenside);
         return rights;
     }
     std::string toString() const {
