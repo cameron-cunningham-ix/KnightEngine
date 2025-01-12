@@ -226,7 +226,7 @@ public:
 
     // Current turn
     Color sideToMove;              // Whose turn it is
-    Color oppColor;                // Opposite color
+    // Color oppColor;                // Opposite color
 
     // Castling rights for each color and side
     bool canCastleWhiteKingside;   // White king's side (h1)
@@ -253,7 +253,7 @@ public:
         canCastleBlackQueenside(true),
         enPassantSquare(-1),
         sideToMove(WHITE),
-        oppColor(BLACK),
+        // oppColor(BLACK),
         halfMoveClock(0),
         fullMoveNumber(1) {}
     
@@ -275,8 +275,8 @@ public:
             !canCastleBlackKingside & !canCastleBlackQueenside) {
                 rights = "-";
         }
-        std::string result = std::format("side: {} opp: {} {} {} {} {}",
-        colorToString(sideToMove), colorToString(oppColor), rights,
+        std::string result = std::format("side: {} {} {} {} {}",
+        colorToString(sideToMove), rights,
         enPassantSquare, halfMoveClock, fullMoveNumber);
 
         return result;

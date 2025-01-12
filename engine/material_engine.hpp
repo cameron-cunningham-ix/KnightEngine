@@ -45,13 +45,13 @@ public:
 
         int actualDepth = (maxDepth > 0) ? maxDepth : searchDepth;
 
-        // Generate all legal moves
+        // Generate all psuedo legal moves
         int moveNum = 0;
-        std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
-        
+        std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generatePsuedoMoves(board, moveNum);
+        Color sideToMove = board.getSideToMove();
         // bestScore will determine what the best move to play is
         // Negative bestScore means Black's position is better, positive means White's position is better
-        int bestScore = board.getSideToMove() == WHITE ? -999999 : 999999;
+        int bestScore = sideToMove == WHITE ? -999999 : 999999;
         DenseMove bestMove;
 
         // Evaluate each move
@@ -66,6 +66,11 @@ public:
             // Make move on temporary board
             ChessBoard tempBoard = board;
             tempBoard.makeMove(moves[i], true);
+
+            // Check if move is legal
+            if (board.isSideInCheck(sideToMove)) {
+                
+            }
 
             // Store start time for this move
             auto moveStartTime = std::chrono::steady_clock::now();
@@ -103,8 +108,8 @@ public:
 
     int evaluatePosition(const ChessBoard& board) override {
         nodeCount++;
-        // Send node count every 30K nodes
-        if (nodeCount % 30000 == 0) {
+        // Send node count every 60K nodes
+        if (nodeCount % 60000 == 0) {
             auto time = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::steady_clock::now() - searchStartTime).count();
             if (time > 0) {

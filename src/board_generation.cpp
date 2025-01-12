@@ -84,7 +84,7 @@ void ChessBoard::setupPositionFromFEN(const std::string& fen) {
 
     // Parse whose turn it is
     currentGameState.sideToMove = playerToMove == "w" ? WHITE : BLACK;
-    currentGameState.oppColor = (Color)!currentGameState.sideToMove;
+    // currentGameState.oppColor = (Color)!currentGameState.sideToMove;
 
     // Parse castling rights
     for (char c : castlingRights) {
@@ -444,7 +444,7 @@ Color ChessBoard::getSideToMove() const {
 }
 /// @return The color of the color opposite of current player
 Color ChessBoard::getOppSide() const {
-    return currentGameState.oppColor;
+    return (Color)!currentGameState.sideToMove;
 }
 /// @param index
 /// @return PieceType at square index. If index is invalid, returns INVALID
@@ -607,7 +607,7 @@ void ChessBoard::initializeGameState() {
 U64 ChessBoard::OppAttacksToSquare(int index, Color colorOfKing) const {
     if (index < 0 || index > 63) return 0ULL;
     // Get opposing pieces based on king's color
-    U64 opPawns, opKnights, opBQ, opRQ, opK, occupancy;
+    U64 opPawns, opKnights, opBQ, opRQ, opK, occupancy, pawnAtkMask;
     if (colorOfKing == WHITE) {
         // Get all black pieces that could attack white king
         opPawns = getBlackPawns();
@@ -615,6 +615,7 @@ U64 ChessBoard::OppAttacksToSquare(int index, Color colorOfKing) const {
         opRQ = getBlackRooks() | getBlackQueens();   // Rooks and Queens for orthogonal attacks
         opBQ = getBlackBishops() | getBlackQueens(); // Bishops and Queens for diagonal attacks
         opK = getBlackKings();
+        pawnAtkMask = ATKMASK_WPAWN[index];
     } else {
         // Get all white pieces that could attack black king
         opPawns = getWhitePawns();
@@ -622,16 +623,17 @@ U64 ChessBoard::OppAttacksToSquare(int index, Color colorOfKing) const {
         opRQ = getWhiteRooks() | getWhiteQueens();   // Rooks and Queens for orthogonal attacks
         opBQ = getWhiteBishops() | getWhiteQueens(); // Bishops and Queens for diagonal attacks
         opK = getWhiteKings();
+        pawnAtkMask = ATKMASK_BPAWN[index];
     }
 
     // Get occupancy of all pieces for blocking calculations
     occupancy = getAllPieces();
     // Return attacking pieces
-    return (colorOfKing == WHITE ? ATKMASK_WPAWN[index] : ATKMASK_BPAWN[index]) & opPawns |
-            ATKMASK_KNIGHT[index] & opKnights |
-            PEXT::getRookAttacks(index, occupancy) & opRQ |
-            PEXT::getBishopAttacks(index, occupancy) & opBQ |
-            ATKMASK_KING[index] & opK;
+    return  (pawnAtkMask & opPawns) |
+            (ATKMASK_KNIGHT[index] & opKnights) |
+            (PEXT::getRookAttacks(index, occupancy) & opRQ) |
+            (PEXT::getBishopAttacks(index, occupancy) & opBQ) |
+            (ATKMASK_KING[index] & opK);
 }
 /// @brief Make a move on the board.
 /// Note: This function does not check validity. It should only be used with known
@@ -696,7 +698,7 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
         currentGameState.canCastleWhiteKingside = false;
         currentGameState.canCastleWhiteQueenside = false;
     }
-    if (movedPiece == B_KING) {
+    else if (movedPiece == B_KING) {
         currentGameState.canCastleBlackKingside = false;
         currentGameState.canCastleBlackQueenside = false;
     }
@@ -718,19 +720,21 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
     if (movedPiece != W_PAWN && movedPiece != B_PAWN) {
         currentGameState.enPassantSquare = -1;
     } else {
-        int expectedFromRank = movedColor == WHITE ? 1 : 6;
-        int expectedToRank = movedColor == WHITE ? 3 : 4;
-        if ((from / 8) == expectedFromRank && (to / 8) == expectedToRank) {
+        if (std::abs(to - from) == 16) {
             // En Passant square is the square behind the double pushed pawn
             currentGameState.enPassantSquare = (from + to) / 2;
-        } else {
+        }
+        // int expectedFromRank = movedColor == WHITE ? 1 : 6;
+        // int expectedToRank = movedColor == WHITE ? 3 : 4;
+        // if ((from / 8) == expectedFromRank && (to / 8) == expectedToRank) {
+        else {
             currentGameState.enPassantSquare = -1;
         }
     }
 
     // Switch side to move
     currentGameState.sideToMove = (Color)!currentGameState.sideToMove;
-    currentGameState.oppColor = (Color)!currentGameState.oppColor;
+    // currentGameState.oppColor = (Color)!currentGameState.oppColor;
 
     // Check if half-move clock should be reset or incremented
     if (capturedPiece != PieceType::EMPTY || movedPiece == W_PAWN || movedPiece == B_PAWN) {
@@ -776,8 +780,6 @@ void ChessBoard::unmakeMove(DenseMove move, bool searching) {
     plyIndex--;
     // Get previous state
     currentGameState = stateHistory[plyIndex];
-
-    Color undoSide = currentGameState.sideToMove;
 
     // Get move info
     PieceType movedPiece = move.getPieceType();
@@ -832,7 +834,7 @@ void ChessBoard::unmakeMove(DenseMove move, bool searching) {
     }
     
     // New position check value not cached
-    hasCachedInCheckValue = false;
+    // hasCachedInCheckValue = false;
 }
 /// @brief Prints a piece bitboard to the console
 /// @param i corresponds to DenseType enum
