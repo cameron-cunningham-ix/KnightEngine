@@ -136,35 +136,23 @@ void ChessClock::applyIncrement(Color color) {
 
 std::chrono::milliseconds ChessClock::getWhiteTime() const {
     std::lock_guard<std::mutex> lock(clockMutex);
-    
-    // Debug print initial state
-    std::cout << "Initial white time remaining: " << whiteTimeRemaining.count() << "ms\n";
-    std::cout << "Clock running: " << (isRunning ? "yes" : "no") 
-              << ", infinite: " << (timeControl.isInfinite ? "yes" : "no")
-              << ", active color: " << (activeColor == WHITE ? "WHITE" : "BLACK") << "\n";
-
     if (!isRunning || timeControl.isInfinite || activeColor != WHITE) {
         return whiteTimeRemaining;
     }
 
     auto now = std::chrono::steady_clock::now();
     auto elapsedDuration = now - lastUpdateTime;
-    std::cout << "Raw elapsed time (ns): " << elapsedDuration.count() << "\n";
     
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(elapsedDuration);
-    std::cout << "Elapsed time (ms): " << elapsed.count() << "\n";
 
     // Check delay period
     if (timeControl.delay > std::chrono::milliseconds(0)) {
-        std::cout << "Delay active: " << timeControl.delay.count() << "ms\n";
         if (elapsed < timeControl.delay) {
-            std::cout << "Still in delay period\n";
             return whiteTimeRemaining;
         }
     }
 
     auto finalTime = std::max(whiteTimeRemaining - elapsed, std::chrono::milliseconds(0));
-    std::cout << "Final calculated time: " << finalTime.count() << "ms\n";
     return finalTime;
 }
 

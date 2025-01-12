@@ -5,7 +5,7 @@
 #include <bitset>
 #include <format>
 
-const int MAX_PLY = 512;
+const int MAX_PLY = 1024;
 const int MAX_MOVES = 218;
 
 typedef unsigned long long U64;     // Used for bitboards
@@ -223,10 +223,6 @@ struct DenseMove {
 /// Used in ChessBoard class.
 struct GameState {
 public:
-    // Structure
-    // [1 bit]      [9 bits]      [7 bits]      [4 bits]
-    // [SideToMove] [FullMoveNum] [HalfMoveClk]        [Castle Rights]
-    // U32 data;
 
     // Current turn
     Color sideToMove;              // Whose turn it is
