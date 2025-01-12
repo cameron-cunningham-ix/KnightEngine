@@ -1,0 +1,40 @@
+2025-01-12T15:16:35-05:00
+Running build\benchmarks\Debug\chess_benchmarks.exe
+DESKTOP-GHDFV7H
+CPU Caches:
+  L1 Data {'type': 'Data', 'level': 1, 'size': 32768, 'num_sharing': 2}
+  L1 Instruction {'type': 'Instruction', 'level': 1, 'size': 32768, 'num_sharing': 2}
+  L2 Unified {'type': 'Unified', 'level': 2, 'size': 262144, 'num_sharing': 2}
+  L3 Unified {'type': 'Unified', 'level': 3, 'size': 9437184, 'num_sharing': 12}
+***WARNING*** Library was built as DEBUG. Timings may be affected.
+------------------------------------------------------------------------------------------------------------------------
+Benchmark                 Time         CPU          Iterations   Allocs/Iter  MaxBytes     TotalAlloc   HeapGrowth  
+------------------------------------------------------------------------------------------------------------------------
+BM_PerftD6Init            31.5 s       31.2 s       1            16.00        992          1016         888         
+BM_MatEng/AlphaBetaSearch 12.7 s       12.4 s       1            557.00       9059         13395        8939        
+BM_MatEng/MateInOneSearch 9.5 s        9.2 s        1            680.00       10344        15664        10224       
+BM_PerftD5Init            1.3 s        1.2 s        1            16.00        992          1016         888         
+BM_PerftD3Init            2.5 ms       2.4 ms       299          1.00         992          1016         888         
+BM_FENParsing             19.1 us      19.3 us      37333        11.12        4832         6152         4728        
+BM_KiwipeteMoveGen        9.7 us       9.6 us       74667        1.88         1371         1491         1251        
+BM_PerftD1Init            5.1 us       5.0 us       100000       1.00         992          1016         888         
+BM_InitialMoveGen         4.6 us       4.5 us       149333       1.12         1056         1080         936         
+BM_MatEng/MoveGen         4.6 us       4.6 us       149333       1.81         1448         1560         1328        
+BM_MGMakeUnmakeNoSearch   2.2 us       2.1 us       298667       1.12         1056         1080         936         
+BM_MGMakeUnmakeSearch     2.1 us       2.1 us       344615       1.12         1056         1080         936         
+BM_QueenAttacks           1.3 us       1.3 us       560000       1.00         992          1016         888         
+BM_RookAttacks            728.8 ns     683.6 ns     1120000      1.00         992          1016         888         
+BM_BishopAttacks          712.1 ns     715.0 ns     896000       1.12         1056         1080         936         
+BM_MatEng/EvalStartPos    575.2 ns     572.0 ns     1120000      1.81         1448         1560         1328        
+BM_MatEng/EvalComplexPos  570.5 ns     537.2 ns     1338027      2.56         1761         1969         1641        
+BM_MatEng/EvalPawnStruct  556.4 ns     516.2 ns     1120000      2.56         1741         1949         1621        
+BM_MatEng/EvalKingSafe    555.9 ns     546.9 ns     1000000      2.56         1761         1969         1641        
+BM_EvalComponents/manual_time 554.6 ns     611.8 ns     1251334      2.50         1579         1779         1459        
+BM_MatEng/EndgameEval     307.2 ns     282.5 ns     2488889      2.44         1575         1767         1455        
+BM_MakeMoveInit           100.0 ns     100.1 ns     6400000      1.00         992          1016         888         
+BM_IsInCheck              56.3 ns      57.2 ns      11200000     1.75         1306         1426         1202        
+BM_AttkCalcInit           48.8 ns      48.8 ns      11200000     1.00         992          1016         888         
+BM_SearchAtDepth<4>       47.0 ns      38.7 ns      19           190.75       38768        63064        38648       
+BM_SearchAtDepth<3>       10.7 ns      7.1 ns       112          189.75       38640        62808        38520       
+BM_SearchAtDepth<2>       5.0 ns       2.1 ns       299          183.75       35824        59224        35704       
+BM_SearchAtDepth<1>       4.4 ns       1.9 ns       345          183.75       35824        59224        35704       

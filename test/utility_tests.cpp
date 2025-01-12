@@ -254,13 +254,13 @@ TEST_F(UtilityTest, PerftD6CalcInitial) {
 // TEST_F(UtilityTest, PerftD7CalcInitial) {
 //     // Test initial position at different depths
 //     board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
-//     EXPECT_EQ(perft(board, 7), 3195901860ULL);   // Depth 7
+//     EXPECT_EQ(perft(board, 7, 7), 3195901860ULL);   // Depth 7
 // }
 
 // TEST_F(UtilityTest, PerftD8CalcInitial) {
 //     // Test initial position at different depths
 //     board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
-//     EXPECT_EQ(perft(board, 8), 84998978956ULL);   // Depth 8
+//     EXPECT_EQ(perft(board, 8, 8), 84998978956ULL);   // Depth 8
 // }
 
 //Test perft function for kiwipete board
@@ -344,55 +344,34 @@ TEST_F(UtilityTest, PerftD4CalcKiwiPete) {
     outfile.close();
 }
 
-// // Test perft function for "Position 3" board (from chessprogramming.org)
-// TEST_F(UtilityTest, PerftD1CalcPos3) {
-//     board.setupPositionFromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -");
-//     EXPECT_EQ(perft(board, 1), 14ULL);   // Depth 1
-// }
-
-// // Test perft function for "Position 3" board (from chessprogramming.org)
-// TEST_F(UtilityTest, PerftMetricsD1CalcPos3) {
-//     board.setupPositionFromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
-//     PerftMetrics metrics = calcPerftMetrics(board, 1);  // Depth 1
-//     EXPECT_EQ(metrics.nodes, 14);
-//     EXPECT_EQ(metrics.captures, 1);
-//     EXPECT_EQ(metrics.enPassants, 0);
-//     EXPECT_EQ(metrics.castles, 0);
-//     EXPECT_EQ(metrics.promotions, 0);
-//     EXPECT_EQ(metrics.checks, 2);
-//     EXPECT_EQ(metrics.checkmates, 0);
-// }
-
-// // Test perft function for "Position 3" board (from chessprogramming.org)
-// TEST_F(UtilityTest, PerftMetricsD2CalcPos3) {
-//     board.setupPositionFromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
-//     PerftMetrics metrics = calcPerftMetrics(board, 2);  // Depth 2
-//     EXPECT_EQ(metrics.nodes, 191);
-//     EXPECT_EQ(metrics.captures, 14);
-//     EXPECT_EQ(metrics.enPassants, 0);
-//     EXPECT_EQ(metrics.castles, 0);
-//     EXPECT_EQ(metrics.promotions, 0);
-//     EXPECT_EQ(metrics.checks, 10);
-//     EXPECT_EQ(metrics.checkmates, 0);
-// }
-
-// // Test perft function for "Position 3_1" board (from chessprogramming.org)
-// TEST_F(UtilityTest, PerftMetricsD1CalcPos3_1) {
-//     board.setupPositionFromFEN("8/2p5/3p4/KP5r/5R1k/8/4P1P1/8 b - - 0 1");
-//     PerftMetrics metrics = calcPerftMetrics(board, 1);  // Depth 1
-//     EXPECT_EQ(metrics.nodes, 2);
-//     EXPECT_EQ(metrics.captures, 0);
-//     EXPECT_EQ(metrics.enPassants, 0);
-//     EXPECT_EQ(metrics.castles, 0);
-//     EXPECT_EQ(metrics.promotions, 0);
-//     EXPECT_EQ(metrics.checks, 0);
-//     EXPECT_EQ(metrics.checkmates, 0);
-// }
+// Test perft function for "Position 3" board (from chessprogramming.org)
+TEST_F(UtilityTest, PerftD1CalcPos3) {
+    board.setupPositionFromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -");
+    EXPECT_EQ(perft(board, 1, 1), 14ULL);   // Depth 1
+}
 
 // Test perft function for "Position 3" board (from chessprogramming.org)
 TEST_F(UtilityTest, PerftD3CalcPos3) {
     board.setupPositionFromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
     EXPECT_EQ(perft(board, 3, 3), 2812ULL);   // Depth 3
+}
+
+// Test perft function for "Position 3" board (from chessprogramming.org)
+TEST_F(UtilityTest, PerftD4CalcPos3) {
+    board.setupPositionFromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
+    EXPECT_EQ(perft(board, 4, 4), 43238ULL);   // Depth 4
+}
+
+// Test perft function for "Position 3" board (from chessprogramming.org)
+TEST_F(UtilityTest, PerftD5CalcPos3) {
+    board.setupPositionFromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
+    EXPECT_EQ(perft(board, 5, 5), 674624ULL);   // Depth 5
+}
+
+// Test perft function for "Position 3" board (from chessprogramming.org)
+TEST_F(UtilityTest, PerftD6CalcPos3) {
+    board.setupPositionFromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
+    EXPECT_EQ(perft(board, 6, 6),  11030083ULL);   // Depth 6
 }
 
 // Test perft function for "Position 4" board (from chessprogramming.org)
@@ -527,6 +506,12 @@ TEST_F(UtilityTest, PerftD3CalcPos6) {
 TEST_F(UtilityTest, PerftD4CalcPos6) {
     board.setupPositionFromFEN("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10");
     EXPECT_EQ(perft(board, 4, 4), 3894594ULL);   // Depth 4
+}
+
+// Test perft function for "Position 6" board (from chessprogramming.org)
+TEST_F(UtilityTest, PerftD5CalcPos6) {
+    board.setupPositionFromFEN("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10");
+    EXPECT_EQ(perft(board, 5, 5), 164075551ULL);   // Depth 5
 }
 
 // Test perft function for 3rd board (from https://github.com/AndyGrant/Ethereal/blob/master/src/perft/standard.epd)

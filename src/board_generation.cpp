@@ -33,7 +33,6 @@ void ChessBoard::setupPositionFromFEN(const std::string& fen) {
     kingSquares[BLACK] = 0;
     attacksToKings[WHITE] = 0ULL;
     attacksToKings[BLACK] = 0ULL;
-    hasCachedInCheckValue = false;
 
     // Clear castling rights
     currentGameState.canCastleBlackKingside = false;
@@ -494,7 +493,7 @@ PieceType ChessBoard::getPieceAt(int index) const {
 DenseType ChessBoard::getDenseTypeAt(int index) const {
     // Check if index is valid
     if (index < 0 || index > 63) {
-        std::cerr << "ChessBoard getPieceAt Error: Invalid index " << index << "\n";
+        std::cerr << "ChessBoard getPieceAt Error: Invalid index " << index << " 1\n";
         return DenseType::D_EMPTY;
     }
     // Check if the square is empty
@@ -525,20 +524,11 @@ DenseType ChessBoard::getDenseTypeAt(int index) const {
     // Reaching this point means there is an error in the bitboards,
     // specifically that this index is set in one of the color bitboards 
     // but not in any of the piece bitboards
-    std::cerr << "ChessBoard getPieceAt Error: Invalid piece at square " << index << "\n";
+    std::cerr << "ChessBoard getPieceAt Error: Invalid piece at square " << index << " 2\n";
     return DenseType::D_EMPTY;
 }
-/// @return cachedInCheckValue if it is cached, otherwise calculates check value,
-/// caches it, and returns check value
+
 bool ChessBoard::isInCheck() {
-    // // Value has already been cached, return value
-    // if (hasCachedInCheckValue) {
-    //     return cachedInCheckValue;
-    // }
-    // // No cache, calculate and store
-    // cachedInCheckValue = calculateIsInCheck();
-    // hasCachedInCheckValue = true;
-    // return cachedInCheckValue;
     return isSideInCheck(getSideToMove());
 }
 /// @param side 
@@ -596,8 +586,6 @@ void ChessBoard::initializeGameState() {
     // Store initial state onto stateHistory
     stateHistory[plyIndex] = currentGameState;
     // Initialize cached check values as false, otherwise they have garbage values
-    hasCachedInCheckValue = false;
-    cachedInCheckValue = false;
     checkingCount = 0;
 }
 /// @brief Find any opponent pieces that are attacking square 'index'
@@ -752,16 +740,9 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
     // Add new state to history
     stateHistory[plyIndex] = currentGameState;
     
-    // New position check value not cached
-    // hasCachedInCheckValue = false;
-    // cachedInCheckValue = false;
-
     if (!searching) {
         moveHistory[plyIndex] = move;
     }
-    // calculateAttacksForSide(WHITE);
-    // calculateAttacksForSide(BLACK);
-    // printBoardInfo(false);
 }
 /// @brief Umake a move on the board (should be the most recent move made)
 /// Note: This function does not check validity. It should only be used with known
@@ -832,9 +813,6 @@ void ChessBoard::unmakeMove(DenseMove move, bool searching) {
             movePiece(rookFrom, rookTo, (movedPiece == W_KING) ? W_ROOK : B_ROOK);
         }
     }
-    
-    // New position check value not cached
-    // hasCachedInCheckValue = false;
 }
 /// @brief Prints a piece bitboard to the console
 /// @param i corresponds to DenseType enum

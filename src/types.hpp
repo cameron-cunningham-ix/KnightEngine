@@ -5,7 +5,7 @@
 #include <bitset>
 #include <format>
 
-const int MAX_PLY = 1024;
+const int MAX_PLY = 512;
 const int MAX_MOVES = 218;
 
 typedef unsigned long long U64;     // Used for bitboards

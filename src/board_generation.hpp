@@ -89,12 +89,7 @@ private:
     U64 colorBB[2];         // Bitboards of all white pieces and all black pieces
     U64 attacksToKings[2];  // Bitboards for the current attack masks to the kings
     U64 attacksBB[2];       // Bitboards for the current attack masks of each side
-    /* Board keeps a cached check value rather than just calculating it per move and storing 
-     * that value since there are instances where we 
-     *  
-     */
-    bool hasCachedInCheckValue; // Whether there is a cached inCheck value for this position
-    bool cachedInCheckValue;    // In check value for current side to move
+
     // King squares - 0 = WHITE, 1 - BLACK for easy calculating
     int kingSquares[2];
     int checkingCount;          // The number of pieces currently checking the current side's king

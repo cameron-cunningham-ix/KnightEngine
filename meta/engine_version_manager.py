@@ -5,10 +5,18 @@ import json
 from pathlib import Path
 import time
 import re
+from enum import Enum
+
+class BuildType(Enum):
+    DEBUG = '_D'
+    RELEASE = '_R'
 
 class EngineVersionManager:
     def __init__(self):
-        self.build_dir = Path('build/engines/Debug')
+        self.build_dirs = {
+            BuildType.DEBUG: Path('build/engines/Debug'),
+            BuildType.RELEASE: Path('build/engines/Release')
+        }
         self.storage_dir = Path('stored_engines')
         self.engine_info_file = self.storage_dir / 'engine_info.json'
         self.stored_engines = self.load_stored_engine_info()
@@ -41,11 +49,11 @@ class EngineVersionManager:
             return engine_name, version
         return None, None
 
-    def format_filename(self, engine_name, version):
-        """Format the filename"""
+    def format_filename(self, engine_name, version, build_type):
+        """Format the filename with build type suffix"""
         # Convert version from "0.2" to "0_2"
         version_str = version.replace('.', '_')
-        return f"{engine_name}_v{version_str}.exe"
+        return f"{engine_name}_v{version_str}{build_type.value}.exe"
     
     def get_engine_info(self, engine_path):
         """Get engine name and version using UCI protocol"""
@@ -96,54 +104,77 @@ class EngineVersionManager:
             return None
     
     def store_new_engines(self):
-        """Check build directory for new engines and store them if new"""
+        """Check build directories for new engines and store them if new"""
         print("Checking for new engines...")
         
-        # Check each executable in build directory
-        for file in self.build_dir.glob('*.exe'):
-            print(f"\nChecking {file.name}...")
+        # Check each build type directory
+        for build_type, build_dir in self.build_dirs.items():
+            print(f"\nChecking {build_dir} directory...")
             
-            # Get engine info
-            engine_info = self.get_engine_info(file)
-            if not engine_info:
-                print(f"Skipping {file.name} - could not get engine info")
+            if not build_dir.exists():
+                print(f"Directory {build_dir} does not exist - skipping")
                 continue
             
-            engine_name = engine_info['name']
-            version = engine_info['version']
-            full_id = f"{engine_name} {version}"
-            
-            # Check if we've seen this exact version before
-            if full_id in self.stored_engines:
-                print(f"Engine {full_id} already stored")
-                continue
-            
-            # This is a new engine version - store it
-            new_filename = self.format_filename(engine_name, version)
-            new_path = self.storage_dir / new_filename
-            
-            print(f"Storing new engine: {new_filename}")
-            shutil.copy2(file, new_path)
-            
-            # Update stored engine info
-            self.stored_engines[full_id] = {
-                'filename': new_filename,
-                'author': engine_info['author'],
-                'stored_date': time.strftime("%Y-%m-%d %H:%M:%S")
-            }
-            
-            self.save_stored_engine_info()
-            print(f"Stored {engine_name} version {version}")
+            # Check each executable in build directory
+            for file in build_dir.glob('*.exe'):
+                print(f"\nChecking {file.name}...")
+                
+                # Get engine info
+                engine_info = self.get_engine_info(file)
+                if not engine_info:
+                    print(f"Skipping {file.name} - could not get engine info")
+                    continue
+                
+                engine_name = engine_info['name']
+                version = engine_info['version']
+                
+                # Create unique ID that includes build type
+                full_id = f"{engine_name} {version} {build_type.value}"
+                
+                # Check if we've seen this exact version and build type before
+                if full_id in self.stored_engines:
+                    print(f"Engine {full_id} already stored")
+                    continue
+                
+                # This is a new engine version - store it
+                new_filename = self.format_filename(engine_name, version, build_type)
+                new_path = self.storage_dir / new_filename
+                
+                print(f"Storing new engine: {new_filename}")
+                shutil.copy2(file, new_path)
+                
+                # Update stored engine info
+                self.stored_engines[full_id] = {
+                    'filename': new_filename,
+                    'author': engine_info['author'],
+                    'build_type': build_type.value,
+                    'stored_date': time.strftime("%Y-%m-%d %H:%M:%S")
+                }
+                
+                self.save_stored_engine_info()
+                print(f"Stored {engine_name} version {version} ({build_type.value})")
     
     def list_stored_engines(self):
         """Print information about all stored engines."""
         print("\nStored Engines:")
         print("=" * 50)
+        
+        # Group engines by name and version
+        grouped_engines = {}
         for full_id, info in self.stored_engines.items():
-            print(f"\n{full_id}:")
-            print(f"  File: {info['filename']}")
-            print(f"  Author: {info['author']}")
-            print(f"  Stored: {info['stored_date']}")
+            name_version = full_id.rsplit(' ', 1)[0]  # Remove build type
+            if name_version not in grouped_engines:
+                grouped_engines[name_version] = []
+            grouped_engines[name_version].append((full_id, info))
+        
+        # Print grouped information
+        for name_version, builds in grouped_engines.items():
+            print(f"\n{name_version}:")
+            for full_id, info in builds:
+                print(f"  Build: {info['build_type']}")
+                print(f"  File: {info['filename']}")
+                print(f"  Author: {info['author']}")
+                print(f"  Stored: {info['stored_date']}")
 
 if __name__ == '__main__':
     manager = EngineVersionManager()

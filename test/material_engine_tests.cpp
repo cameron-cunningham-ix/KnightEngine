@@ -28,10 +28,19 @@ TEST_F(MaterialEngineTest, Initialization) {
     EXPECT_FALSE(engine->isThinking());
 }
 
-// Test material evaluation in starting position
-TEST_F(MaterialEngineTest, InitialPositionEvaluation) {
+// Test multiple position evaluations
+TEST_F(MaterialEngineTest, MultPositionEval) {
     int eval = engine->evaluatePosition(board);
     EXPECT_EQ(eval, 0); // Starting position should be equal
+
+    // Scholars mate before move
+    board.setupPositionFromFEN("r1bqkbnr/1ppp1ppp/p1n5/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 0 4");
+    eval = engine->evaluatePosition(board);
+    EXPECT_NEAR(eval, 0, 100);
+    // Scholars mate after move
+    board.setupPositionFromFEN("r1bqkbnr/1ppp1Qpp/p1n5/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4");
+    eval = engine->evaluatePosition(board);
+    EXPECT_EQ(eval, 100000);
 }
 
 // Test material evaluation with white advantage

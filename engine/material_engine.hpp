@@ -6,6 +6,10 @@
 #include <algorithm>
 #include <chrono>
 
+
+static constexpr int INF_POS = 999999999;
+static constexpr int INF_NEG = -999999999;
+
 /// @brief 
 class MaterialEngine : public ChessEngineBase {
 private:
@@ -16,25 +20,27 @@ private:
     int currentMoveNumber;
 
     // Piece values (centipawns)
-    static constexpr int PAWN_VALUE = 10;
-    static constexpr int KNIGHT_VALUE = 32;
-    static constexpr int BISHOP_VALUE = 33;
-    static constexpr int ROOK_VALUE = 50;
-    static constexpr int QUEEN_VALUE = 90;
-    static constexpr int KING_VALUE = 200;
+    static constexpr int PAWN_VALUE = 100;
+    static constexpr int KNIGHT_VALUE = 320;
+    static constexpr int BISHOP_VALUE = 330;
+    static constexpr int ROOK_VALUE = 500;
+    static constexpr int QUEEN_VALUE = 900;
+    static constexpr int KING_VALUE = 2000;
 
     // Additional positional bonus/penalty
-    static constexpr int DOUBLED_PAWN_PENALTY = -5;
-    static constexpr int ISOLATED_PAWN_PENALTY = -8;
-    static constexpr int CHECKED_PENALTY = -150;
-    static constexpr int PIECE_DIFF_BONUS = 100;
-    static constexpr int CHECKING_BONUS = 500;
-    static constexpr int BISHOP_PAIR_BONUS = 15;
-    static constexpr int ROOK_OPEN_FILE_BONUS = 25;
+    static constexpr int MATE_SCORE = 100000;
+    static constexpr int SUPPORTED_PAWN_BONUS = 90;
+    static constexpr int DOUBLED_PAWN_PENALTY = -50;
+    static constexpr int ISOLATED_PAWN_PENALTY = -80;
+    static constexpr int CHECKED_PENALTY = -10000;
+    static constexpr int CHECKING_BONUS = 15000;
+    static constexpr int BISHOP_PAIR_BONUS = 150;
+    static constexpr int ROOK_OPEN_FILE_BONUS = 250;
 
 public:
+
     MaterialEngine() 
-        : ChessEngineBase("MaterialEngine", "0.316", "Cameron Cunningham", 6) {}
+        : ChessEngineBase("MaterialEngine", "0.4", "Cameron Cunningham", 6) {}
 
     DenseMove findBestMove(ChessBoard& board, 
                            int maxDepth = -1) override {
@@ -44,14 +50,15 @@ public:
         currentMoveNumber = 0;
 
         int actualDepth = (maxDepth > 0) ? maxDepth : searchDepth;
+        sendInfo(std::format("search to depth {}", actualDepth));
 
         // Generate all psuedo legal moves
         int moveNum = 0;
-        std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generatePsuedoMoves(board, moveNum);
+        std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
         Color sideToMove = board.getSideToMove();
         // bestScore will determine what the best move to play is
         // Negative bestScore means Black's position is better, positive means White's position is better
-        int bestScore = sideToMove == WHITE ? -999999 : 999999;
+        int bestScore = sideToMove == WHITE ? INF_NEG : INF_POS;
         DenseMove bestMove;
 
         // Evaluate each move
@@ -67,20 +74,21 @@ public:
             ChessBoard tempBoard = board;
             tempBoard.makeMove(moves[i], true);
 
-            // Check if move is legal
-            if (board.isSideInCheck(sideToMove)) {
-                
-            }
+            // // Check if move is illegal
+            // if (tempBoard.isSideInCheck(sideToMove)) {
+            //     std::cout << "go next\n";
+            //     continue;
+            // }
 
             // Store start time for this move
             auto moveStartTime = std::chrono::steady_clock::now();
 
             // Evaluate resulting position
             int score = alphaBeta(tempBoard, actualDepth - 1, 
-                                 -999999, 999999, board.getSideToMove() == WHITE);
+                                 INF_NEG, INF_POS, board.getSideToMove() == WHITE);
             // Update best move if better score found
-            if ((board.getSideToMove() == WHITE && score > bestScore) ||
-                (board.getSideToMove() == BLACK && score < bestScore)) {
+            if ((sideToMove == WHITE && score > bestScore) ||
+                (sideToMove == BLACK && score < bestScore)) {
                 bestScore = score;
                 bestMove = moves[i];
 
@@ -88,7 +96,7 @@ public:
                     std::chrono::steady_clock::now() - searchStartTime).count();
                 
                 // Send updated info
-                std::string infoStr = std::format("depth {} score cp {} time {} nodes {} ",
+                std::string infoStr = std::format("depth {} score cp {} time {} nodes {}",
                     actualDepth, bestScore, moveTime, nodeCount);
                 
                 // Add NPS if we have meaningful time elapsed
@@ -156,9 +164,6 @@ private:
             // Queens
             pieces = board.getWhiteQueens();
             score += popcount(pieces) * QUEEN_VALUE;
-            // Bonus for fewer black pieces remaining
-            pieces = board.getBlackPieces();
-            score += (16 - popcount(pieces)) * PIECE_DIFF_BONUS;
         } else {
             // Pawns
             pieces = board.getBlackPawns();
@@ -175,9 +180,6 @@ private:
             // Queens
             pieces = board.getBlackQueens();
             score += popcount(pieces) * QUEEN_VALUE;
-            // Bonus for fewer white pieces remaining
-            pieces = board.getWhitePieces();
-            score += (16 - popcount(pieces)) * PIECE_DIFF_BONUS;
         }
 
         return score;
@@ -213,6 +215,12 @@ private:
                 // No pawns in adjacent files
                 if (!(adjacentFiles & pawns)) {
                     score += ISOLATED_PAWN_PENALTY;
+                }
+
+                // If this pawn is supporting another
+                U64 supports = ATKMASK_WPAWN[square] & pawns;
+                if (supports) {
+                    score += SUPPORTED_PAWN_BONUS * popcount(supports);
                 }
 
                 pawns &= pawns - 1;
@@ -262,6 +270,12 @@ private:
                     score += ISOLATED_PAWN_PENALTY;
                 }
 
+                // If this pawn is supporting another
+                U64 supports = ATKMASK_BPAWN[square] & pawns;
+                if (supports) {
+                    score += SUPPORTED_PAWN_BONUS * popcount(pawns);
+                }
+
                 pawns &= pawns - 1;
             }
 
@@ -301,75 +315,119 @@ private:
         }
 
         int moveNum = 0;
-        std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
+        std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generatePsuedoMoves(board, moveNum);
 
-        // No legal moves
-        if (moveNum == 0) {
-            // If in check, this is checkmate
-            if (board.isSideInCheck((Color)maximizing)) {
-                /// @todo Figure out why maximizing side wants big score?
-                return maximizing ? 999999 : -999999;
-            }
-            // Otherwise stalemate
-            return 0;
-        }
+        bool noLegalMoves = true;
+
+        // // No legal moves
+        // if (moveNum == 0) {
+        //     // If in check, this is checkmate
+        //     if (board.isSideInCheck((Color)maximizing)) {
+        //         /// @todo Figure out why maximizing side wants big score?
+        //         return maximizing ? 999999 : -999999;
+        //     }
+        //     // Otherwise stalemate
+        //     return 0;
+        // }
 
         // White to move
         // Trying to improve alpha value by finding moves that give a higher score
         if (maximizing) {
             // maxEval is the best score that's been found so far in this node
-            int maxEval = -999999;
+            int maxEval = INF_NEG;
             ChessBoard tempBoard = board;
             // Test every move in the position
             for (int i = 0; i < moveNum; i++) {
                 tempBoard.makeMove(moves[i], true);
 
+                // Check move legality
+                if (tempBoard.isSideInCheck(WHITE)) {
+                    // isMate = false;
+                    tempBoard.unmakeMove(moves[i], true);
+                    continue;
+                }
+                noLegalMoves = false;
                 // Evaluation of next alphabeta is minimizing
                 int eval = alphaBeta(tempBoard, depth - 1, alpha, beta, false);
 
                 tempBoard.unmakeMove(moves[i], true);
                 // If eval is greater than any other score so far in this node,
                 // maxEval gets set to eval
-                maxEval = std::max(maxEval, eval);
+                if (eval > maxEval) maxEval = eval;
 
-                // If eval is greater than alpha (best maximizing score 
+                // If maxEval is now greater than alpha (best maximizing score 
                 // guranteed across the search tree so far), set alpha to eval
-                alpha = std::max(alpha, eval);
+                if (maxEval > alpha) alpha = maxEval;
 
-                // If eval is so good that it's greater than beta (best minimizing 
+                // If alpha is now so good that it's greater than beta (best minimizing 
                 // score guaranteed across the search tree so far), then minimizing
                 // player will never allow this position to be reached if playing optimally
-                if (eval >= beta) break;
+                // and we can return alpha early
+                if (alpha >= beta) return alpha;
             }
-            return maxEval;
+            // If there was at least 1 legal move, return eval
+            if (!noLegalMoves)
+                return maxEval;
+            else {
+                // No legal moves means we're either in checkmate or stalemate
+                if (board.isSideInCheck(WHITE)) {
+                    // If we're trying to maximize White's score and are in checkmate,
+                    // this is the worst possible outcome and should be avoided for White
+                    // and wanted for Black
+                    // Subtract depth so Black prefers faster checkmates
+                    return -MATE_SCORE - depth;
+                }
+                // Otherwise stalemate
+                return 0;
+            }
         } 
         // Black to move
         // Trying to improve beta value by finding moves that give a lower score
         else {
             // minEval is the lowest score that's been found so far in this node
-            int minEval = 999999;
+            int minEval = INF_POS;
             ChessBoard tempBoard = board;
             // Test every move in the position
             for (int i = 0; i < moveNum; i++) {
                 tempBoard.makeMove(moves[i], true);
 
+                // Check move legality
+                if (tempBoard.isSideInCheck(BLACK)) {
+                    tempBoard.unmakeMove(moves[i], true);
+                    continue;
+                }
+                noLegalMoves = false;
                 // Evaluation of next alphabeta is maximizing
                 int eval = alphaBeta(tempBoard, depth - 1, alpha, beta, true);
 
-                tempBoard.unmakeMove(moves[i], true);
-
                 // If eval is less than any other score so far in this node,
                 // minEval gets set to eval
-                minEval = std::min(minEval, eval);
+                if (eval < minEval) minEval = eval;
 
-                // If eval is less than beta (best minimizing score guranteed across
-                // the search tree so far), set beta to eval
-                beta = std::min(beta, eval);
+                // If minEval is now less than beta (best minimizing score guranteed across
+                // the search tree so far), set beta to minEval
+                if (minEval < beta) beta = minEval;
 
-                // If eval is so good that it's less than alpha (best maximizing score
+                // If beta is now so good that it's less than alpha (best maximizing score
                 // guranteed across the search tree so far), then maximizing player
                 // will never allow this position to be reached if playing optimally
-                if (eval <= alpha) break;
+                if (beta <= alpha) return beta;
+
+            }
+            // If there was at least 1 legal move, return eval
+            if (!noLegalMoves)
+                return minEval;
+            else {
+                // No legal moves means we're either in checkmate or stalemate
+                if (board.isSideInCheck(BLACK)) {
+                    // If we're trying to minimize Black's score and are in checkmate,
+                    // this is the worst possible outcome and should be avoided for Black
+                    // and wanted for White
+                    // Add depth so White prefers faster checkmates
+                    return MATE_SCORE + depth;
+                }
+                // Otherwise stalemate
+                return 0;
             }
             return minEval;
         }

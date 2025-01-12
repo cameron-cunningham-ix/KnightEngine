@@ -8,7 +8,7 @@ def get_benchmark_exe_path():
     # Determine the path to the benchmark executable based on OS and build configuration
     base_path = os.path.join('build', 'benchmarks')
     if platform.system() == 'Windows':
-        return os.path.join(base_path, 'Debug', 'chess_benchmarks.exe')
+        return os.path.join(base_path, 'Release', 'chess_benchmarks.exe')
     else:
         return os.path.join(base_path, 'chess_benchmarks')
 

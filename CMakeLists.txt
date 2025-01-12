@@ -17,6 +17,21 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Set optimization flags for different build types
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    if(MSVC)
+        set(CMAKE_CXX_FLAGS_RELEASE "/O2 /GL")
+    else()
+        set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+    endif()
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    if(MSVC)
+        set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/O2 /Zi /GL")
+    else()
+        set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
+    endif()
+endif()
+
 
 # Create the chess engine library
 add_library(KnightEngine

@@ -1,5 +1,19 @@
 # Material Engine Changelog
 
+## Material Engine V0.321 (2025-01-12)
+- Changed supported pawn bonus to 90
+
+## Material Engine V0.32 (2025-01-12)
+- Finally realized the reason the engine was so slow was
+because I was not turning on compiler optimizations and 
+compiling for Release. Perft depth 6 is around 4.3 seconds with
+optimizations instead of 30 without. Success!
+- Added SupportedPawnBonus
+- Flipped return value for side in check back to what it should be for 
+alpha beta (INF_NEG for white, INF_POS for black)
+Note: This makes it worse for some reason :( might have to refactor
+alphaBeta and findBestMove functions
+
 ## Material Engine V0.315 (2025-01-11)
 - Added sendInfo functionality; engine now sends info back to UCI
 about currmove, currmovenumber, depth, score (centipawns), time (to
