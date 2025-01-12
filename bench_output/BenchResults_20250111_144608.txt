@@ -1,0 +1,40 @@
+2025-01-11T14:46:08-05:00
+Running build\benchmarks\Debug\chess_benchmarks.exe
+DESKTOP-GHDFV7H
+CPU Caches:
+  L1 Data {'type': 'Data', 'level': 1, 'size': 32768, 'num_sharing': 2}
+  L1 Instruction {'type': 'Instruction', 'level': 1, 'size': 32768, 'num_sharing': 2}
+  L2 Unified {'type': 'Unified', 'level': 2, 'size': 262144, 'num_sharing': 2}
+  L3 Unified {'type': 'Unified', 'level': 3, 'size': 9437184, 'num_sharing': 12}
+***WARNING*** Library was built as DEBUG. Timings may be affected.
+------------------------------------------------------------------------------------------------------------------------
+Benchmark                 Time         CPU          Iterations   Allocs/Iter  MaxBytes     TotalAlloc   HeapGrowth  
+------------------------------------------------------------------------------------------------------------------------
+BM_PerftD6Init            31.6 s       31.2 s       1            16.00        992          1016         888         
+BM_PerftD5Init            1.3 s        1.3 s        1            16.00        992          1016         888         
+MaterialEngineBenchmark/AlphaBetaSearch 17.3 ms      16.0 ms      45           8.56         3563         4539         3443        
+BM_PerftD3Init            2.5 ms       2.5 ms       299          1.00         992          1016         888         
+BM_FENParsing             18.6 us      18.4 us      37333        11.12        4832         6152         4728        
+BM_KiwipeteMoveGen        10.1 us      10.0 us      64000        1.88         1371         1491         1251        
+MaterialEngineBenchmark/MateInOneSearch 7.5 us       7.1 us       89600        2.56         1769         1977         1649        
+BM_PerftD1Init            5.3 us       5.2 us       112000       1.00         992          1016         888         
+MaterialEngineBenchmark/MoveGeneration 5.0 us       5.0 us       100000       1.81         1456         1568         1336        
+BM_InitialMoveGen         4.7 us       4.7 us       149333       1.12         1056         1080         936         
+BM_MGMakeUnmakeNoSearch   2.3 us       2.3 us       373333       1.12         1056         1080         936         
+BM_MGMakeUnmakeSearch     2.1 us       2.1 us       373333       1.12         1056         1080         936         
+BM_QueenAttacks           1.3 us       1.3 us       560000       1.00         992          1016         888         
+BM_RookAttacks            717.0 ns     725.4 ns     1120000      1.00         992          1016         888         
+BM_BishopAttacks          713.0 ns     683.6 ns     1120000      1.12         1056         1080         936         
+MaterialEngineBenchmark/EvaluateKingSafety 577.4 ns     572.0 ns     1120000      2.56         1769         1977         1649        
+MaterialEngineBenchmark/EvaluateStartingPosition 554.5 ns     530.1 ns     1120000      1.81         1488         1600         1368        
+MaterialEngineBenchmark/EvaluatePawnStructure 543.0 ns     525.5 ns     1338027      2.56         1749         1957         1629        
+BM_EvaluationComponents/manual_time 541.2 ns     592.2 ns     1292904      2.50         1579         1779         1459        
+MaterialEngineBenchmark/EvaluateComplexPosition 525.8 ns     516.2 ns     1120000      2.56         1769         1977         1649        
+MaterialEngineBenchmark/EndgameEvaluation 272.2 ns     255.0 ns     2635294      2.44         1583         1775         1463        
+BM_MakeMoveInit           98.5 ns      96.3 ns      7466667      1.00         992          1016         888         
+BM_AttkCalcInit           49.3 ns      48.8 ns      11200000     1.00         992          1016         888         
+BM_SearchAtDepth<4>       31.3 ns      26.3 ns      22           7.75         3056         3928         2936        
+BM_IsInCheck              9.5 ns       9.5 ns       64000000     1.75         1306         1426         1202        
+BM_SearchAtDepth<3>       6.3 ns       5.7 ns       112          7.75         3056         3928         2936        
+BM_SearchAtDepth<2>       1.6 ns       1.0 ns       640          7.75         3056         3928         2936        
+BM_SearchAtDepth<1>       0.8 ns       0.3 ns       2133         7.75         3056         3928         2936        

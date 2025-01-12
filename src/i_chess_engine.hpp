@@ -17,7 +17,7 @@ public:
                            const std::string& value) = 0;  // Set engine option
     virtual void uciNewGame() = 0;             // Start a new game
     virtual void position(const std::string& fen, 
-                          const std::vector<DenseMove>& moves) = 0;  // Set position
+                          const std::string& moves) = 0;  // Set position
     virtual void go(const std::map<std::string, std::string>& searchParams) = 0;    // Start calculating
     virtual void stop() = 0;                   // Stop calculating
     virtual void quit() = 0;                   // Quit the program

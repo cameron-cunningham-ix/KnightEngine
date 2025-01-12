@@ -16,6 +16,7 @@ void MoveGenerator::generatePawnMoves(const ChessBoard& board, std::array<DenseM
     U64 occupancy = board.getAllPieces();
     U64 emptySquares = board.getEmptySquares();
     Color sideToMove = board.getSideToMove();
+    int currCastleRights = board.currentGameState.getCastleRights();
     // If checkingCount is 1, we need to either block attack or capture piece
     // Double check should already be accounted for and so not necessary to check
     // if (board.getCheckCount() == 1) {
@@ -38,6 +39,7 @@ void MoveGenerator::generatePawnMoves(const ChessBoard& board, std::array<DenseM
                 if (targetSquare >= 56 && targetSquare < 64) {
                     DenseMove promoteMove = DenseMove(W_PAWN, index, targetSquare, 
                                                       board.getDenseTypeAt(targetSquare));
+                    promoteMove.setCastleRights(currCastleRights);
                     promoteMove.setPromoteTo(D_KNIGHT);
                     moves[moveNum++] = promoteMove;
                     promoteMove.setPromoteTo(D_BISHOP);
@@ -48,8 +50,10 @@ void MoveGenerator::generatePawnMoves(const ChessBoard& board, std::array<DenseM
                     moves[moveNum++] = promoteMove;
                 }
                 else {
-                    moves[moveNum++] = (DenseMove(W_PAWN, index, targetSquare, 
-                                     board.getDenseTypeAt(targetSquare)));
+                    DenseMove move = DenseMove(W_PAWN, index, targetSquare, 
+                                     board.getDenseTypeAt(targetSquare));
+                    move.setCastleRights(currCastleRights);
+                    moves[moveNum++] = move;
                 }
                 attackMask &= (attackMask - 1);     // Clear the least significant bit
             }
@@ -70,6 +74,7 @@ void MoveGenerator::generatePawnMoves(const ChessBoard& board, std::array<DenseM
             if (targetSquare >= 56 && targetSquare < 64) {
                 DenseMove promoteMove = DenseMove(W_PAWN, targetSquare - 8, 
                                                   targetSquare);
+                promoteMove.setCastleRights(currCastleRights);
                 promoteMove.setPromoteTo(D_KNIGHT);
                 moves[moveNum++] = promoteMove;
                 promoteMove.setPromoteTo(D_BISHOP);
@@ -80,7 +85,9 @@ void MoveGenerator::generatePawnMoves(const ChessBoard& board, std::array<DenseM
                 moves[moveNum++] = promoteMove;
             } 
             else {
-                moves[moveNum++] = (DenseMove(W_PAWN, targetSquare - 8, targetSquare));
+                DenseMove move = DenseMove(W_PAWN, targetSquare - 8, targetSquare);
+                move.setCastleRights(currCastleRights);
+                moves[moveNum++] = move;
             }
             singlePushes &= (singlePushes - 1);
         }
@@ -430,7 +437,7 @@ std::array<DenseMove, MAX_MOVES> MoveGenerator::generateLegalMoves(ChessBoard& b
     // std::vector<DenseMove> legal;
     // For each psuedo legal move generated
     for (int i = 0; i < moveNum; i) {
-        // std::cout << "psuedo move: " << move.toString(false) << "\n";
+        // std::cout << "psuedo move: " << legal[i].toString(false) << "\n";
         // Make the move on the board
         board.makeMove(legal[i], true);
         // std::cout << "    made move\n";
@@ -448,6 +455,6 @@ std::array<DenseMove, MAX_MOVES> MoveGenerator::generateLegalMoves(ChessBoard& b
     }
     // No legal moves, ensure indices are empty move
     if (moveNum == 0) legal.fill(DenseMove());
-    // std::cout << "    generateLegalMoves returning, size " << legal.size() << "\n";
+    // std::cout << "    generateLegalMoves returning, size " << moveNum << "\n";
     return legal;
 }

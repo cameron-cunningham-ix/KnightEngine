@@ -204,11 +204,9 @@ void ChessBoard::movePiece(int from, int to, PieceType piece) {
     pieceBB[pieceType] ^= fromToBB;
 
     // Update empty squares bitboard
-    pieceBB[D_EMPTY] = (~colorBB[WHITE]) & (~colorBB[BLACK]);
+    pieceBB[D_EMPTY] = ~(colorBB[WHITE] | colorBB[BLACK]);
     // If king moved, update king square
-    if (piece == W_KING) {
-        kingSquares[WHITE] = to;
-    } 
+    if (piece == W_KING) kingSquares[WHITE] = to;
     else if (piece == B_KING) kingSquares[BLACK] = to;
 }
 /// @brief Helper function to remove a piece from the board
@@ -253,8 +251,7 @@ void ChessBoard::addPiece(int square, PieceType piece) {
 /// @return True if current side to move is in check, false otherwise
 bool ChessBoard::calculateIsInCheck() {
     // Get current side to move
-    Color sideToMove = currentGameState.sideToMove;
-    // Get side's king square
+    Color sideToMove = currentGameState.sideToMove;    // Get side's king square
     int kingSquare = kingSquares[sideToMove];
 
     U64 occupancy = getAllPieces();
@@ -534,14 +531,15 @@ DenseType ChessBoard::getDenseTypeAt(int index) const {
 /// @return cachedInCheckValue if it is cached, otherwise calculates check value,
 /// caches it, and returns check value
 bool ChessBoard::isInCheck() {
-    // Value has already been cached, return value
-    if (hasCachedInCheckValue) {
-        return cachedInCheckValue;
-    }
-    // No cache, calculate and store
-    cachedInCheckValue = calculateIsInCheck();
-    hasCachedInCheckValue = true;
-    return cachedInCheckValue;
+    // // Value has already been cached, return value
+    // if (hasCachedInCheckValue) {
+    //     return cachedInCheckValue;
+    // }
+    // // No cache, calculate and store
+    // cachedInCheckValue = calculateIsInCheck();
+    // hasCachedInCheckValue = true;
+    // return cachedInCheckValue;
+    return isSideInCheck(getSideToMove());
 }
 /// @param side 
 /// @return True if 'side' is currently attacked / checked by opposing side
@@ -751,8 +749,8 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
     stateHistory[plyIndex] = currentGameState;
     
     // New position check value not cached
-    hasCachedInCheckValue = false;
-    cachedInCheckValue = false;
+    // hasCachedInCheckValue = false;
+    // cachedInCheckValue = false;
 
     if (!searching) {
         moveHistory[plyIndex] = move;
@@ -771,8 +769,11 @@ void ChessBoard::unmakeMove(DenseMove move, bool searching) {
     if (!searching) {
         moveHistory[plyIndex] = {};
     }
-    // Clear last state and move plyIndex back to last state
-    stateHistory[plyIndex--] = {};
+    // Move plyIndex back to last state
+    // We do not clear the state at plyIndex because it uses too much time
+    // to do it for every unmake, and we shouldn't be accessing old
+    // values anyway, they'll be overwritten by makeMove
+    plyIndex--;
     // Get previous state
     currentGameState = stateHistory[plyIndex];
 

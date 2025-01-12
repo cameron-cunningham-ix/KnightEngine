@@ -13,10 +13,8 @@ protected:
     std::string engineVersion;      // Version of the engine
     std::string engineAuthor;       // Author of the engine
     std::atomic<bool> isSearching;  // Whether engine is currently searching
-    // Side to analyze for; in search and evaluation functions, 
-    // this is the side that should be maximizing score
-    Color analyzeSide;
     DenseMove bestMove;             // Best move found in last search
+    int defaultDepth;               // Default depth for the engine
     int searchDepth;                // Current search depth
     
     // Engine options with their current values
@@ -27,13 +25,12 @@ public:
     ChessEngineBase(const std::string& name, 
                     const std::string& version, 
                     const std::string& author,
-                    Color side = BLACK,
                     int defaultDepth = 4)
         : engineName(name)
         , engineVersion(version)
         , engineAuthor(author)
-        , analyzeSide(side)
         , isSearching(false)
+        , defaultDepth(defaultDepth)
         , searchDepth(defaultDepth) {}
     
     virtual ~ChessEngineBase() = default;
@@ -48,14 +45,13 @@ public:
     // Common functionality that engines might want to override
     virtual void stopSearch() { isSearching = false; }
     virtual void setSearchDepth(int depth) { searchDepth = depth; }
+    virtual void resetSearchDepth() { searchDepth = defaultDepth; }
     virtual bool setOption(const std::string& name, const std::string& value);
-    virtual void setSide(Color side) { analyzeSide = side; }
 
     // Getters
     std::string getName() const { return engineName; }
     std::string getVersion() const { return engineVersion; }
     std::string getAuthor() const { return engineAuthor; }
-    Color getSide() const { return analyzeSide; }
     bool isThinking() const { return isSearching; }
     DenseMove getBestMove() const { return bestMove; }
     int getSearchDepth() const { return searchDepth; }

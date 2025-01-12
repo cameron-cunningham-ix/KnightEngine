@@ -9,7 +9,7 @@ private:
 
 public:
     RandomEngine() 
-        : ChessEngineBase("RandomEngine", "1.0", "Cameron Cunningham", BLACK, 1)  // Only needs depth 1
+        : ChessEngineBase("RandomEngine", "1.0", "Cameron Cunningham", 1)  // Only needs depth 1
         , rng(std::random_device{}()) {}
 
     DenseMove findBestMove(ChessBoard& board, 

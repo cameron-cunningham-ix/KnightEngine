@@ -125,7 +125,7 @@ TEST_F(EnginePlayerTest, UCICommands) {
     player->setOption("Hash", "32");
     
     // Test position command
-    std::vector<DenseMove> moves = {DenseMove(W_PAWN, 12, 28)};  // e2e4
+    std::string moves = "e2e4";
     player->position("", moves);  // Empty FEN means use startpos
     
     // Test isready command
@@ -227,6 +227,6 @@ TEST_F(EnginePlayerTest, ErrorHandling1) {
     player->position("invalid fen", {});  // Should handle gracefully
     
     // Test invalid moves
-    std::vector<DenseMove> invalidMoves = {DenseMove()};  // Invalid move
+    std::string invalidMoves = "a1a1";  // Invalid move
     player->position("", invalidMoves);  // Should handle gracefully
 }

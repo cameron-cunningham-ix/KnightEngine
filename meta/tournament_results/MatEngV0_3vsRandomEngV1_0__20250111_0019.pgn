@@ -1,0 +1,490 @@
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "1"]
+[White "MaterialEngine_v0_3"]
+[Black "RandomEngine_v1_0"]
+[Result "1/2-1/2"]
+[ECO "A00"]
+[GameDuration "00:00:02"]
+[GameEndTime "2025-01-11T00:20:43.876 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:20:40.911 Eastern Standard Time"]
+[Opening "Benko's Opening"]
+[PlyCount "139"]
+[TimeControl "40/60+1"]
+
+1. g3 Na6 2. f3 Nf6 3. e3 Ne4 4. Bxa6 g6 5. fxe4 Bg7 6. Bxb7 h5 7. Bxa8 h4
+8. gxh4 Bc3 9. Nxc3 Rh5 10. Qxh5 c5 11. Qxc5 Ba6 12. Qxa7 g5 13. Qxa6 Qa5
+14. Qxa5 e6 15. hxg5 Ke7 16. d4 Kd6 17. a3 f6 18. b3 e5 19. dxe5+ Ke7 20. exf6+
+Kf8 21. h3 Ke8 22. a4 Kf8 23. b4 Kf7 24. b5 d6 25. e5 dxe5 26. e4 Ke8 27. b6 Kf7
+28. Qxe5 Kf8 29. a5 Kg8 30. a6 Kh7 31. a7 Kh8 32. b7 Kh7 33. b8=Q Kg6 34. f7
+Kxf7 35. h4 Kg6 36. Qh2 Kh7 37. e5 Kg6 38. h5+ Kf7 39. g6+ Ke7 40. h6 Ke6 41. g7
+Kf7 42. g8=R Ke7 43. h7 Kf7 44. Nge2 Ke6 45. Rgg1 Kf5 46. Nb1 Ke6 47. h8=B Kf7
+48. Bh6 Ke6 49. c3 Kf5 50. c4 Ke6 51. c5 Ke7 52. c6 Ke6 53. Na3 Kd5 54. e6 Kxe6
+55. Nb1 Kf5 56. c7 Ke6 57. c8=R Kd7 58. Nd2 Ke6 59. O-O-O Ke7 60. Nb1 Kf7
+61. Nd2 Ke6 62. Nb3 Ke7 63. Nc3 Ke6 64. Nd2 Kd7 65. Ndb1+ Ke7 66. Nd2 Kf7
+67. Ndb1 Ke6 68. Nd2 Ke7 69. Ndb1 Ke6 70. Nd2 {Draw by 3-fold repetition}
+1/2-1/2
+
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "1"]
+[White "RandomEngine_v1_0"]
+[Black "MaterialEngine_v0_3"]
+[Result "1/2-1/2"]
+[ECO "A01"]
+[GameDuration "00:00:05"]
+[GameEndTime "2025-01-11T00:20:48.946 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:20:43.891 Eastern Standard Time"]
+[Opening "Nimzowitsch-Larsen attack"]
+[PlyCount "124"]
+[TimeControl "40/60+1"]
+
+1. b3 a6 2. c4 a5 3. e3 b6 4. Qc2 f6 5. Be2 h6 6. Nf3 a4 7. bxa4 b5 8. g4 bxa4
+9. Na3 h5 10. c5 hxg4 11. e4 gxf3 12. Rb1 fxe2 13. Bb2 Rxh2 14. Nc4 Rxf2 15. Qd3
+e6 16. Qh3 e5 17. Bc3 d6 18. Na5 Rxa5 19. Qg2 Rxg2 20. Rc1 Rxc5 21. Rh4 Rxc3
+22. Rxc3 a3 23. Rh8 d5 24. d3 dxe4 25. Rc5 Bxc5 26. Kd2 e1=B+ 27. Kd1 exd3
+28. Kc1 d2+ 29. Kb1 d1=B 30. Rh7 e4 31. Rh4 e3 32. Rg4 Rxa2 33. Kc1 e2 34. Kb1
+f5 35. Rg3 f4 36. Rxg7 Bf8 37. Rh7 f3 38. Rg7 f2 39. Rg5 f1=Q 40. Rc5 c6 41. Rg5
+c5 42. Rg2 Rc2 43. Ka1 c4 44. Rg4 a2 45. Re4+ Kd7 46. Rxc4 Rxc4 47. Kb2 a1=N
+48. Kb1 Nc2 49. Ka2 Na1 50. Kb2 Nc2 51. Kb1 Na1 52. Ka2 Nc2 53. Kb1 Na1 54. Kxa1
+Na6 55. Kb2 Nb4 56. Kb1 Nc2 57. Kb2 Ne3 58. Kb1 Nc2 59. Kb2 Ne3 60. Ka1 Nc2+
+61. Ka2 Na1 62. Kb1 Nc2 {Draw by 3-fold repetition} 1/2-1/2
+
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "2"]
+[White "MaterialEngine_v0_3"]
+[Black "RandomEngine_v1_0"]
+[Result "1/2-1/2"]
+[ECO "A00"]
+[GameDuration "00:00:02"]
+[GameEndTime "2025-01-11T00:20:51.142 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:20:48.955 Eastern Standard Time"]
+[Opening "Benko's Opening"]
+[PlyCount "109"]
+[TimeControl "40/60+1"]
+
+1. g3 d5 2. f3 f6 3. e3 b5 4. Bxb5+ Qd7 5. Bxd7+ Kf7 6. Bxc8 g5 7. d3 Kg7 8. c3
+a5 9. b3 Ra6 10. Bxa6 e6 11. a3 Nc6 12. Ke2 Nce7 13. h3 Kf7 14. g4 e5 15. f4 Nc8
+16. Bxc8 Bc5 17. fxe5 h5 18. exf6 hxg4 19. hxg4 Ba7 20. Rxh8 c5 21. Rxg8 a4
+22. Rxg5 c4 23. Rxd5 Bb6 24. bxa4 Kg8 25. dxc4 Bc7 26. e4 Bd8 27. Rxd8+ Kh7
+28. g5 Kg6 29. a5 Kh5 30. a4 Kh4 31. c5 Kg3 32. c4 Kg2 33. e5 Kg3 34. a6 Kh2
+35. a5 Kg3 36. c6 Kh4 37. c5 Kh5 38. e6 Kg4 39. a7 Kh5 40. a8=Q Kh4 41. a6 Kg4
+42. a7 Kf5 43. c7 Kg6 44. c6 Kf5 45. e7+ Ke5 46. Nd2 Kf4 47. e8=Q Kxg5 48. f7
+Kh5 49. f8=B+ Kh4 50. Ngf3+ Kg3 51. Ne1 Kf4 52. Nc2 Kg3 53. Ne1 Kh4 54. Nc2 Kg3
+55. Ne1 {Draw by 3-fold repetition} 1/2-1/2
+
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "2"]
+[White "RandomEngine_v1_0"]
+[Black "MaterialEngine_v0_3"]
+[Result "1/2-1/2"]
+[ECO "A00"]
+[GameDuration "00:00:02"]
+[GameEndTime "2025-01-11T00:20:53.966 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:20:51.149 Eastern Standard Time"]
+[Opening "Clemenz (Mead's, Basman's or de Klerk's) Opening"]
+[PlyCount "103"]
+[TimeControl "40/60+1"]
+
+1. h3 a6 2. e3 a5 3. e4 a4 4. Bc4 f6 5. Qg4 h6 6. b4 a3 7. Qf4 f5 8. Rh2 fxe4
+9. Qe5 e3 10. dxe3 h5 11. Qe4 h4 12. Qg4 b6 13. Qe6 b5 14. Nd2 bxc4 15. c3 c6
+16. Qf6 c5 17. Qxe7+ Kxe7 18. Bxa3 Rxa3 19. Kd1 cxb4 20. Ke1 Rxa2 21. Ne2 Rxa1+
+22. Nb1 Rxb1+ 23. Nc1 Rxc1+ 24. Ke2 Rxc3 25. g3 Rxe3+ 26. Kxe3 hxg3 27. Kd2 gxh2
+28. h4 h1=Q 29. Kc2 Rxh4 30. f3 Qxf3 31. Kc1 b3 32. Kb1 d6 33. Kb2 d5 34. Kb1 d4
+35. Ka1 d3 36. Kb1 b2 37. Ka2 b1=B+ 38. Ka3 g6 39. Kb2 g5 40. Kc3 g4 41. Kb4 c3
+42. Ka4 c2 43. Ka3 c1=Q+ 44. Ka4 Nd7 45. Kb4 Qcd1 46. Kb5 Nb6 47. Kc5 Nd7+
+48. Kb5 Nb6 49. Kb4 Nd7 50. Kc4 Nb6+ 51. Kc5 Nd7+
+52. Kb5 {Draw by 3-fold repetition} 1/2-1/2
+
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "3"]
+[White "MaterialEngine_v0_3"]
+[Black "RandomEngine_v1_0"]
+[Result "0-1"]
+[ECO "A00"]
+[GameDuration "00:00:00"]
+[GameEndTime "2025-01-11T00:20:54.106 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:20:53.978 Eastern Standard Time"]
+[Opening "Benko's Opening"]
+[PlyCount "6"]
+[TimeControl "40/60+1"]
+
+1. g3 b6 2. f3 e6 3. g4 Qh4# {Black mates} 0-1
+
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "3"]
+[White "RandomEngine_v1_0"]
+[Black "MaterialEngine_v0_3"]
+[Result "1/2-1/2"]
+[ECO "A02"]
+[GameDuration "00:00:02"]
+[GameEndTime "2025-01-11T00:20:57.066 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:20:54.123 Eastern Standard Time"]
+[Opening "Bird's Opening"]
+[PlyCount "122"]
+[TimeControl "40/60+1"]
+
+1. f4 a6 2. d4 a5 3. e3 a4 4. Kf2 a3 5. Ke1 axb2 6. h4 bxa1=Q 7. Na3 Qxc1 8. h5
+Qxd1+ 9. Kxd1 Rxa3 10. f5 Rxe3 11. f6 Nxf6 12. c4 Nxh5 13. Bd3 Rxd3+ 14. Ke2
+Rxd4 15. Kf1 Rxc4 16. g4 Rxg4 17. a4 Rxg1+ 18. Kf2 Rxh1 19. Ke2 b6 20. a5 bxa5
+21. Kd2 a4 22. Ke3 a3 23. Kd2 a2 24. Kc2 a1=Q 25. Kb3 c6 26. Kb4 c5+ 27. Kc4 d6
+28. Kd5 c4 29. Ke4 c3 30. Kd5 c2 31. Ke4 c1=Q 32. Kd5 f6 33. Ke4 e6 34. Kd3
+Qcb1+ 35. Ke3 d5 36. Ke2 d4 37. Kd2 d3 38. Ke3 d2 39. Kf3 d1=R 40. Kg4 g6
+41. Kf3 e5 42. Ke3 f5 43. Ke2 Nf4+ 44. Kf3 Rhe1 45. Kf2 h6 46. Kg3 Rh1 47. Kf3
+Rhe1 48. Kf2 h5 49. Kf3 Na6 50. Kf2 Nb4 51. Kg3 Rh1 52. Kf3 Rhe1 53. Kf2 Na2
+54. Kf3 Nc1 55. Kg3 Rh1 56. Kf2 Na2 57. Kf3 Rhe1 58. Kf2 Nc1 59. Kf3 Na2 60. Kg3
+Rh1 61. Kf3 Rhe1 {Draw by 3-fold repetition} 1/2-1/2
+
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "4"]
+[White "MaterialEngine_v0_3"]
+[Black "RandomEngine_v1_0"]
+[Result "1/2-1/2"]
+[ECO "A00"]
+[GameDuration "00:00:03"]
+[GameEndTime "2025-01-11T00:21:00.195 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:20:57.072 Eastern Standard Time"]
+[Opening "Benko's Opening"]
+[PlyCount "126"]
+[TimeControl "40/60+1"]
+
+1. g3 b6 2. f3 a6 3. e3 c5 4. Bxa6 c4 5. Bxc8 g6 6. d3 e5 7. Bxd7+ Nxd7 8. dxc4
+Nb8 9. b3 Bc5 10. a3 Qd4 11. e4 Kd8 12. Nd2 Ne7 13. c3 g5 14. h3 Ng6 15. a4
+Qxg1+ 16. Ke2 Bb4 17. g4 Bf8 18. b4 Rxa4 19. h4 Qe3+ 20. Kf1 Qc5 21. Rxa4 Kc7
+22. hxg5 Qf2+ 23. Kxf2 Kd8 24. Rxh7 Rg8 25. Rxf7 Nc6 26. Rxf8+ Rxf8 27. f4 Nb8
+28. f5 Na6 29. Rxa6 Nh8 30. Rxb6 Kc8 31. b5 Re8 32. c5 Rd8 33. c4 Rd4 34. f6 Kd8
+35. g6 Rxe4 36. g5 Re3 37. Kxe3 Nxg6 38. f7 Kc8 39. f8=R+ Kd7 40. Rxg6 Kc7
+41. b6+ Kb7 42. Nb1 e4 43. Kxe4 Ka6 44. Rf1 Ka5 45. Nd2 Ka6 46. Nb1 Ka5 47. Nd2
+Kb4 48. Qe1 Ka4 49. c6 Ka5 50. c5 Kb5 51. b7 Ka6 52. b8=R Ka7 53. Ba3 Kxb8
+54. c7+ Kxc7 55. c6 Kb6 56. c7+ Kxc7 57. Nb1 Kc8 58. Nd2 Kc7 59. Nb1 Kc8 60. Nd2
+Kb7 61. Nb1 Ka8 62. Nd2 Kb7 63. Nb1 Kc8 {Draw by 3-fold repetition} 1/2-1/2
+
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "4"]
+[White "RandomEngine_v1_0"]
+[Black "MaterialEngine_v0_3"]
+[Result "1-0"]
+[ECO "A00"]
+[GameDuration "00:00:01"]
+[GameEndTime "2025-01-11T00:21:01.252 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:21:00.207 Eastern Standard Time"]
+[Opening "Saragossa Opening"]
+[PlyCount "19"]
+[TimeControl "40/60+1"]
+
+1. c3 a6 2. e4 a5 3. Qh5 a4 4. Nf3 b6 5. Ne5 a3 6. Qd1 axb2 7. Qb3 bxa1=N 8. f3
+b5 9. Be2 b4 10. Qxf7# {White mates} 1-0
+
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "5"]
+[White "MaterialEngine_v0_3"]
+[Black "RandomEngine_v1_0"]
+[Result "1-0"]
+[ECO "A00"]
+[GameDuration "00:00:02"]
+[GameEndTime "2025-01-11T00:21:03.502 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:21:01.264 Eastern Standard Time"]
+[Opening "Benko's Opening"]
+[PlyCount "57"]
+[Termination "illegal move"]
+[TimeControl "40/60+1"]
+
+1. g3 a5 2. f3 f5 3. e3 h6 4. d3 c6 5. c3 b5 6. b3 Bb7 7. a3 Ra7 8. h3 Nf6 9. g4
+b4 10. axb4 fxg4 11. fxg4 Ba6 12. bxa5 d5 13. b4 Rh7 14. d4 Nh5 15. Bxa6 Kf7
+16. gxh5 Rxa6 17. c4 Qd6 18. cxd5 Rb6 19. axb6 Qc7 20. bxc7 Ke8 21. cxb8=R+ Kd7
+22. Rxf8 g5 23. hxg6 Rg7 24. dxc6+ Kd6 25. d5 Rg8 26. Rxg8 e5 27. dxe6+ Ke7
+28. h4 h5 29. Qxh5 {Black makes an illegal move: g5h4} 1-0
+
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "5"]
+[White "RandomEngine_v1_0"]
+[Black "MaterialEngine_v0_3"]
+[Result "1/2-1/2"]
+[ECO "A00"]
+[GameDuration "00:00:02"]
+[GameEndTime "2025-01-11T00:21:06.127 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:21:03.520 Eastern Standard Time"]
+[Opening "Grob's attack"]
+[PlyCount "121"]
+[TimeControl "40/60+1"]
+
+1. g4 a6 2. a4 a5 3. f3 b6 4. b3 b5 5. c3 bxa4 6. Ra3 axb3 7. Ra4 b2 8. Ra3
+bxc1=Q 9. d3 Qxd1+ 10. Kf2 Qxb1 11. c4 Qxf1+ 12. Ke3 Qxg1+ 13. Ke4 Qxh1 14. Kd4
+Qxh2 15. Kc5 Qxe2 16. Ra1 Qxf3 17. Kd4 Qxg4+ 18. Kc5 a4 19. d4 Qxd4+ 20. Kb5
+Qxa1 21. Kc5 a3 22. Kb4 a2 23. Kb5 h6 24. Kc5 h5 25. Kd5 h4 26. c5 h3 27. Kc4 h2
+28. Kb5 h1=Q 29. Kc4 c6 30. Kb4 Na6+ 31. Kc4 d6 32. cxd6 exd6 33. Kb3 c5 34. Ka4
+f6 35. Kb3 f5 36. Kc4 f4 37. Kb5 f3 38. Ka4 f2 39. Kb3 f1=R 40. Ka4 d5 41. Ka3
+d4 42. Kb3 d3 43. Ka4 d2 44. Kb3 d1=R 45. Kc2 g6 46. Kb3 g5 47. Ka3 g4 48. Ka4
+g3 49. Kb5 Qd6 50. Ka5 g2 51. Kb5 g1=Q 52. Ka5 Nf6 53. Kb5 Ne4 54. Kc4 Nf2
+55. Kb5 Nd3 56. Kc4 Nc1 57. Kb5 Ne2 58. Ka4 Nc1 59. Kb5 Ne2 60. Ka4 Nc1
+61. Kb5 {Draw by 3-fold repetition} 1/2-1/2
+
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "6"]
+[White "MaterialEngine_v0_3"]
+[Black "RandomEngine_v1_0"]
+[Result "1/2-1/2"]
+[ECO "A00"]
+[GameDuration "00:00:03"]
+[GameEndTime "2025-01-11T00:21:09.414 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:21:06.140 Eastern Standard Time"]
+[Opening "Benko's Opening"]
+[PlyCount "106"]
+[TimeControl "40/60+1"]
+
+1. g3 f5 2. f3 h5 3. e3 g5 4. d3 Nc6 5. c3 e5 6. b3 Nf6 7. a3 Rb8 8. h3 Nd5
+9. h4 Qe7 10. hxg5 Nf4 11. gxf4 Qg7 12. fxe5 Qf6 13. exf6 Bc5 14. Rxh5 Rxh5
+15. e4 fxe4 16. fxe4 Ne5 17. Ne2 Rh8 18. a4 Ng4 19. Nd2 Nxf6 20. gxf6 c6 21. b4
+Bd6 22. c4 Bc5 23. b5 Kf8 24. bxc6 Rh2 25. cxb7 Kg8 26. bxc8=N Bg1 27. d4 Rb1
+28. a5 Rg2 29. c5 Bh2 30. Ng1 Rg7 31. Nxb1 Rg2 32. d5 Bb8 33. a6 Kh8 34. c6 Ra2
+35. cxd7 Rh2 36. f7 Ra2 37. d8=N Bf4 38. e5 Bxc1 39. f8=B Rg2 40. Nxa7 Re2+
+41. Kxe2 Be3 42. Kxe3 Kg8 43. d6 Kh8 44. e6 Kh7 45. d7 Kg6 46. e7 Kg5 47. e8=Q
+Kh4 48. Nd2 Kg5 49. Ne2 Kg4 50. Nb1 Kh4 51. Nd2 Kg4 52. Nb1 Kg5 53. Nd2
+Kg4 {Draw by 3-fold repetition} 1/2-1/2
+
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "6"]
+[White "RandomEngine_v1_0"]
+[Black "MaterialEngine_v0_3"]
+[Result "1/2-1/2"]
+[ECO "A00"]
+[GameDuration "00:00:03"]
+[GameEndTime "2025-01-11T00:21:12.530 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:21:09.424 Eastern Standard Time"]
+[Opening "Mieses Opening"]
+[PlyCount "149"]
+[TimeControl "40/60+1"]
+
+1. d3 a6 2. Bh6 Nxh6 3. f4 a5 4. Qd2 a4 5. Nh3 a3 6. Qc3 axb2 7. Kf2 bxa1=Q
+8. Ng1 Qxc3 9. Nxc3 Rxa2 10. Ne4 Rxc2 11. d4 b6 12. Ng5 Rxe2+ 13. Kf3 Rxg2
+14. Be2 Rxe2 15. f5 Nxf5 16. Kg4 Nxd4 17. Ne4 Rxh2 18. Kf4 Rxh1 19. Ne2 Nxe2+
+20. Kf5 b5 21. Ng3 Nxg3+ 22. Kg5 b4 23. Kf4 b3 24. Ke3 b2 25. Kf2 b1=Q 26. Ke3
+c6 27. Kd4 c5+ 28. Kc3 c4 29. Kxc4 d6 30. Kd5 f6 31. Kc4 d5+ 32. Kc3 f5 33. Kd2
+e6 34. Ke3 f4+ 35. Kf3 Nf1 36. Kg4 d4 37. Kf3 d3 38. Kg2 d2 39. Kxh1 d1=Q
+40. Kg1 e5 41. Kh1 e4 42. Kg2 Bg4 43. Kh1 g6 44. Kg2 e3 45. Kh1 e2 46. Kg1 e1=Q
+47. Kg2 Qeb4 48. Kf2 g5 49. Kg2 f3+ 50. Kh1 h6 51. Kg1 f2+ 52. Kh1 Qdc1 53. Kg2
+h5 54. Kxf2 h4 55. Kg1 Na6 56. Kg2 h3+ 57. Kf2 h2 58. Kg2 Bd1 59. Kf2 g4
+60. Kxf1 Nc5 61. Kg2 Nb3 62. Kf2 Nd2 63. Kg2 h1=R 64. Kg3 Bc2 65. Kg2 Nb3
+66. Kf2 g3+ 67. Kxg3 Na1 68. Kg2 Nb3 69. Kg3 Na1 70. Kg2 Nb3 71. Kf3 Nd2+
+72. Ke3 Nb3+ 73. Ke2 Na1 74. Kf2 Nb3 75. Kg3 {Draw by 3-fold repetition} 1/2-1/2
+
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "7"]
+[White "MaterialEngine_v0_3"]
+[Black "RandomEngine_v1_0"]
+[Result "0-1"]
+[ECO "A00"]
+[GameDuration "00:00:00"]
+[GameEndTime "2025-01-11T00:21:13.268 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:21:12.541 Eastern Standard Time"]
+[Opening "Benko's Opening"]
+[PlyCount "24"]
+[TimeControl "40/60+1"]
+
+1. g3 Nh6 2. f3 e5 3. g4 a6 4. a3 g5 5. b3 a5 6. f4 Rg8 7. fxe5 Bc5 8. c3 b5
+9. h3 Be7 10. d3 Rf8 11. Bxg5 Ba6 12. Bd2 Bh4# {Black mates} 0-1
+
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "7"]
+[White "RandomEngine_v1_0"]
+[Black "MaterialEngine_v0_3"]
+[Result "1/2-1/2"]
+[ECO "A00"]
+[GameDuration "00:00:01"]
+[GameEndTime "2025-01-11T00:21:14.873 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:21:13.281 Eastern Standard Time"]
+[Opening "Saragossa Opening"]
+[PlyCount "112"]
+[TimeControl "40/60+1"]
+
+1. c3 a6 2. f4 a5 3. g3 a4 4. Qxa4 Rxa4 5. h4 Rxa2 6. Kf2 Rxa1 7. Na3 Rxc1
+8. Rh3 Rxf1+ 9. Kg2 Rxg1+ 10. Kf2 Rxg3 11. Kxg3 b6 12. Nc4 b5 13. Na3 c6 14. d4
+c5 15. d5 d6 16. Nc4 Bxh3 17. Na5 Qxa5 18. c4 bxc4 19. Kf2 c3 20. bxc3 Qxc3
+21. e3 c4 22. h5 e6 23. Ke2 exd5 24. Kd1 f5 25. h6 Nxh6 26. Ke2 d4 27. Kd1 dxe3
+28. Ke2 Bg4+ 29. Kf1 e2+ 30. Kf2 e1=B+ 31. Kg1 d5 32. Kh1 d4 33. Kg1 d3 34. Kh2
+d2 35. Kg2 d1=Q 36. Kh1 g6 37. Kg1 g5 38. Kh1 gxf4 39. Kh2 Be2 40. Kg2 f3+
+41. Kg1 f4 42. Kh1 Nf5 43. Kh2 h6 44. Kg1 h5 45. Kh1 h4 46. Kg1 Ne3 47. Kh2 f2
+48. Kh3 f1=B+ 49. Kh2 f3 50. Kg1 h3 51. Kh1 f2 52. Kh2 Bh5 53. Kh1 Ng2 54. Kh2
+Ne3 55. Kg3 Ng2+ 56. Kh2 Ne3 {Draw by 3-fold repetition} 1/2-1/2
+
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "8"]
+[White "MaterialEngine_v0_3"]
+[Black "RandomEngine_v1_0"]
+[Result "1/2-1/2"]
+[ECO "A00"]
+[GameDuration "00:00:03"]
+[GameEndTime "2025-01-11T00:21:18.100 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:21:14.879 Eastern Standard Time"]
+[Opening "Benko's Opening"]
+[PlyCount "106"]
+[TimeControl "40/60+1"]
+
+1. g3 b6 2. f3 h5 3. e3 d5 4. d3 Nh6 5. Kf2 b5 6. c3 Kd7 7. b3 e5 8. a3 Qe7
+9. h3 a5 10. g4 Nc6 11. gxh5 Qc5 12. Ke2 Qd6 13. e4 Rg8 14. Bxh6 Nd4+ 15. cxd4
+Qc5 16. dxe5 f6 17. exd5 Kd8 18. Bxg7 Qf2+ 19. Kxf2 Bxh3 20. Nxh3 Rb8 21. Bxf8
+Rg3 22. Kxg3 Rb7 23. exf6 b4 24. Bxb4 Ra7 25. Bxa5 Ra6 26. Bxc7+ Kd7 27. a4 Ke8
+28. b4 Rxa4 29. Rxa4 Kd7 30. d4 Kxc7 31. f4 Kd6 32. b5 Kd7 33. f5 Kc7 34. b6+
+Kc8 35. d6 Kb7 36. d5 Kxb6 37. h6 Kc5 38. d7 Kb6 39. d8=R Kc7 40. d6+ Kc6 41. d7
+Kb7 42. f7 Kc6 43. f8=Q Kb7 44. f6 Kb6 45. f7 Kc6 46. h7 Kb6 47. h8=Q Kb7
+48. Nd2 Kc7 49. Nb1 Kb6 50. Nd2 Kc7 51. Nb1 Kb6 52. Nd2 Kb7 53. Nb1
+Kb6 {Draw by 3-fold repetition} 1/2-1/2
+
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "8"]
+[White "RandomEngine_v1_0"]
+[Black "MaterialEngine_v0_3"]
+[Result "1/2-1/2"]
+[ECO "A10"]
+[GameDuration "00:00:02"]
+[GameEndTime "2025-01-11T00:21:21.035 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:21:18.112 Eastern Standard Time"]
+[Opening "English Opening"]
+[PlyCount "127"]
+[TimeControl "40/60+1"]
+
+1. c4 a6 2. Na3 a5 3. f4 a4 4. Nb5 c6 5. Qxa4 Rxa4 6. e4 Rxa2 7. Be2 Rxa1 8. b4
+b6 9. Bf1 Rxc1+ 10. Ke2 Rxf1 11. Nc7+ Qxc7 12. d3 Rxg1 13. Ke3 Rxh1 14. Ke2 Rxh2
+15. Ke3 Qxf4+ 16. Kd4 Rxg2 17. b5 cxb5 18. Kd5 bxc4 19. e5 b5 20. Kc5 Qxe5+
+21. Kb4 c3 22. Ka5 c2 23. Kb6 c1=Q 24. Ka7 d6 25. Kb6 d5 26. d4 b4 27. Ka5 Qxd4
+28. Ka4 Qdb2 29. Ka5 b3 30. Kb4 d4 31. Ka4 d3 32. Kb5 d2 33. Ka4 d1=Q 34. Ka5 e6
+35. Kb6 e5 36. Ka5 e4 37. Kb6 f5 38. Kb5 Ne7 39. Ka5 e3 40. Kb5 e2 41. Ka5 e1=R
+42. Ka4 f4 43. Ka5 f3 44. Kb5 f2 45. Kb4 f1=R 46. Ka4 g6 47. Ka5 g5 48. Kb4 g4
+49. Kb5 g3 50. Kb6 h6 51. Ka7 Bh3 52. Kb7 h5 53. Kxb8 h4 54. Kb7 Nd5 55. Ka8 Nc3
+56. Kb8 Nb1 57. Ka7 Nd2 58. Ka6 Nb1 59. Kb5 Nd2 60. Ka4 Nb1 61. Ka5 Nd2 62. Ka4
+Nb1 63. Ka5 Nd2 64. Ka4 {Draw by 3-fold repetition} 1/2-1/2
+
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "9"]
+[White "MaterialEngine_v0_3"]
+[Black "RandomEngine_v1_0"]
+[Result "1/2-1/2"]
+[ECO "A00"]
+[GameDuration "00:00:03"]
+[GameEndTime "2025-01-11T00:21:24.233 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:21:21.052 Eastern Standard Time"]
+[Opening "Benko's Opening"]
+[PlyCount "110"]
+[TimeControl "40/60+1"]
+
+1. g3 d5 2. f3 g5 3. e3 Qd6 4. Ne2 c6 5. g4 Kd8 6. h3 Qe6 7. d3 Na6 8. c3 Nb8
+9. b3 Qg6 10. a3 Qd6 11. Nd2 Qf6 12. f4 b5 13. fxg5 Qh6 14. gxh6 Bxg4 15. hxg4
+a6 16. b4 Bg7 17. hxg7 a5 18. gxh8=Q e5 19. Qxg8+ Kc7 20. Qxb8+ Rxb8 21. Rxh7
+Rd8 22. Rxf7+ Kc8 23. bxa5 c5 24. a4 Re8 25. axb5 c4 26. Nxc4 dxc4 27. dxc4 Rh8
+28. Nd4 Rh7 29. Rxh7 e4 30. g5 Kd8 31. Rh1 Kc7 32. b6+ Kd6 33. c5+ Kd5 34. c6
+Kc5 35. c4 Kd6 36. c5+ Ke7 37. g6 Kf6 38. b7 Ke7 39. b8=Q Kf6 40. g7 Ke7
+41. g8=B Kf6 42. c7 Ke5 43. c8=Q+ Kf6 44. Bh3 Kg6 45. a6 Kh6 46. c6 Kg6 47. a7
+Kg7 48. a8=Q Kf6 49. c7 Kg7 50. Nc2 Kh6 51. Qxe4 Kg7 52. Bg4 Kf6 53. Bh3 Kg7
+54. Bg4 Kf6 55. Bh3 Kg7 {Draw by 3-fold repetition} 1/2-1/2
+
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "9"]
+[White "RandomEngine_v1_0"]
+[Black "MaterialEngine_v0_3"]
+[Result "1/2-1/2"]
+[ECO "A01"]
+[GameDuration "00:00:03"]
+[GameEndTime "2025-01-11T00:21:27.511 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:21:24.247 Eastern Standard Time"]
+[Opening "Nimzowitsch-Larsen attack"]
+[PlyCount "135"]
+[TimeControl "40/60+1"]
+
+1. b3 a6 2. h4 a5 3. b4 axb4 4. c3 bxc3 5. dxc3 Rxa2 6. e4 Rxa1 7. Qd5 Rxb1
+8. Qd6 e6 9. Qb6 Rxb6 10. Kd1 Qxh4 11. g3 Qxh1 12. Kc2 Qxg1 13. Bc4 Qxf2+
+14. Kd1 Qxg3 15. Bh6 Nxh6 16. Kc2 d6 17. Bd3 d5 18. exd5 exd5 19. Bb5+ Rxb5
+20. Kd1 Qxc3 21. Ke2 d4 22. Kd1 f5 23. Ke2 d3+ 24. Kd1 Qa3 25. Kd2 f4 26. Ke1
+d2+ 27. Kd1 Rb3 28. Kc2 d1=N 29. Kxd1 f3 30. Kd2 b6 31. Ke1 f2+ 32. Kd1 f1=B
+33. Ke1 b5 34. Kd1 b4 35. Kc2 Bg2 36. Kd2 c6 37. Ke1 c5 38. Kd1 c4 39. Kd2 c3+
+40. Ke2 c2 41. Ke1 c1=B 42. Ke2 g6 43. Kf2 g5 44. Kg1 g4 45. Kxg2 g3 46. Kg1 g2
+47. Kxg2 Ng4 48. Kf1 h6 49. Kg1 h5 50. Kh1 h4 51. Kg1 h3 52. Kh1 Nf2+ 53. Kg1
+h2+ 54. Kg2 h1=B+ 55. Kxf2 Na6 56. Ke2 Nc5 57. Ke1 Nd3+ 58. Kf1 Ne1 59. Kf2 Nc2
+60. Kg1 Na1 61. Kf1 Nc2 62. Kf2 Na1 63. Ke2 Nc2 64. Kd1 Na1 65. Ke2 Nc2 66. Kf2
+Na1 67. Ke1 Nc2+ 68. Kf2 {Draw by 3-fold repetition} 1/2-1/2
+
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "10"]
+[White "MaterialEngine_v0_3"]
+[Black "RandomEngine_v1_0"]
+[Result "1/2-1/2"]
+[ECO "A00"]
+[GameDuration "00:00:04"]
+[GameEndTime "2025-01-11T00:21:31.608 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:21:27.523 Eastern Standard Time"]
+[Opening "Benko's Opening"]
+[PlyCount "108"]
+[TimeControl "40/60+1"]
+
+1. g3 e5 2. f3 d5 3. g4 Qe7 4. a3 g5 5. b3 Na6 6. f4 h6 7. fxe5 b5 8. d3 Qd8
+9. Bxg5 Qxg5 10. Nd2 Bxg4 11. c3 Bc5 12. e3 Ke7 13. h3 Nb8 14. a4 Bf5 15. Ke2 a5
+16. axb5 Bg6 17. b4 Qf6 18. e4 Kf8 19. bxa5 Qb6 20. axb6 Bh7 21. Rxa8 Nf6
+22. exf6 Rg8 23. bxc7 Rg3 24. cxb8=B Rxd3 25. Kxd3 Bd6 26. Kd4 Bg6 27. e5 Ba3
+28. Rxa3 Bh7 29. Kxd5 Ke8 30. c4 Bg6 31. h4 Bb1 32. Nxb1 Kd8 33. c5 h5 34. Qxh5
+Kc8 35. b6 Kxb8 36. e6 Kc8 37. exf7 Kb8 38. f8=B Kb7 39. f7 Kb8 40. b7 Kxb7
+41. c6+ Kc7 42. Nd2 Kb6 43. c7 Kb7 44. c8=B+ Kxc8 45. Ne2 Kd7 46. Nb1 Kc8
+47. Nd2 Kc7 48. Nb1 Kd8 49. Nd2 Kc7 50. Nb1 Kb6 51. Nd2 Kb5 52. Nb1 Kb6 53. Nd2
+Kb5 54. Nb1 Kb6 {Draw by 3-fold repetition} 1/2-1/2
+
+[Event "MatEngV0_3vsRandomV1_0"]
+[Site "?"]
+[Date "2025.01.11"]
+[Round "10"]
+[White "RandomEngine_v1_0"]
+[Black "MaterialEngine_v0_3"]
+[Result "1/2-1/2"]
+[ECO "A00"]
+[GameDuration "00:00:01"]
+[GameEndTime "2025-01-11T00:21:33.522 Eastern Standard Time"]
+[GameStartTime "2025-01-11T00:21:31.621 Eastern Standard Time"]
+[Opening "Polish (Sokolsky) opening"]
+[PlyCount "135"]
+[TimeControl "40/60+1"]
+
+1. b4 a6 2. h3 a5 3. Nf3 axb4 4. Ba3 bxa3 5. Qc1 b6 6. Qxa3 Rxa3 7. Nh2 Rxh3
+8. e3 Rxh2 9. a3 Rxh1 10. Kd1 Rxf1+ 11. Ke2 Rxb1 12. g4 Rxa1 13. a4 Rxa4 14. Kd3
+Rxg4 15. f3 b5 16. c3 b4 17. fxg4 bxc3 18. Ke4 cxd2 19. Kf5 d1=Q 20. Ke4 Qxg4+
+21. Ke5 Qd1 22. Kf5 c6 23. Kg5 c5 24. Kh4 c4 25. Kg3 c3 26. e4 c2 27. Kh4 c1=Q
+28. Kg3 d6 29. e5 Kd7 30. Kf2 dxe5 31. Kg3 e4 32. Kh4 e3 33. Kg3 e2 34. Kh2 e1=R
+35. Kg2 e6 36. Kh2 e5 37. Kg2 e4 38. Kh3 f5 39. Kg2 e3 40. Kh2 e2 41. Kg2 f4
+42. Kh2 g6 43. Kh3 g5 44. Kg4 f3 45. Kg3 f2 46. Kg4 f1=R 47. Kh3 h6 48. Kg4 h5+
+49. Kh3 h4 50. Kh2 Na6 51. Kh3 Nb4 52. Kg2 Na2 53. Kh3 Nc3 54. Kg4 Nb1 55. Kh3
+Nd2 56. Kg4 h3 57. Kg3 Bh6 58. Kxh3 Nb1 59. Kh2 Nd2 60. Kg2 Nb1 61. Kh3 Nd2
+62. Kg3 Nb1 63. Kh2 Nd2 64. Kg3 Nb1 65. Kg4 Nd2 66. Kh3 Nb1 67. Kg4 Nd2
+68. Kh3 {Draw by 3-fold repetition} 1/2-1/2
+

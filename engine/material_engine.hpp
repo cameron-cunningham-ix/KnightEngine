@@ -4,57 +4,95 @@
 #include "board_utility.hpp"
 #include <immintrin.h>
 #include <algorithm>
+#include <chrono>
 
 /// @brief 
 class MaterialEngine : public ChessEngineBase {
 private:
+    // Search statistics
+    U64 nodeCount;
+    std::chrono::steady_clock::time_point searchStartTime;
+    DenseMove currentMove;
+    int currentMoveNumber;
+
     // Piece values (centipawns)
-    static constexpr int PAWN_VALUE = 100;
-    static constexpr int KNIGHT_VALUE = 320;
-    static constexpr int BISHOP_VALUE = 330;
-    static constexpr int ROOK_VALUE = 500;
-    static constexpr int QUEEN_VALUE = 900;
-    static constexpr int KING_VALUE = 2000;
+    static constexpr int PAWN_VALUE = 10;
+    static constexpr int KNIGHT_VALUE = 32;
+    static constexpr int BISHOP_VALUE = 33;
+    static constexpr int ROOK_VALUE = 50;
+    static constexpr int QUEEN_VALUE = 90;
+    static constexpr int KING_VALUE = 200;
 
     // Additional positional bonus/penalty
-    static constexpr int DOUBLED_PAWN_PENALTY = -10;
-    static constexpr int ISOLATED_PAWN_PENALTY = -20;
-    static constexpr int CHECKED_PENALTY = -300;
-    static constexpr int BISHOP_PAIR_BONUS = 30;
+    static constexpr int DOUBLED_PAWN_PENALTY = -5;
+    static constexpr int ISOLATED_PAWN_PENALTY = -8;
+    static constexpr int CHECKED_PENALTY = -150;
+    static constexpr int PIECE_DIFF_BONUS = 100;
+    static constexpr int CHECKING_BONUS = 500;
+    static constexpr int BISHOP_PAIR_BONUS = 15;
     static constexpr int ROOK_OPEN_FILE_BONUS = 25;
 
 public:
     MaterialEngine() 
-        : ChessEngineBase("MaterialEngine", "0.2", "Cameron Cunningham", BLACK, 4) {}
+        : ChessEngineBase("MaterialEngine", "0.316", "Cameron Cunningham", 6) {}
 
     DenseMove findBestMove(ChessBoard& board, 
                            int maxDepth = -1) override {
         startSearch();
+        searchStartTime = std::chrono::steady_clock::now();
+        nodeCount = 0;
+        currentMoveNumber = 0;
+
         int actualDepth = (maxDepth > 0) ? maxDepth : searchDepth;
 
         // Generate all legal moves
         int moveNum = 0;
         std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
         
-        // 
-        int bestScore = board.currentGameState.sideToMove == getSide() ? -999999 : 999999;
+        // bestScore will determine what the best move to play is
+        // Negative bestScore means Black's position is better, positive means White's position is better
+        int bestScore = board.getSideToMove() == WHITE ? -999999 : 999999;
         DenseMove bestMove;
 
         // Evaluate each move
         for (int i = 0; i < moveNum; i++) {
+            currentMoveNumber = i + 1;
+            currentMove = moves[i];
+
+            // Send current move info
+            sendInfo(std::format("currmove {} currmovenumber {}",
+                                currentMove.toAlgebraic(), currentMoveNumber));
+
             // Make move on temporary board
             ChessBoard tempBoard = board;
             tempBoard.makeMove(moves[i], true);
 
-            // Evaluate resulting position
-            int score = -alphaBeta(tempBoard, actualDepth - 1, 
-                                 -999999, 999999, board.currentGameState.sideToMove == getSide());
+            // Store start time for this move
+            auto moveStartTime = std::chrono::steady_clock::now();
 
+            // Evaluate resulting position
+            int score = alphaBeta(tempBoard, actualDepth - 1, 
+                                 -999999, 999999, board.getSideToMove() == WHITE);
             // Update best move if better score found
-            if ((board.currentGameState.sideToMove == getSide() && score > bestScore) ||
-                (board.currentGameState.sideToMove != getSide() && score < bestScore)) {
+            if ((board.getSideToMove() == WHITE && score > bestScore) ||
+                (board.getSideToMove() == BLACK && score < bestScore)) {
                 bestScore = score;
                 bestMove = moves[i];
+
+                auto moveTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() - searchStartTime).count();
+                
+                // Send updated info
+                std::string infoStr = std::format("depth {} score cp {} time {} nodes {} ",
+                    actualDepth, bestScore, moveTime, nodeCount);
+                
+                // Add NPS if we have meaningful time elapsed
+                if (moveTime > 0) {
+                    U64 nps = (nodeCount * 1000) / moveTime;
+                    infoStr += std::format("nps {} ", nps);
+                }
+
+                sendInfo(infoStr);
             }
         }
 
@@ -64,18 +102,35 @@ public:
     }
 
     int evaluatePosition(const ChessBoard& board) override {
+        nodeCount++;
+        // Send node count every 30K nodes
+        if (nodeCount % 30000 == 0) {
+            auto time = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - searchStartTime).count();
+            if (time > 0) {
+                long long nps = (nodeCount * 1000) / time;
+                sendInfo(std::format("nodes {} nps {}", nodeCount, nps));
+            }
+        }
+
         int score = 0;
 
         // Material count
-        score += countMaterial(board, getSide()) - countMaterial(board, (Color)!getSide());
+        score += countMaterial(board, WHITE);
+        score -= countMaterial(board, BLACK);
 
         // Positional evaluation
-        score += evaluatePositional(board, getSide()) - evaluatePositional(board, (Color)!getSide());
+        score += evaluatePositional(board, WHITE);
+        score -= evaluatePositional(board, BLACK);
 
-        return board.currentGameState.sideToMove == getSide() ? score : -score;
+        return score;
     }
 
 private:
+    void sendInfo(const std::string& info) {
+        std::cout << "info " << info << std::endl;
+    }
+
     int countMaterial(const ChessBoard& board, Color color) {
         int score = 0;
         U64 pieces;
@@ -96,6 +151,9 @@ private:
             // Queens
             pieces = board.getWhiteQueens();
             score += popcount(pieces) * QUEEN_VALUE;
+            // Bonus for fewer black pieces remaining
+            pieces = board.getBlackPieces();
+            score += (16 - popcount(pieces)) * PIECE_DIFF_BONUS;
         } else {
             // Pawns
             pieces = board.getBlackPawns();
@@ -112,6 +170,9 @@ private:
             // Queens
             pieces = board.getBlackQueens();
             score += popcount(pieces) * QUEEN_VALUE;
+            // Bonus for fewer white pieces remaining
+            pieces = board.getWhitePieces();
+            score += (16 - popcount(pieces)) * PIECE_DIFF_BONUS;
         }
 
         return score;
@@ -153,10 +214,11 @@ private:
             }
 
             // Evaluate attacks to opposite king
+            /// @todo apparently this does fuck all to encourage checks
             U64 attackingOppKing = board.OppAttacksToSquare(board.getBlackKingSquare(), BLACK);
             if (attackingOppKing) {
                 // Using popcount means double checks should be worth more
-                score += KING_VALUE * popcount(attackingOppKing);
+                score += CHECKING_BONUS * popcount(attackingOppKing);
             }
 
             // Evaluate attacks to own king
@@ -202,7 +264,7 @@ private:
             U64 attackingOppKing = board.OppAttacksToSquare(board.getWhiteKingSquare(), WHITE);
             if (attackingOppKing) {
                 // Using popcount means double checks should be worth more
-                score += KING_VALUE * popcount(attackingOppKing);
+                score += CHECKING_BONUS * popcount(attackingOppKing);
             }
 
             // Evaluate attacks to own king
@@ -212,13 +274,21 @@ private:
                 score += CHECKED_PENALTY * popcount(attacksToKing);
             }
         }
-        
-
 
         return score;
     }
 
-    // Alpha-beta search implementation
+    /// @brief Alpha-Beta search algorithm.
+    /// This is a recursively called function used to score a chess position.
+    /// Positive means the position is better for White, negative better for Black
+    /// @param board Current board to search
+    /// @param depth Depth to search to. Position is evaluated at depth 0
+    /// @param alpha The minimum score the maximizing player (W) is guranteed
+    /// in the position
+    /// @param beta The maximum score the minimizing player (B) is guranteed
+    /// in the position
+    /// @param maximizing 
+    /// @return 
     int alphaBeta(ChessBoard& board, int depth, int alpha, 
                   int beta, bool maximizing) {
         if (depth == 0 || !isSearching) {
@@ -228,28 +298,73 @@ private:
         int moveNum = 0;
         std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
 
+        // No legal moves
+        if (moveNum == 0) {
+            // If in check, this is checkmate
+            if (board.isSideInCheck((Color)maximizing)) {
+                /// @todo Figure out why maximizing side wants big score?
+                return maximizing ? 999999 : -999999;
+            }
+            // Otherwise stalemate
+            return 0;
+        }
+
+        // White to move
+        // Trying to improve alpha value by finding moves that give a higher score
         if (maximizing) {
+            // maxEval is the best score that's been found so far in this node
             int maxEval = -999999;
+            ChessBoard tempBoard = board;
+            // Test every move in the position
             for (int i = 0; i < moveNum; i++) {
-                ChessBoard tempBoard = board;
                 tempBoard.makeMove(moves[i], true);
 
+                // Evaluation of next alphabeta is minimizing
                 int eval = alphaBeta(tempBoard, depth - 1, alpha, beta, false);
+
+                tempBoard.unmakeMove(moves[i], true);
+                // If eval is greater than any other score so far in this node,
+                // maxEval gets set to eval
                 maxEval = std::max(maxEval, eval);
+
+                // If eval is greater than alpha (best maximizing score 
+                // guranteed across the search tree so far), set alpha to eval
                 alpha = std::max(alpha, eval);
-                if (beta <= alpha) break;
+
+                // If eval is so good that it's greater than beta (best minimizing 
+                // score guaranteed across the search tree so far), then minimizing
+                // player will never allow this position to be reached if playing optimally
+                if (eval >= beta) break;
             }
             return maxEval;
-        } else {
+        } 
+        // Black to move
+        // Trying to improve beta value by finding moves that give a lower score
+        else {
+            // minEval is the lowest score that's been found so far in this node
             int minEval = 999999;
+            ChessBoard tempBoard = board;
+            // Test every move in the position
             for (int i = 0; i < moveNum; i++) {
-                ChessBoard tempBoard = board;
                 tempBoard.makeMove(moves[i], true);
 
+                // Evaluation of next alphabeta is maximizing
                 int eval = alphaBeta(tempBoard, depth - 1, alpha, beta, true);
+
+                tempBoard.unmakeMove(moves[i], true);
+
+                // If eval is less than any other score so far in this node,
+                // minEval gets set to eval
                 minEval = std::min(minEval, eval);
+
+                // If eval is less than beta (best minimizing score guranteed across
+                // the search tree so far), set beta to eval
                 beta = std::min(beta, eval);
-                if (beta <= alpha) break;
+
+                // If eval is so good that it's less than alpha (best maximizing score
+                // guranteed across the search tree so far), then maximizing player
+                // will never allow this position to be reached if playing optimally
+                if (eval <= alpha) break;
             }
             return minEval;
         }

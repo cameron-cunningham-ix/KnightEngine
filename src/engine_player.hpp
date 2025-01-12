@@ -3,6 +3,7 @@
 #include "i_player.hpp"
 #include "i_chess_engine.hpp"
 #include "chess_engine_base.hpp"
+#include "pext_bitboard.hpp"
 #include <memory>
 #include <thread>
 #include <mutex>
@@ -30,6 +31,11 @@ private:
     std::condition_variable cv;              // Condition variable for synchronization
     std::queue<std::string> commandQueue;    // Queue of UCI commands to process
     bool shouldQuit;                         // Whether engine should quit
+
+    ChessBoard currentBoard;                 // Track current position
+    ChessClock currentClock;
+    std::unique_ptr<std::thread> searchThread;
+    std::mutex boardMutex;
 
     // Calculate appropriate search depth based on remaining time
     int calculateSearchDepth(const ChessClock& clock) const;
@@ -64,7 +70,7 @@ public:
     void isReady() override;
     void setOption(const std::string& name, const std::string& value) override;
     void uciNewGame() override;
-    void position(const std::string& fen, const std::vector<DenseMove>& moves) override;
+    void position(const std::string& fen, const std::string& moves) override;
     void go(const std::map<std::string, std::string>& searchParams) override;
     void stop() override;
     void quit() override;

@@ -1,7 +1,17 @@
 #include "chess_clock.hpp"
 #include <iostream>
 
-ChessClock::ChessClock(const TimeControl& tc)
+ChessClock::ChessClock()
+    : timeControl(TimeControl(std::chrono::milliseconds(300000))),  // 5 minutes
+      whiteTimeRemaining(timeControl.initialTime),
+      blackTimeRemaining(timeControl.initialTime),
+      isRunning(false),
+      activeColor(WHITE),
+      moveCount(0),
+      lastUpdateTime(std::chrono::steady_clock::now()) {}
+
+
+ChessClock::ChessClock(const TimeControl &tc)
     : timeControl(tc),
       whiteTimeRemaining(tc.initialTime),
       blackTimeRemaining(tc.initialTime),
@@ -126,21 +136,36 @@ void ChessClock::applyIncrement(Color color) {
 
 std::chrono::milliseconds ChessClock::getWhiteTime() const {
     std::lock_guard<std::mutex> lock(clockMutex);
+    
+    // Debug print initial state
+    std::cout << "Initial white time remaining: " << whiteTimeRemaining.count() << "ms\n";
+    std::cout << "Clock running: " << (isRunning ? "yes" : "no") 
+              << ", infinite: " << (timeControl.isInfinite ? "yes" : "no")
+              << ", active color: " << (activeColor == WHITE ? "WHITE" : "BLACK") << "\n";
+
     if (!isRunning || timeControl.isInfinite || activeColor != WHITE) {
         return whiteTimeRemaining;
     }
 
     auto now = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-        now - lastUpdateTime);
+    auto elapsedDuration = now - lastUpdateTime;
+    std::cout << "Raw elapsed time (ns): " << elapsedDuration.count() << "\n";
     
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(elapsedDuration);
+    std::cout << "Elapsed time (ms): " << elapsed.count() << "\n";
+
     // Check delay period
-    if (timeControl.delay > std::chrono::milliseconds(0) && 
-        elapsed < timeControl.delay) {
-        return whiteTimeRemaining;
+    if (timeControl.delay > std::chrono::milliseconds(0)) {
+        std::cout << "Delay active: " << timeControl.delay.count() << "ms\n";
+        if (elapsed < timeControl.delay) {
+            std::cout << "Still in delay period\n";
+            return whiteTimeRemaining;
+        }
     }
 
-    return std::max(whiteTimeRemaining - elapsed, std::chrono::milliseconds(0));
+    auto finalTime = std::max(whiteTimeRemaining - elapsed, std::chrono::milliseconds(0));
+    std::cout << "Final calculated time: " << finalTime.count() << "ms\n";
+    return finalTime;
 }
 
 std::chrono::milliseconds ChessClock::getBlackTime() const {
@@ -179,6 +204,10 @@ bool ChessClock::isBlackTimeUp() const {
     return getBlackTimeNoLock() <= std::chrono::milliseconds(0);
 }
 
+bool ChessClock::isInfinite() const {
+    return timeControl.isInfinite;
+}
+
 bool ChessClock::isClockRunning() const {
     return isRunning;
 }
@@ -215,6 +244,10 @@ void ChessClock::setTime(Color color, std::chrono::milliseconds amount) {
     } else {
         blackTimeRemaining = amount;
     }
+}
+
+void ChessClock::setInfinite(bool isInf) {
+    timeControl.isInfinite = isInf;
 }
 
 std::string TimeControl::toString() const {

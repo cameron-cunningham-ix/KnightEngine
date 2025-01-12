@@ -1,5 +1,6 @@
 #include "engine_player.hpp"
 #include <sstream>
+#include <string>
 
 EnginePlayer::EnginePlayer(std::unique_ptr<ChessEngineBase> engineImpl, 
                          bool acceptDrawOffers,
@@ -14,12 +15,18 @@ EnginePlayer::EnginePlayer(std::unique_ptr<ChessEngineBase> engineImpl,
     , shouldQuit(false) {
     // Start UCI thread for engine player
     uciThread = std::thread(&EnginePlayer::uciLoop, this);
+    // Create default clock
+    currentClock = ChessClock();
+    currentClock.setInfinite(true);
 }
 
 EnginePlayer::~EnginePlayer() {
     quit();
     if (uciThread.joinable()) {
         uciThread.join();
+    }
+    if (searchThread && searchThread->joinable()) {
+        searchThread->join();
     }
 }
 
@@ -34,8 +41,8 @@ DenseMove EnginePlayer::getMove(ChessBoard& board,
 
 void EnginePlayer::notifyOpponentMove(const DenseMove& move) {
     // Notify engine about opponent's move for any internal state updates
-    std::vector<DenseMove> moves = {move};
-    position("", moves);  // Empty FEN means use current position
+    std::string moveStr = moveToUCI(move);
+    position("", moveStr);  // Empty FEN means use current position
 }
 
 void EnginePlayer::onGameEnd() {
@@ -61,23 +68,23 @@ void EnginePlayer::setOption(const std::string& name, const std::string& value) 
 }
 
 void EnginePlayer::uciNewGame() {
-    engine->setSearchDepth(4);  // Reset to default depth
+    engine->resetSearchDepth();  // Reset to default depth
     // Reset any engine-specific state
+    currentClock = ChessClock();
+    currentClock.setInfinite(true);
+    currentBoard = ChessBoard();
 }
 
-void EnginePlayer::position(const std::string& fen, const std::vector<DenseMove>& moves) {
+void EnginePlayer::position(const std::string& fen, const std::string& moves) {
     std::stringstream ss;
     ss << "position ";
     if (fen.empty()) {
-        ss << "startpos";
+        ss << "startpos ";
     } else {
         ss << "fen " << fen;
     }
     if (!moves.empty()) {
-        ss << " moves";
-        for (const DenseMove& move : moves) {
-            ss << " " << moveToUCI(move);
-        }
+        ss << " moves " << moves;
     }
     
     std::unique_lock<std::mutex> lock(mutex);
@@ -117,25 +124,30 @@ bool EnginePlayer::isInitialized() const {
 // }
 
 int EnginePlayer::calculateSearchDepth(const ChessClock& clock) const {
+    // If clock is set to infinite, we can return the set search depth
+    if (clock.isInfinite()) return engine->getSearchDepth();
     // Get remaining time for current player
     auto remainingTime = (clock.getActiveColor() == WHITE) ? 
                         clock.getWhiteTime() : 
                         clock.getBlackTime();
     
-    // Calculate maximum time we can spend on this move
-    auto maxTimeForMove = std::min(maxTime, remainingTime / 30);
-    maxTimeForMove = std::max(maxTimeForMove, minTime);
+    // Calculate maximum time we can spend on this move (30th of remaining time)
+    auto timePerMove = remainingTime / 20;
+    
+    auto maxMoveTime = std::min(maxTime, timePerMove);    
+    auto actualMoveTime = std::max(maxMoveTime, minTime);
     
     // Convert time to depth using a simple heuristic
     int depth = 1;
-    auto timeForDepth = std::chrono::milliseconds(50);
+    auto timeForDepth = std::chrono::milliseconds(25);
     
-    while (timeForDepth * 5 < maxTimeForMove) {
+    while (timeForDepth * 5 < actualMoveTime) {
         depth++;
         timeForDepth *= 5;
     }
     
-    return std::clamp(depth, 1, engine->getSearchDepth());
+    int finalDepth = std::clamp(depth, 1, engine->getSearchDepth());
+    return finalDepth;
 }
 
 /// @brief 
@@ -160,6 +172,10 @@ void EnginePlayer::processCommand(const std::string& cmd) {
     iss >> token;
     
     if (token == "uci") {
+        // Ensure that PEXT is initialized
+        if (!PEXT::initialized) {
+            PEXT::initialize();
+        }
         // Send engine identification
         sendResponse("id name " + engine->getName() + " " + engine->getVersion());
         sendResponse("id author " + engine->getAuthor());
@@ -184,31 +200,110 @@ void EnginePlayer::processCommand(const std::string& cmd) {
         sendResponse("uciok");
         initialized = true;
     }
+    else if (token == "ucinewgame") {
+        /// @todo
+    }
     else if (token == "isready") {
         sendResponse("readyok");
     }
     else if (token == "go") {
-        // Parse search parameters
+        std::cout << "recieved go\n";
+         // Parse search parameters
         std::map<std::string, std::string> searchParams;
         while (iss >> token) {
             std::string value;
             if (iss >> value) {
-                searchParams[token] = value;
+                searchParams.insert({token, value});
             }
         }
-        
-        // Start search in a separate thread
-        std::thread([this, searchParams] {
-            thinking = true;
-            // Find best move using parameters
-            // For now, just use base engine search
-            ChessBoard board;  // Need to track current position
-            bestMove = engine->findBestMove(board);
-            thinking = false;
+    
+        // Start search in a controlled thread
+        std::lock_guard<std::mutex> lock(boardMutex);
+        if (searchThread && searchThread->joinable()) {
+            searchThread->join();
+        }
+        searchThread = std::make_unique<std::thread>([this, searchParams] {
+            // thinking = true;
+            currentClock.setInfinite(true);
+            // Set search parameters
+            // Depth
+            auto it = searchParams.find("depth");
+            if (it != searchParams.end()) {
+                if (it->second == "infinite") {
+                    engine->setSearchDepth(128);   // Very large depth
+                } 
+                // If not infinite, there should only be digits
+                else if (it->second.find_first_not_of("0123456789") == std::string::npos) {
+                    engine->setSearchDepth(std::stoi(it->second));
+                }
+                else {
+                    engine->resetSearchDepth();
+                }
+            } else {
+                engine->resetSearchDepth();
+            }
+            // Clock time
+            it = searchParams.find("wtime");
+            if (it != searchParams.end()) {
+                currentClock.setTime(WHITE, std::chrono::milliseconds(std::stoi(it->second)));
+                currentClock.setInfinite(false);
+            }
+                
+            it = searchParams.find("btime");
+            if (it != searchParams.end()) {
+                currentClock.setTime(BLACK, std::chrono::milliseconds(std::stoi(it->second)));
+                currentClock.setInfinite(false);
+            } 
+            
+            // Use current board position
+            std::lock_guard<std::mutex> lock(boardMutex);
+            bestMove = getMove(currentBoard, currentClock);
+            
+            // thinking = false;
             sendResponse("bestmove " + moveToUCI(bestMove));
-        }).detach();
+        });
+    } 
+    else if (token == "position") {
+        std::lock_guard<std::mutex> lock(boardMutex);
+        // Parse position command and update currentBoard
+
+        iss >> token;   // Get next token
+
+        // Set up initial position
+        if (token == "startpos") {
+            currentBoard = ChessBoard();
+            iss >> token;   // Consume "moves" if present
+        }
+        else if (token == "fen") {
+            // Collect all parts of the FEN string
+            std::string fen;
+            // FEN has 6 fields separated by spaces
+            for (int i = 0; i < 6; i++) {
+                std::string fenPart;
+                if (!(iss >> fenPart)) break;   // 
+                fen += (i == 0 ? "" : " ") + fenPart;
+            }
+            currentBoard = ChessBoard();
+            currentBoard.setupPositionFromFEN(fen);
+            iss >> token;   // Consume "moves" if present
+        }
+
+        // If there's any moves to make
+        if (token == "moves") {
+            std::string moveStr;
+            while (iss >> moveStr) {
+                DenseMove move = uciToMove(moveStr, currentBoard);
+                currentBoard.makeMove(move, false);
+            }
+        }
     }
-    // ... handle other UCI commands
+    else if (token == "stop") {
+        engine->stopSearch();
+        if (searchThread && searchThread->joinable()) {
+            searchThread->join();
+        }
+    }
+    /// @todo Handle other UCI commands
 }
 
 void EnginePlayer::sendResponse(const std::string& response) {
@@ -236,7 +331,10 @@ std::string EnginePlayer::moveToUCI(const DenseMove& move) const {
     
     return from + to + promotion;
 }
-
+/// @brief This function assumes that the UCI string is a valid move on the board
+/// @param uciMove 
+/// @param board 
+/// @return 
 DenseMove EnginePlayer::uciToMove(const std::string& uciMove, 
                                   const ChessBoard& board) const {
     if (uciMove.length() < 4) return DenseMove();
@@ -264,6 +362,16 @@ DenseMove EnginePlayer::uciToMove(const std::string& uciMove,
             default: return DenseMove();
         }
         move.setPromoteTo(promoteTo);
+    }
+    // Castling
+    if ((piece == W_KING && from == 4 && (to == 2 || to == 6)) || 
+        (piece == B_KING && from == 60 && (to == 58 || to == 62))) {
+            move.setCastle(true);
+    }
+    // En passant
+    // Pawn moving to en passant square has to be capturing en passant
+    if ((piece == W_PAWN || piece == B_PAWN) && to == board.currentGameState.enPassantSquare) {
+        move.setEnPass(true);
     }
     
     return move;

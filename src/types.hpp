@@ -9,7 +9,7 @@ const int MAX_PLY = 512;
 const int MAX_MOVES = 218;
 
 typedef unsigned long long U64;     // Used for bitboards
-typedef unsigned int U32;           // Used for dense move representation
+typedef unsigned int U32;           // Used for dense move and game state representation
 
 /// @brief Enum for piece types on the board + empty and invalid
 /// 3 LSB are used to represent the piece type, 4th bit is used to represent the color
@@ -53,21 +53,24 @@ std::string pieceTypeToString(PieceType type);
 
 // Masks for extracting fields from dense move representation
 
-const U32 moveMask_DType =     0b000000000000000000000111;
-const U32 moveMask_Color =     0b000000000000000000001000;
-const U32 moveMask_Piece =     0b000000000000000000001111;
-const U32 moveMask_From =      0b000000000000001111110000;
-const U32 moveMask_To =        0b000000001111110000000000;
-const U32 moveMask_CaptType =  0b000001110000000000000000;
-const U32 moveMask_IsCastle =  0b000010000000000000000000;
-const U32 moveMask_IsEnPass =  0b000100000000000000000000;
-const U32 moveMask_PromoTo =   0b111000000000000000000000;
+const U32 moveMask_CaptType =       0b11100000000000000000000000000000;
+const U32 moveMask_DType =          0b00001110000000000000000000000000;
+const U32 moveMask_Color =          0b00010000000000000000000000000000;
+const U32 moveMask_Piece =          0b00011110000000000000000000000000;
+const U32 moveMask_PromoTo =        0b00000001110000000000000000000000;
+const U32 moveMask_From =           0b00000000001111110000000000000000;
+const U32 moveMask_To =             0b00000000000000001111110000000000;
+const U32 moveMask_IsCastle =       0b00000000000000000000001000000000;
+const U32 moveMask_IsEnPass =       0b00000000000000000000000100000000;
+// Castling rights before this move is made:                  KQkq
+const U32 moveMask_CastleRights =   0b00000000000000000000000011110000;
 
 // Move struct using one unsigned 32-bit integer
 struct DenseMove {
-    // Int structure [24 bits]:
-    // [3b]      [1b]       [1b]       [3b]            [6b] [6b]   [1b]    [3b]
-    // [PromoTo] [isEnPass] [isCastle] [CaptDenseType] [To] [From] [Color] [DenseType]
+    // U32 structure [28 relevant bits]:
+    // [3 bits]    [3 bits] [1 bit] [3 bits]  [6 bits] [6 bits] [1 bit]    [1 bit]    [4 bits]       [4 bits]
+    // [Capt Type] [DType]  [Color] [PromoTo] [From]   [To]     [IsCastle] [isEnPass] [CastleRights] [Unused]
+    // This way important moves (captures and high value pieces) can be easily sorted by highest to lowest value
     U32 data;
 
     /// @brief Default constructor - 0, will correspond with EMPTY PieceType
@@ -77,37 +80,41 @@ struct DenseMove {
     DenseMove(DenseType piece, Color color, int from, int to,
               DenseType captureType = DenseType::D_EMPTY, 
               bool isCastle = false, bool isEnPassant = false,
-              DenseType promoteTo = DenseType::D_EMPTY) {
-        data = 0;
-        data |= piece;
-        data |= (color << 3);
+              DenseType promoteTo = DenseType::D_EMPTY,
+              int castleRights = 0b1111) {
         if (from < 0 || from > 63 || to < 0 || to > 63) {
             throw std::invalid_argument("Invalid square index");
         }
-        data |= (from << 4);
+        data = 0;
+        data |= (castleRights << 4);
+        data |= (isEnPassant << 8);
+        data |= (isCastle << 9);
         data |= (to << 10);
-        data |= (captureType << 16);
-        data |= (isCastle << 19);
-        data |= (isEnPassant << 20);
-        data |= (promoteTo << 21);
+        data |= (from << 16);
+        data |= (promoteTo << 22);
+        data |= (piece << 25);
+        data |= (color << 28);
+        data |= (captureType << 29);
     }
     
     /// @brief Constructor with all fields - PieceType
     DenseMove(PieceType piece, int from, int to,
               DenseType captureType = DenseType::D_EMPTY, 
               bool isCastle = false, bool isEnPassant = false,
-              DenseType promoteTo = DenseType::D_EMPTY) {
-        data = 0;
-        data |= piece;
+              DenseType promoteTo = DenseType::D_EMPTY,
+              int castleRights = 0b1111) {
         if (from < 0 || from > 63 || to < 0 || to > 63) {
             throw std::invalid_argument("Invalid square index");
         }
-        data |= (from << 4);
+        data = 0;
+        data |= (castleRights << 4);
+        data |= (isEnPassant << 8);
+        data |= (isCastle << 9);
         data |= (to << 10);
-        data |= (captureType << 16);
-        data |= (isCastle << 19);
-        data |= (isEnPassant << 20);
-        data |= (promoteTo << 21);
+        data |= (from << 16);
+        data |= (promoteTo << 22);
+        data |= (piece << 25);
+        data |= (captureType << 29);
     }
 
 
@@ -122,32 +129,34 @@ struct DenseMove {
     // Getters
 
     /// @return DenseType of move
-    DenseType getDenseType() const { return static_cast<DenseType>(data & moveMask_DType); }
+    DenseType getDenseType() const { return static_cast<DenseType>((data & moveMask_DType) >> 25); }
     /// @return PieceType of move
-    PieceType getPieceType() const { return static_cast<PieceType>(data & moveMask_Piece); }
+    PieceType getPieceType() const { return static_cast<PieceType>((data & moveMask_Piece) >> 25); }
     /// @return Color of move
-    Color getColor() const { return static_cast<Color>((data & moveMask_Color) >> 3); }
+    Color getColor() const { return static_cast<Color>((data & moveMask_Color) >> 28); }
     /// @return Starting square of move
-    int getFrom() const { return (data & moveMask_From) >> 4; }
+    int getFrom() const { return (data & moveMask_From) >> 16; }
     /// @return Ending square of move
     int getTo() const { return (data & moveMask_To) >> 10; }
     /// @return DenseType of captured piece
-    DenseType getCaptDense() const { return static_cast<DenseType>((data & moveMask_CaptType) >> 16); }
+    DenseType getCaptDense() const { return static_cast<DenseType>((data & moveMask_CaptType) >> 29); }
     /// @return PieceType of captured piece
     PieceType getCaptPiece() const {
-        int piece = (data & moveMask_CaptType) >> 16;
+        int piece = (data & moveMask_CaptType) >> 29;
         if (piece == 0) return PieceType::EMPTY;
         piece |= getColor() == WHITE ? 0b1000 : 0b0;    // If moving piece is white, captured piece is black and vice versa
         return static_cast<PieceType>(piece);
     }
     /// @return True if capture is not empty
     bool isCapture() const { return getCaptDense() != D_EMPTY; }
+    /// @return Castling rights before move is made
+    int getCastlingRights() const { return (data & moveMask_CastleRights) >> 4; }
     /// @return True if this is a castling move, false otherwise
-    bool isCastle() const { return (data & moveMask_IsCastle) >> 19; }
+    bool isCastle() const { return (data & moveMask_IsCastle) >> 9; }
     /// @return True if this is an en passant move, false otherwise
-    bool isEnPassant() const { return (data & moveMask_IsEnPass) >> 20; }
+    bool isEnPassant() const { return (data & moveMask_IsEnPass) >> 8; }
     /// @return DenseType of piece to promote to
-    DenseType getPromoteDense() const { return static_cast<DenseType>((data & moveMask_PromoTo) >> 21); }
+    DenseType getPromoteDense() const { return static_cast<DenseType>((data & moveMask_PromoTo) >> 22); }
     /// @return PieceType of piece to promote to
     PieceType getPromotePiece() const {
         // if (getColor() == WHITE) {
@@ -155,18 +164,36 @@ struct DenseMove {
         // } else {
         //     return static_cast<PieceType>(getPromoteDense() + 8);
         // }
-        int piece = (data & moveMask_PromoTo) >> 21;
+        int piece = (data & moveMask_PromoTo) >> 22;
         if (piece == 0) return PieceType::EMPTY;
-        piece |= (data & moveMask_Color);
+        piece |= (data & moveMask_Color) >> 25;
         return static_cast<PieceType>(piece);
     }
     /// @return True if promotion type is not empty
-    bool isPromotion() const { return getPromoteDense() != D_EMPTY; }
+    bool isPromotion() const { return data & moveMask_PromoTo; }
     /// @brief Setter for promotion type; useful for pawn promotions
     /// @param promoteTo 
     void setPromoteTo(DenseType promoteTo) {
         data &= ~moveMask_PromoTo;
-        data |= (promoteTo << 21);
+        data |= (promoteTo << 22);
+    }
+    /// @brief 
+    /// @param castle 
+    void setCastle(bool castle) {
+        data &= ~moveMask_IsCastle;
+        data |= (castle << 9);
+    }
+    /// @brief 
+    /// @param enpass 
+    void setEnPass(bool enpass) {
+        data &= ~moveMask_IsEnPass;
+        data |= (enpass << 8);
+    }
+    /// @brief 
+    /// @param rights 
+    void setCastleRights(int rights) {
+        data &= ~moveMask_CastleRights;
+        data |= (rights << 4);
     }
     /// @param isBrief If true, returns a shortened version. If false, returns all values
     /// @return String representation of the move
@@ -196,6 +223,15 @@ struct DenseMove {
 /// Used in ChessBoard class.
 struct GameState {
 public:
+    // Structure
+    // [1 bit]      [9 bits]      [7 bits]      [4 bits]
+    // [SideToMove] [FullMoveNum] [HalfMoveClk]        [Castle Rights]
+    // U32 data;
+
+    // Current turn
+    Color sideToMove;              // Whose turn it is
+    Color oppColor;                // Opposite color
+
     // Castling rights for each color and side
     bool canCastleWhiteKingside;   // White king's side (h1)
     bool canCastleWhiteQueenside;  // White queen's side (a1)
@@ -205,9 +241,6 @@ public:
     // Track en passant possibility
     int enPassantSquare;           // Square where en passant capture is possible (-1 if none)
     
-    // Current turn
-    Color sideToMove;              // Whose turn it is
-    Color oppColor;                // Opposite color
     
     // How long its been since the last pawn push or piece capture 
     // (used for determining 50-move draw rule)
@@ -228,7 +261,15 @@ public:
         halfMoveClock(0),
         fullMoveNumber(1) {}
     
-    std::string toString() {
+    int getCastleRights() const {
+        int rights = 0;
+        rights  |= (canCastleWhiteKingside << 3)
+                | (canCastleWhiteQueenside << 2)
+                | (canCastleBlackKingside << 1)
+                | (canCastleBlackQueenside);
+        return rights;
+    }
+    std::string toString() const {
         std::string rights;
         if (canCastleWhiteKingside) rights.append("K");
         if (canCastleWhiteQueenside) rights.append("Q");

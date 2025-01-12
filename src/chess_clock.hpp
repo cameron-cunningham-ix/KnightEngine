@@ -11,7 +11,7 @@ struct TimeControl {
     std::chrono::milliseconds increment;        // Time increment after each move
     std::chrono::milliseconds delay;            // Delay before time starts counting down
     int movesUntilTimeControl;                  // Number of moves until next time control (-1 for no next control)
-    bool isInfinite;                           // Flag for infinite time control
+    bool isInfinite;                            // Flag for infinite time control
 
     TimeControl(std::chrono::milliseconds initial = std::chrono::hours(1),
                std::chrono::milliseconds inc = std::chrono::seconds(0),
@@ -88,6 +88,8 @@ private:
     }
 
 public:
+    // Default constructor
+    explicit ChessClock();
     // Constructor
     explicit ChessClock(const TimeControl& tc);
 
@@ -120,6 +122,7 @@ public:
     bool isTimeUp() const;
     bool isWhiteTimeUp() const;
     bool isBlackTimeUp() const;
+    bool isInfinite() const;
     
     // Status methods
     bool isClockRunning() const;
@@ -131,4 +134,5 @@ public:
     void setTimeControl(const TimeControl& tc);
     void addTime(Color color, std::chrono::milliseconds amount);
     void setTime(Color color, std::chrono::milliseconds amount);
+    void setInfinite(bool isInf);
 };

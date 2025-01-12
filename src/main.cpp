@@ -65,11 +65,9 @@ int main() {
         whitePlayer = std::make_unique<HumanPlayer>(whiteName);
     } else if (whiteChoice == 2) {
         auto randomEngine = std::make_unique<RandomEngine>();
-        randomEngine->setSide(WHITE);
         whitePlayer = std::make_unique<EnginePlayer>(std::move(randomEngine));
     } else {
         auto materialEngine = std::make_unique<MaterialEngine>();
-        materialEngine->setSide(WHITE);
         whitePlayer = std::make_unique<EnginePlayer>(std::move(materialEngine));
     }
 
@@ -82,11 +80,9 @@ int main() {
         blackPlayer = std::make_unique<HumanPlayer>(blackName);
     } else if (blackChoice == 2) {
         auto randomEngine = std::make_unique<RandomEngine>();
-        randomEngine->setSide(BLACK);
         blackPlayer = std::make_unique<EnginePlayer>(std::move(randomEngine));
     } else {
         auto materialEngine = std::make_unique<MaterialEngine>();
-        materialEngine->setSide(BLACK);
         blackPlayer = std::make_unique<EnginePlayer>(std::move(materialEngine));
     }
     

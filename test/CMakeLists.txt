@@ -12,6 +12,7 @@ FetchContent_MakeAvailable(googletest)
 
 # Create test executable
 add_executable(chess_tests
+    material_engine_tests.cpp
     board_tests.cpp
     chess_clock_tests.cpp
     chess_match_tests.cpp

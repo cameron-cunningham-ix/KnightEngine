@@ -100,8 +100,6 @@ private:
     int checkingCount;          // The number of pieces currently checking the current side's king
     int plyIndex;               // Current ply; used to index into stateHistory and moveHistory
 
-    
-
     // Normal board initialization methods
     void initializeWhiteBB();
     void initializeBlackBB();

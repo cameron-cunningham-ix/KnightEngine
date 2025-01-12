@@ -70,16 +70,18 @@ void uciLoop(std::unique_ptr<EnginePlayer>& player) {
         else if (cmd == "position") {
             std::string pos_type;
             iss >> pos_type;
-            
+
             std::string fen;
+            std::string moves;
+
             if (pos_type == "startpos") {
-                fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-                std::string moves_str;
-                if (iss >> moves_str && moves_str == "moves") {
-                    std::vector<DenseMove> moves = parseUCIMoves(fen, iss);
-                    player->position(fen, moves);
-                } else {
-                    player->position(fen, {});
+                // Empty fen indicates startpos
+                std::string token;
+                if (iss >> token && token == "moves") {
+                    // Get rest of line as moves
+                    std::getline(iss, moves);
+                    // Remove leading whitespace if any
+                    moves = moves.substr(moves.find_first_not_of(" \t"));
                 }
             }
             else if (pos_type == "fen") {
@@ -90,12 +92,14 @@ void uciLoop(std::unique_ptr<EnginePlayer>& player) {
                 }
                 
                 if (part == "moves") {
-                    std::vector<DenseMove> moves = parseUCIMoves(fen, iss);
-                    player->position(fen, moves);
-                } else {
-                    player->position(fen, {});
+                    // Get rest of line as moves
+                    std::getline(iss, moves);
+                    // Remove leading whitespace if any
+                    moves = moves.substr(moves.find_first_not_of(" \t"));
                 }
             }
+
+            player->position(fen, moves);
         }
         else if (cmd == "go") {
             // Parse go parameters
