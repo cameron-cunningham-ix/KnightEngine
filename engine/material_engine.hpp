@@ -179,7 +179,7 @@ public:
 
 
     MaterialEngine() 
-        : ChessEngineBase("MaterialEngine", "0.41", "Cameron Cunningham", 6) {}
+        : ChessEngineBase("MaterialEngine", "0.42", "Cameron Cunningham", 6) {}
 
     DenseMove findBestMove(ChessBoard& board, 
                            int maxDepth = -1) override {
@@ -336,7 +336,8 @@ private:
         int endgameLerp = (std::clamp(14 - totalPiecesWithoutPawns, 0, 14))/ENDGAME_LERP;
         if (color == WHITE) {
             // Evaluate pawn structure
-            U64 pawns, pawnRef = board.getWhitePawns();
+            U64 pawns = board.getWhitePawns();
+            U64 pawnRef = pawns;
             while (pawns) {
                 int square = std::countr_zero(pawns);
 
@@ -443,7 +444,8 @@ private:
 
         } else {
             // Evaluate pawn structure
-            U64 pawns, pawnRef = board.getBlackPawns();
+            U64 pawns = board.getBlackPawns();
+            U64 pawnRef = pawns;
             while (pawns) {
                 int square = std::countr_zero(pawns);
 
