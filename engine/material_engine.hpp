@@ -154,6 +154,10 @@ private:
         -50,-30,-30,-30,-30,-30,-30,-50
     };
 
+    // Masks of light and dark squares
+    static constexpr U64 lightSquareMask = 0xAA55AA55AA55AA55;
+    static constexpr U64 darkSquareMask =  0x55AA55AA55AA55AA;
+
     // Piece values (centipawns)
     static constexpr int PAWN_VALUE = 100;
     static constexpr int KNIGHT_VALUE = 320;
@@ -165,21 +169,20 @@ private:
     // Additional positional bonus/penalty
     static constexpr int ENDGAME_LERP = 14;
     static constexpr int MATE_SCORE = 100000;
-    static constexpr int SUPPORTED_PAWN_BONUS = 90;
-    static constexpr int SUPPORTING_PAWN_BONUS = 75;
+    static constexpr int SUPPORTED_PAWN_BONUS = 75;
+    static constexpr int SUPPORTING_PAWN_BONUS = 90;
     static constexpr int SUPPORTING_PIECE_BONUS = 100;
     static constexpr int DOUBLED_PAWN_PENALTY = -70;
     static constexpr int ISOLATED_PAWN_PENALTY = -80;
     static constexpr int CHECKED_PENALTY = -1000;
     static constexpr int CHECKING_BONUS = 1500;
-    static constexpr int BISHOP_PAIR_BONUS = 150;
+    static constexpr int BISHOP_PAIR_BONUS = 125;
     static constexpr int ROOK_OPEN_FILE_BONUS = 250;
 
 public:
 
-
     MaterialEngine() 
-        : ChessEngineBase("MaterialEngine", "0.42", "Cameron Cunningham", 6) {}
+        : ChessEngineBase("MaterialEngine", "0.431", "Cameron Cunningham", 6) {}
 
     DenseMove findBestMove(ChessBoard& board, 
                            int maxDepth = -1) override {
@@ -395,7 +398,8 @@ private:
             // Bishop pair bonus
             /// @todo Consider light square / dark square mask to determine real pair
             if (popcount(bishops) >= 2) {
-                score += BISHOP_PAIR_BONUS;
+                if ((lightSquareMask & bishops) && (darkSquareMask & bishops))
+                     score += BISHOP_PAIR_BONUS;
             }
             while (bishops) {
                 int square = std::countr_zero(bishops);
@@ -505,7 +509,8 @@ private:
             // Bishop pair bonus
             /// @todo Consider light square / dark square mask to determine real pair
             if (popcount(bishops) >= 2) {
-                score += BISHOP_PAIR_BONUS;
+                if ((lightSquareMask & bishops) && (darkSquareMask & bishops))
+                     score += BISHOP_PAIR_BONUS;
             }
             while (bishops) {
                 int square = std::countr_zero(bishops);

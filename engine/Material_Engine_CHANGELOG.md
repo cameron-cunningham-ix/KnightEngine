@@ -1,5 +1,11 @@
 # Material Engine Changelog
 
+## Material Engine V0.431
+- Changed bishop pair score to only score for actual pair (light and dark)
+
+## Material Engine V0.42 (2025-01-13)
+- Some evaluation constants changed
+
 ## Material Engine V0.41 (2025-01-12)
 - Added piece-square tables for early game and endgame, and 
 ENDGAME_LERP for interpolating between early and endgame
