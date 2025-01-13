@@ -37,7 +37,7 @@ private:
         -40,-20,  0,  0,  0,  0,-20,-40,
         -30,  0, 10, 15, 15, 10,  0,-30,
         -30,  5, 15, 20, 20, 15,  5,-30,
-        -30,  0, 15, 20, 20, 15,  0,-30,
+        -30,  0, 15, 15, 15, 15,  0,-30,
         -30,  5, 10, 15, 15, 10,  5,-30,
         -40,-20,  0,  5,  5,  0,-20,-40,
         -50,-40,-30,-30,-30,-30,-40,-50
@@ -166,7 +166,9 @@ private:
     static constexpr int ENDGAME_LERP = 14;
     static constexpr int MATE_SCORE = 100000;
     static constexpr int SUPPORTED_PAWN_BONUS = 90;
-    static constexpr int DOUBLED_PAWN_PENALTY = -50;
+    static constexpr int SUPPORTING_PAWN_BONUS = 75;
+    static constexpr int SUPPORTING_PIECE_BONUS = 100;
+    static constexpr int DOUBLED_PAWN_PENALTY = -70;
     static constexpr int ISOLATED_PAWN_PENALTY = -80;
     static constexpr int CHECKED_PENALTY = -1000;
     static constexpr int CHECKING_BONUS = 1500;
@@ -320,7 +322,8 @@ private:
             pieces = board.getBlackQueens();
             score += popcount(pieces) * QUEEN_VALUE;
         }
-        // Get total piece count
+        // Get total piece count (not including pawns or kings)
+        // for endgame lerp
         totalPiecesWithoutPawns = popcount(board.getAllPieces() & 
                                         (~board.getDenseSet(D_PAWN) | 
                                          ~board.getDenseSet(D_KING)));
@@ -333,7 +336,7 @@ private:
         int endgameLerp = (std::clamp(14 - totalPiecesWithoutPawns, 0, 14))/ENDGAME_LERP;
         if (color == WHITE) {
             // Evaluate pawn structure
-            U64 pawns = board.getWhitePawns();
+            U64 pawns, pawnRef = board.getWhitePawns();
             while (pawns) {
                 int square = std::countr_zero(pawns);
 
@@ -346,7 +349,7 @@ private:
                 // Check for doubled pawns (more than one pawn in a file)
                 int file = BUTIL::squareToFileIndex(square);
                 U64 fileMask = BUTIL::FileMask << file;
-                if (popcount(fileMask & pawns) > 1) {
+                if (popcount(fileMask & pawnRef) > 1) {
                     score += DOUBLED_PAWN_PENALTY;
                 }
 
@@ -355,16 +358,25 @@ private:
                 if (file > 0) adjacentFiles |= BUTIL::FileMask << (file - 1);
                 if (file < 7) adjacentFiles |= BUTIL::FileMask << (file + 1);
                 // No pawns in adjacent files
-                if (!(adjacentFiles & pawns)) {
+                if (!(adjacentFiles & pawnRef)) {
                     score += ISOLATED_PAWN_PENALTY;
                 }
 
-                // If this pawn is supporting another
-                U64 supports = ATKMASK_WPAWN[square] & pawns;
+                // If this pawn is supporting another pawn
+                U64 supports = ATKMASK_WPAWN[square] & pawnRef;
                 if (supports) {
-                    score += SUPPORTED_PAWN_BONUS * popcount(supports);
+                    score += SUPPORTING_PAWN_BONUS * popcount(supports);
                 }
-
+                // If this pawn is supported by other pawns
+                U64 supported = ATKMASK_BPAWN[square] & pawnRef;
+                if (supported) {
+                    score += SUPPORTED_PAWN_BONUS * popcount(supported);
+                }
+                // If this pawn is supporting a piece
+                supports = ATKMASK_WPAWN[square] & (board.getWhitePieces() & ~pawnRef);
+                if (supports) {
+                    score += SUPPORTING_PIECE_BONUS * popcount(supports);
+                }
                 pawns &= pawns - 1;
             }
             // Knights
@@ -427,9 +439,11 @@ private:
             if (attacksToKing) {
                 score += CHECKED_PENALTY * popcount(attacksToKing);
             }
+
+
         } else {
             // Evaluate pawn structure
-            U64 pawns = board.getBlackPawns();
+            U64 pawns, pawnRef = board.getBlackPawns();
             while (pawns) {
                 int square = std::countr_zero(pawns);
 
@@ -443,7 +457,7 @@ private:
                 // Check for doubled pawns (more than one pawn in a file)
                 int file = BUTIL::squareToFileIndex(square);
                 U64 fileMask = BUTIL::FileMask << file;
-                if (popcount(fileMask & pawns) > 1) {
+                if (popcount(fileMask & pawnRef) > 1) {
                     score += DOUBLED_PAWN_PENALTY;
                 }
 
@@ -452,14 +466,24 @@ private:
                 if (file > 0) adjacentFiles |= BUTIL::FileMask << (file - 1);
                 if (file < 7) adjacentFiles |= BUTIL::FileMask << (file + 1);
                 // No pawns in adjacent files
-                if (!(adjacentFiles & pawns)) {
+                if (!(adjacentFiles & pawnRef)) {
                     score += ISOLATED_PAWN_PENALTY;
                 }
 
                 // If this pawn is supporting another
-                U64 supports = ATKMASK_BPAWN[square] & pawns;
+                U64 supports = ATKMASK_BPAWN[square] & pawnRef;
                 if (supports) {
-                    score += SUPPORTED_PAWN_BONUS * popcount(supports);
+                    score += SUPPORTING_PAWN_BONUS * popcount(supports);
+                }
+                // If this pawn is supported by others
+                U64 supported = ATKMASK_WPAWN[square] & pawnRef;
+                if (supported) {
+                    score += SUPPORTED_PAWN_BONUS * popcount(supported);
+                }
+                // If this pawn is supporting a piece
+                supports = ATKMASK_BPAWN[square] & (board.getBlackPieces() & ~pawnRef);
+                if (supports) {
+                    score += SUPPORTING_PIECE_BONUS * popcount(supports);
                 }
 
                 pawns &= pawns - 1;
@@ -495,6 +519,7 @@ private:
                 int square = std::countr_zero(rooks);
                 score += rookSqTbEarly[63-square]*(earlygameLerp) +
                     rookSqTbEnd[63-square]*(endgameLerp);
+
                 rooks &= rooks - 1;
             }
             // Queens
