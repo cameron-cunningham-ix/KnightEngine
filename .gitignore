@@ -13,7 +13,6 @@
 !bench_output/
 !bench_output/**
 !meta/
-!meta/**
 !engine/
 !engine/**
 !stored_engines/
@@ -42,6 +41,7 @@ Makefile
 *.exe
 # But keep stored engines
 !stored_engines/**.exe
+!meta/**
 *.dll
 *.so
 *.dylib
