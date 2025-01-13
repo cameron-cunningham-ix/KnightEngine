@@ -40,7 +40,8 @@ Makefile
 
 # Ignore compiled binaries and libraries
 *.exe
-!stored_engines/**.exe  # But keep stored engines
+# But keep stored engines
+!stored_engines/**.exe
 *.dll
 *.so
 *.dylib
