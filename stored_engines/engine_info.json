@@ -1,0 +1,110 @@
+{
+  "MaterialEngine 0.2": {
+    "filename": "MaterialEngine_v0_2_D.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_D",
+    "stored_date": "2025-01-10 22:19:30"
+  },
+  "RandomEngine 1.0": {
+    "filename": "RandomEngine_v1_0_D.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_D",
+    "stored_date": "2025-01-10 22:19:30"
+  },
+  "MaterialEngine 0.3": {
+    "filename": "MaterialEngine_v0_3_D.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_D",
+    "stored_date": "2025-01-11 00:15:05"
+  },
+  "MaterialEngine 0.31": {
+    "filename": "MaterialEngine_v0_31_D.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_D",
+    "stored_date": "2025-01-11 00:31:17"
+  },
+  "MaterialEngine 0.311": {
+    "filename": "MaterialEngine_v0_311_D.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_D",
+    "stored_date": "2025-01-11 00:49:22"
+  },
+  "MaterialEngine 0.312": {
+    "filename": "MaterialEngine_v0_312_D.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_D",
+    "stored_date": "2025-01-11 01:04:37"
+  },
+  "MaterialEngine 0.313": {
+    "filename": "MaterialEngine_v0_313_D.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_D",
+    "stored_date": "2025-01-11 01:39:20"
+  },
+  "MaterialEngine 0.314": {
+    "filename": "MaterialEngine_v0_314_D.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_D",
+    "stored_date": "2025-01-11 11:19:26"
+  },
+  "MaterialEngine 0.315": {
+    "filename": "MaterialEngine_v0_315_D.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_D",
+    "stored_date": "2025-01-11 15:48:11"
+  },
+  "MaterialEngine 0.317": {
+    "filename": "MaterialEngine_v0_317_D.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_D",
+    "stored_date": "2025-01-12 10:51:35"
+  },
+  "MaterialEngine 0.317 _D": {
+    "filename": "MaterialEngine_v0_317_D.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_D",
+    "stored_date": "2025-01-12 15:31:12"
+  },
+  "RandomEngine 1.0 _D": {
+    "filename": "RandomEngine_v1_0_D.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_D",
+    "stored_date": "2025-01-12 15:31:12"
+  },
+  "MaterialEngine 0.317 _R": {
+    "filename": "MaterialEngine_v0_317_R.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_R",
+    "stored_date": "2025-01-12 15:31:12"
+  },
+  "RandomEngine 1.0 _R": {
+    "filename": "RandomEngine_v1_0_R.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_R",
+    "stored_date": "2025-01-12 15:31:12"
+  },
+  "MaterialEngine 0.32 _R": {
+    "filename": "MaterialEngine_v0_32_R.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_R",
+    "stored_date": "2025-01-12 16:29:52"
+  },
+  "MaterialEngine 0.321 _R": {
+    "filename": "MaterialEngine_v0_321_R.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_R",
+    "stored_date": "2025-01-12 17:42:53"
+  },
+  "MaterialEngine 0.4 _R": {
+    "filename": "MaterialEngine_v0_4_R.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_R",
+    "stored_date": "2025-01-12 21:43:24"
+  },
+  "MaterialEngine 0.41 _R": {
+    "filename": "MaterialEngine_v0_41_R.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_R",
+    "stored_date": "2025-01-12 23:30:57"
+  }
+}

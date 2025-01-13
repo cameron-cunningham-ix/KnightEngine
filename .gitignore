@@ -16,6 +16,10 @@
 !meta/**
 !engine/
 !engine/**
+!stored_engines/
+!stored_engines/**
+!uci/
+!uci/**
 
 # Ignore build directories anywhere
 **/build/
