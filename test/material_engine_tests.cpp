@@ -149,6 +149,13 @@ TEST_F(MaterialEngineTest, KingSafetyEvaluation) {
 
 // Test that the engine finds mate in one from multiple positions
 TEST_F(MaterialEngineTest, MultipleMatePosTest) {
+    testing::internal::CaptureStdout();
+    std::ofstream outfile("TestOutput/MaterialEngineTest_MultipleMatePosTest.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
+    if (outfile.is_open()) {
+        outfile << "MaterialEngineTest_MateInOne.txt\n";
+        std::cout.rdbuf(outfile.rdbuf());
+    }
     // King Queen mates
     // White
     board.setupPositionFromFEN("2k5/7Q/2K5/8/8/8/8/8 w - - 0 1");
@@ -169,16 +176,21 @@ TEST_F(MaterialEngineTest, MultipleMatePosTest) {
     // Black
     board.setupPositionFromFEN("2K5/7q/2k5/8/8/8/8/8 b - - 0 1");
     DenseMove move4 = engine->findBestMove(board);
-    board.makeMove(move1, false);
+    board.makeMove(move4, false);
     EXPECT_TRUE(isCheckmate(board));
 
     board.setupPositionFromFEN("K7/7q/2k5/8/8/8/8/8 b - - 0 1");
     DenseMove move5 = engine->findBestMove(board);
-    board.makeMove(move2, false);
+    board.makeMove(move5, false);
     EXPECT_TRUE(isCheckmate(board));
 
     board.setupPositionFromFEN("K7/8/2k5/8/8/8/1q6/8 b - - 0 1");
     DenseMove move6 = engine->findBestMove(board);
-    board.makeMove(move3, false);
+    board.makeMove(move6, false);
     EXPECT_TRUE(isCheckmate(board));
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
+    std::cout.rdbuf(coutBuf);
 }

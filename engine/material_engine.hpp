@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <chrono>
 
-
 static constexpr int INF_POS = 999999999;
 static constexpr int INF_NEG = -999999999;
 
@@ -18,6 +17,142 @@ private:
     std::chrono::steady_clock::time_point searchStartTime;
     DenseMove currentMove;
     int currentMoveNumber;
+    int totalPiecesWithoutPawns;
+
+    // Piece-Square tables
+    // Pawns - Early game
+    static constexpr std::array<int, 64> pawnSqTbEarly = {
+         0,  0,  0,  0,  0,  0,  0,  0,
+        50, 50, 50, 50, 50, 50, 50, 50,
+        20, 20, 25, 25, 25, 25, 20, 20,
+         5,  5, 10, 20, 20, 10,  5,  5,
+         0,  0,  0, 20, 20,  0,  0,  0,
+         5, -5,-10,  0,  0,-10, -5,  5,
+         5, 15, 15,-10,-10, 15, 15,  5,
+         0,  0,  0,  0,  0,  0,  0,  0
+    };
+    // Knights - Early game
+    static constexpr std::array<int, 64> knightSqTbEarly = {
+        -50,-40,-30,-30,-30,-30,-40,-50,
+        -40,-20,  0,  0,  0,  0,-20,-40,
+        -30,  0, 10, 15, 15, 10,  0,-30,
+        -30,  5, 15, 20, 20, 15,  5,-30,
+        -30,  0, 15, 20, 20, 15,  0,-30,
+        -30,  5, 10, 15, 15, 10,  5,-30,
+        -40,-20,  0,  5,  5,  0,-20,-40,
+        -50,-40,-30,-30,-30,-30,-40,-50
+    };
+    // Bishops - Early game
+    static constexpr std::array<int, 64> bishopSqTbEarly = {
+        -20,-10,-10,-10,-10,-10,-10,-20,
+        -10,  0,  0,  0,  0,  0,  0,-10,
+        -10,  0,  5, 10, 10,  5,  0,-10,
+        -10,  5,  5, 10, 10,  5,  5,-10,
+        -10,  0, 10, 10, 10, 10,  0,-10,
+        -10, 10, 10, 10, 10, 10, 10,-10,
+        -10,  5,  0,  0,  0,  0,  5,-10,
+        -20,-10,-10,-10,-10,-10,-10,-20
+    };
+    // Rooks - Early game
+    static constexpr std::array<int, 64> rookSqTbEarly = {
+        0,  0,  0,  0,  0,  0,  0,  0,
+        5, 10, 10, 10, 10, 10, 10,  5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        0,  0,  0,  5,  5,  0,  0,  0
+    };
+    // Queens - Early game
+    static constexpr std::array<int, 64> queenSqTbEarly = {
+        -20,-10,-10, -5, -5,-10,-10,-20,
+        -10,  0,  0,  0,  0,  0,  0,-10,
+        -10,  0,  5,  5,  5,  5,  0,-10,
+        -5,  0,  5,  5,  5,  5,  0, -5,
+        0,  0,  5,  5,  5,  5,  0, -5,
+        -10,  5,  5,  5,  5,  5,  0,-10,
+        -10,  0,  5,  0,  0,  0,  0,-10,
+        -20,-10,-10, -5, -5,-10,-10,-20
+    };
+    // King - Early game
+    static constexpr std::array<int, 64> kingSqTbEarly = {
+        -30,-40,-40,-50,-50,-40,-40,-30,
+        -30,-40,-40,-50,-50,-40,-40,-30,
+        -30,-40,-40,-50,-50,-40,-40,-30,
+        -30,-40,-40,-50,-50,-40,-40,-30,
+        -20,-30,-30,-40,-40,-30,-30,-20,
+        -10,-20,-20,-20,-20,-20,-20,-10,
+        20, 20,  0,  0,  0,  0, 20, 20,
+        20, 30, 10,  0,  0, 10, 30, 20
+    };
+    // Piece-Square tables for endgame
+    // Pawns - Endgame
+    static constexpr std::array<int, 64> pawnSqTbEnd = {
+        0,  0,  0,  0,  0,  0,  0,  0,
+        80, 80, 80, 80, 80, 80, 80, 80,
+        50, 50, 50, 50, 50, 50, 50, 50,
+        30, 30, 30, 30, 30, 30, 30, 30,
+        20, 20, 20, 20, 20, 20, 20, 20,
+        10, 10, 10, 10, 10, 10, 10, 10,
+        10, 10, 10, 10, 10, 10, 10, 10,
+        0,  0,  0,  0,  0,  0,  0,  0
+    };
+    // Knights - Endgame
+    static constexpr std::array<int, 64> knightSqTbEnd = {
+        -40,-30,-20,-20,-20,-20,-30,-40,
+        -30,-20,  0,  0,  0,  0,-20,-30,
+        -20,  0, 10, 15, 15, 10,  0,-20,
+        -20,  5, 15, 20, 20, 15,  5,-20,
+        -20,  0, 15, 20, 20, 15,  0,-20,
+        -20,  5, 10, 15, 15, 10,  5,-20,
+        -30,-20,  0,  5,  5,  0,-20,-30,
+        -40,-30,-20,-20,-20,-20,-30,-40
+    };
+    // Bishops - Endgame
+    static constexpr std::array<int, 64> bishopSqTbEnd = {
+        -20,-10,-10,-10,-10,-10,-10,-20,
+        -10,  0,  0,  0,  0,  0,  0,-10,
+        -10,  0,  5, 10, 10,  5,  0,-10,
+        -10,  5,  5, 10, 10,  5,  5,-10,
+        -10,  0, 10, 10, 10, 10,  0,-10,
+        -10, 10, 10, 10, 10, 10, 10,-10,
+        -10,  5,  0,  0,  0,  0,  5,-10,
+        -20,-10,-10,-10,-10,-10,-10,-20
+    };
+    // Rooks - Endgame
+    static constexpr std::array<int, 64> rookSqTbEnd = {
+        0,  0,  0,  0,  0,  0,  0,  0,
+        5, 10, 10, 10, 10, 10, 10,  5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        0,  0,  0,  5,  5,  0,  0,  0
+    };
+    // Queens - Endgame
+    static constexpr std::array<int, 64> queenSqTbEnd = {
+        -20,-10,-10, -5, -5,-10,-10,-20,
+        -10,  0,  5,  0,  0,  0,  0,-10,
+        -10,  5,  5,  5,  5,  5,  0,-10,
+        0,  0,  5,  5,  5,  5,  0, -5,
+        -5,  0,  5,  5,  5,  5,  0, -5,
+        -10,  0,  5,  5,  5,  5,  0,-10,
+        -10,  0,  0,  0,  0,  0,  0,-10,
+        -20,-10,-10, -5, -5,-10,-10,-20
+    };
+    // King - Endgame
+    static constexpr std::array<int, 64> kingSqTbEnd = {
+        -50,-40,-30,-20,-20,-30,-40,-50,
+        -30,-20,-10,  0,  0,-10,-20,-30,
+        -30,-10, 20, 30, 30, 20,-10,-30,
+        -30,-10, 30, 40, 40, 30,-10,-30,
+        -30,-10, 30, 40, 40, 30,-10,-30,
+        -30,-10, 20, 30, 30, 20,-10,-30,
+        -30,-30,  0,  0,  0,  0,-30,-30,
+        -50,-30,-30,-30,-30,-30,-30,-50
+    };
 
     // Piece values (centipawns)
     static constexpr int PAWN_VALUE = 100;
@@ -28,19 +163,21 @@ private:
     static constexpr int KING_VALUE = 2000;
 
     // Additional positional bonus/penalty
+    static constexpr int ENDGAME_LERP = 14;
     static constexpr int MATE_SCORE = 100000;
     static constexpr int SUPPORTED_PAWN_BONUS = 90;
     static constexpr int DOUBLED_PAWN_PENALTY = -50;
     static constexpr int ISOLATED_PAWN_PENALTY = -80;
-    static constexpr int CHECKED_PENALTY = -10000;
-    static constexpr int CHECKING_BONUS = 15000;
+    static constexpr int CHECKED_PENALTY = -1000;
+    static constexpr int CHECKING_BONUS = 1500;
     static constexpr int BISHOP_PAIR_BONUS = 150;
     static constexpr int ROOK_OPEN_FILE_BONUS = 250;
 
 public:
 
+
     MaterialEngine() 
-        : ChessEngineBase("MaterialEngine", "0.4", "Cameron Cunningham", 6) {}
+        : ChessEngineBase("MaterialEngine", "0.41", "Cameron Cunningham", 6) {}
 
     DenseMove findBestMove(ChessBoard& board, 
                            int maxDepth = -1) override {
@@ -50,12 +187,14 @@ public:
         currentMoveNumber = 0;
 
         int actualDepth = (maxDepth > 0) ? maxDepth : searchDepth;
-        sendInfo(std::format("search to depth {}", actualDepth));
 
         // Generate all psuedo legal moves
         int moveNum = 0;
         std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
         Color sideToMove = board.getSideToMove();
+        
+        int alpha = INF_NEG;
+        int beta = INF_POS;
         // bestScore will determine what the best move to play is
         // Negative bestScore means Black's position is better, positive means White's position is better
         int bestScore = sideToMove == WHITE ? INF_NEG : INF_POS;
@@ -74,30 +213,30 @@ public:
             ChessBoard tempBoard = board;
             tempBoard.makeMove(moves[i], true);
 
-            // // Check if move is illegal
-            // if (tempBoard.isSideInCheck(sideToMove)) {
-            //     std::cout << "go next\n";
-            //     continue;
-            // }
-
             // Store start time for this move
             auto moveStartTime = std::chrono::steady_clock::now();
 
             // Evaluate resulting position
             int score = alphaBeta(tempBoard, actualDepth - 1, 
-                                 INF_NEG, INF_POS, board.getSideToMove() == WHITE);
+                                 alpha, beta, tempBoard.getSideToMove() == WHITE);
             // Update best move if better score found
             if ((sideToMove == WHITE && score > bestScore) ||
                 (sideToMove == BLACK && score < bestScore)) {
                 bestScore = score;
                 bestMove = moves[i];
 
+                if (sideToMove == WHITE) {
+                    if (score > alpha) alpha = score;
+                } else {
+                    if (score < beta) beta = score;
+                }
+
                 auto moveTime = std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::steady_clock::now() - searchStartTime).count();
                 
                 // Send updated info
-                std::string infoStr = std::format("depth {} score cp {} time {} nodes {}",
-                    actualDepth, bestScore, moveTime, nodeCount);
+                std::string infoStr = std::format("depth {} score cp {} time {} nodes {} ",
+                    actualDepth, bestScore, moveTime, nodeCount, bestMove.toAlgebraic());
                 
                 // Add NPS if we have meaningful time elapsed
                 if (moveTime > 0) {
@@ -181,25 +320,28 @@ private:
             pieces = board.getBlackQueens();
             score += popcount(pieces) * QUEEN_VALUE;
         }
-
+        // Get total piece count
+        totalPiecesWithoutPawns = popcount(board.getAllPieces() & 
+                                        (~board.getDenseSet(D_PAWN) | 
+                                         ~board.getDenseSet(D_KING)));
         return score;
     }
 
     int evaluatePositional(const ChessBoard& board, Color color) {
         int score = 0;
+        int earlygameLerp = totalPiecesWithoutPawns/ENDGAME_LERP;
+        int endgameLerp = (std::clamp(14 - totalPiecesWithoutPawns, 0, 14))/ENDGAME_LERP;
         if (color == WHITE) {
-            // Bishop pair bonus
-            U64 bishops = board.getWhiteBishops();
-
-            /// @todo Consider light square / dark square mask to determine real pair
-            if (popcount(bishops) >= 2) {
-                score += BISHOP_PAIR_BONUS;
-            }
-
             // Evaluate pawn structure
             U64 pawns = board.getWhitePawns();
             while (pawns) {
                 int square = std::countr_zero(pawns);
+
+                // Add score from piece-square table
+                // Lerp from early to endgame based on total piece count
+                // not including pawns
+                score +=  pawnSqTbEarly[square]*(earlygameLerp) +
+                    pawnSqTbEnd[square]*(endgameLerp);
 
                 // Check for doubled pawns (more than one pawn in a file)
                 int file = BUTIL::squareToFileIndex(square);
@@ -225,6 +367,51 @@ private:
 
                 pawns &= pawns - 1;
             }
+            // Knights
+            U64 knights = board.getWhiteKnights();
+            while (knights) {
+                int square = std::countr_zero(knights);
+                // Add score from piece-square table
+                // Lerp from early to endgame based on total piece count
+                score +=  knightSqTbEarly[square]*(earlygameLerp) +
+                    knightSqTbEnd[square]*(endgameLerp);
+                knights &= knights - 1;
+            }
+            // Bishops
+            U64 bishops = board.getWhiteBishops();
+            // Bishop pair bonus
+            /// @todo Consider light square / dark square mask to determine real pair
+            if (popcount(bishops) >= 2) {
+                score += BISHOP_PAIR_BONUS;
+            }
+            while (bishops) {
+                int square = std::countr_zero(bishops);
+                // Add score from piece-square table
+                // Lerp from early to endgame based on total piece count
+                score +=  bishopSqTbEarly[square]*(earlygameLerp) +
+                    bishopSqTbEnd[square]*(endgameLerp);
+                bishops &= bishops - 1;
+            }
+            // Rooks
+            U64 rooks = board.getWhiteRooks();
+            while (rooks) {
+                int square = std::countr_zero(rooks);
+                score += rookSqTbEarly[square]*(earlygameLerp) +
+                    rookSqTbEnd[square]*(endgameLerp);
+                rooks &= rooks - 1;
+            }
+            // Queens
+            U64 queens = board.getWhiteQueens();
+            while (queens) {
+                int square = std::countr_zero(queens);
+                score += queenSqTbEarly[square]*(earlygameLerp) +
+                    queenSqTbEnd[square]*(endgameLerp);
+                queens &= queens - 1;
+            }
+            // King
+            int kingSquare = board.getWhiteKingSquare();
+            score += kingSqTbEarly[kingSquare]*(earlygameLerp) +
+                kingSqTbEnd[kingSquare]*(endgameLerp);
 
             // Evaluate attacks to opposite king
             /// @todo apparently this does fuck all to encourage checks
@@ -241,18 +428,17 @@ private:
                 score += CHECKED_PENALTY * popcount(attacksToKing);
             }
         } else {
-            // Bishop pair bonus
-            U64 bishops = board.getBlackBishops();
-
-            /// @todo Consider light square / dark square mask to determine real pair
-            if (popcount(bishops) >= 2) {
-                score += BISHOP_PAIR_BONUS;
-            }
-
             // Evaluate pawn structure
             U64 pawns = board.getBlackPawns();
             while (pawns) {
                 int square = std::countr_zero(pawns);
+
+                // Add score from piece-square table
+                // Lerp from early to endgame based on total piece count
+                // not including pawns
+                // For now 63 - is a hack for not having flipped piece-square tables
+                score +=  pawnSqTbEarly[63-square]*(earlygameLerp) +
+                    pawnSqTbEnd[63-square]*(endgameLerp);
 
                 // Check for doubled pawns (more than one pawn in a file)
                 int file = BUTIL::squareToFileIndex(square);
@@ -273,13 +459,59 @@ private:
                 // If this pawn is supporting another
                 U64 supports = ATKMASK_BPAWN[square] & pawns;
                 if (supports) {
-                    score += SUPPORTED_PAWN_BONUS * popcount(pawns);
+                    score += SUPPORTED_PAWN_BONUS * popcount(supports);
                 }
 
                 pawns &= pawns - 1;
             }
+            // Knights
+            U64 knights = board.getBlackKnights();
+            while (knights) {
+                int square = std::countr_zero(knights);
+                // Add score from piece-square table
+                // Lerp from early to endgame based on total piece count
+                score +=  knightSqTbEarly[63-square]*(earlygameLerp) +
+                    knightSqTbEnd[63-square]*(endgameLerp);
+                knights &= knights - 1;
+            }
+            // Bishops
+            U64 bishops = board.getBlackBishops();
+            // Bishop pair bonus
+            /// @todo Consider light square / dark square mask to determine real pair
+            if (popcount(bishops) >= 2) {
+                score += BISHOP_PAIR_BONUS;
+            }
+            while (bishops) {
+                int square = std::countr_zero(bishops);
+                // Add score from piece-square table
+                // Lerp from early to endgame based on total piece count
+                score +=  bishopSqTbEarly[63-square]*(earlygameLerp) +
+                    bishopSqTbEnd[63-square]*(endgameLerp);
+                bishops &= bishops - 1;
+            }
+            // Rooks
+            U64 rooks = board.getBlackRooks();
+            while (rooks) {
+                int square = std::countr_zero(rooks);
+                score += rookSqTbEarly[63-square]*(earlygameLerp) +
+                    rookSqTbEnd[63-square]*(endgameLerp);
+                rooks &= rooks - 1;
+            }
+            // Queens
+            U64 queens = board.getBlackQueens();
+            while (queens) {
+                int square = std::countr_zero(queens);
+                score += queenSqTbEarly[63-square]*(earlygameLerp) +
+                    queenSqTbEnd[63-square]*(endgameLerp);
+                queens &= queens - 1;
+            }
+            // King
+            int kingSquare = board.getBlackKingSquare();
+            score += kingSqTbEarly[63-kingSquare]*(earlygameLerp) +
+                kingSqTbEnd[63-kingSquare]*(endgameLerp);
 
             // Evaluate attacks to opposite king
+            /// @todo apparently this does fuck all to encourage checks
             U64 attackingOppKing = board.OppAttacksToSquare(board.getWhiteKingSquare(), WHITE);
             if (attackingOppKing) {
                 // Using popcount means double checks should be worth more
@@ -319,17 +551,6 @@ private:
 
         bool noLegalMoves = true;
 
-        // // No legal moves
-        // if (moveNum == 0) {
-        //     // If in check, this is checkmate
-        //     if (board.isSideInCheck((Color)maximizing)) {
-        //         /// @todo Figure out why maximizing side wants big score?
-        //         return maximizing ? 999999 : -999999;
-        //     }
-        //     // Otherwise stalemate
-        //     return 0;
-        // }
-
         // White to move
         // Trying to improve alpha value by finding moves that give a higher score
         if (maximizing) {
@@ -362,8 +583,8 @@ private:
                 // If alpha is now so good that it's greater than beta (best minimizing 
                 // score guaranteed across the search tree so far), then minimizing
                 // player will never allow this position to be reached if playing optimally
-                // and we can return alpha early
-                if (alpha >= beta) return alpha;
+                // and we can break early
+                if (alpha >= beta) break;
             }
             // If there was at least 1 legal move, return eval
             if (!noLegalMoves)
@@ -400,6 +621,8 @@ private:
                 // Evaluation of next alphabeta is maximizing
                 int eval = alphaBeta(tempBoard, depth - 1, alpha, beta, true);
 
+                tempBoard.unmakeMove(moves[i], true);
+
                 // If eval is less than any other score so far in this node,
                 // minEval gets set to eval
                 if (eval < minEval) minEval = eval;
@@ -411,8 +634,7 @@ private:
                 // If beta is now so good that it's less than alpha (best maximizing score
                 // guranteed across the search tree so far), then maximizing player
                 // will never allow this position to be reached if playing optimally
-                if (beta <= alpha) return beta;
-
+                if (beta <= alpha) break;
             }
             // If there was at least 1 legal move, return eval
             if (!noLegalMoves)

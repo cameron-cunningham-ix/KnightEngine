@@ -31,6 +31,7 @@ public:
     // Bitboard getters
 
     U64 getPieceSet(PieceType pt) const;
+    U64 getDenseSet(DenseType dt) const;
     U64 getWhitePawns() const;
     U64 getWhiteKnights() const;
     U64 getWhiteBishops() const;
@@ -64,12 +65,14 @@ public:
     PieceType getPieceAt(int index) const;
     DenseType getDenseTypeAt(int index) const;
 
+
     // Whether current side to move is in check
-    bool isInCheck();
+    bool isInCheck() const;
     // Whether 'side' is in check
     bool isSideInCheck(Color side) const;
     // How many pieces are checking current side's king
     int getCheckCount() const;
+
 
     // Attack calculation methods
     U64 OppAttacksToSquare(int indexOfSquare, Color colorOfKing) const;

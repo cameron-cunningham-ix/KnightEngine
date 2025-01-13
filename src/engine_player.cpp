@@ -201,13 +201,12 @@ void EnginePlayer::processCommand(const std::string& cmd) {
         initialized = true;
     }
     else if (token == "ucinewgame") {
-        /// @todo
+        uciNewGame();
     }
     else if (token == "isready") {
         sendResponse("readyok");
     }
     else if (token == "go") {
-        std::cout << "recieved go\n";
          // Parse search parameters
         std::map<std::string, std::string> searchParams;
         while (iss >> token) {

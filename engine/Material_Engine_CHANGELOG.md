@@ -1,5 +1,16 @@
 # Material Engine Changelog
 
+## Material Engine V0.41 (2025-01-12)
+- Added piece-square tables for early game and endgame, and 
+ENDGAME_LERP for interpolating between early and endgame
+
+## Material Engine V0.4 (2025-01-12)
+- Changed alpha beta function again, it seems to be working better
+Issues:
+- Doesn't account for three-fold repetition, so it makes those draws
+a lot. Seems like Zobrist hash keys could help to solve this as well
+as evaluating the same position multiple times
+
 ## Material Engine V0.321 (2025-01-12)
 - Changed supported pawn bonus to 90
 

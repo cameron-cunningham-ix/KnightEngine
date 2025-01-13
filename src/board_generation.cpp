@@ -184,11 +184,14 @@ U64 ChessBoard::getPieceSet(PieceType pt) const {
     if (pt == INVALID) return 0ULL;
     return pieceBB[pieceCode(pt)] & colorBB[colorCode(pt)];
 }
+U64 ChessBoard::getDenseSet(DenseType dt) const {
+    return pieceBB[dt];
+}
 /// @brief Private helper function to update bitboards for piece movement.
 /// Should only be used where move is valid
-/// @param from 
-/// @param to 
-/// @param piece 
+/// @param from
+/// @param to
+/// @param piece
 void ChessBoard::movePiece(int from, int to, PieceType piece) {
     // BB with both squares set
     U64 fromToBB = (1ULL << from) | (1ULL << to);
@@ -528,7 +531,7 @@ DenseType ChessBoard::getDenseTypeAt(int index) const {
     return DenseType::D_EMPTY;
 }
 
-bool ChessBoard::isInCheck() {
+bool ChessBoard::isInCheck() const {
     return isSideInCheck(getSideToMove());
 }
 /// @param side 
