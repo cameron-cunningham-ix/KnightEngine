@@ -167,7 +167,7 @@ private:
     static constexpr int KING_VALUE = 2000;
 
     // Additional positional bonus/penalty
-    static constexpr int ENDGAME_LERP = 14;
+    static constexpr int INIT_MAJ_MIN_PIECES = 14;
     static constexpr int MATE_SCORE = 100000;
     static constexpr int SUPPORTED_PAWN_BONUS = 75;
     static constexpr int SUPPORTING_PAWN_BONUS = 90;
@@ -198,6 +198,7 @@ public:
         std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
         Color sideToMove = board.getSideToMove();
         
+        // Initialize alpha beta values at this root node
         int alpha = INF_NEG;
         int beta = INF_POS;
         // bestScore will determine what the best move to play is
@@ -230,6 +231,9 @@ public:
                 bestScore = score;
                 bestMove = moves[i];
 
+                // Update alpha beta values for this root node
+                // Next nodes searched can be pruned if they lead to much better
+                // or worse positions than best move already found
                 if (sideToMove == WHITE) {
                     if (score > alpha) alpha = score;
                 } else {
@@ -258,6 +262,10 @@ public:
         return bestMove;
     }
 
+    /// @brief Called at the terminal nodes of alphaBeta function.
+    /// 
+    /// @param board 
+    /// @return 
     int evaluatePosition(const ChessBoard& board) override {
         nodeCount++;
         // Send node count every 60K nodes
@@ -335,8 +343,10 @@ private:
 
     int evaluatePositional(const ChessBoard& board, Color color) {
         int score = 0;
-        int earlygameLerp = totalPiecesWithoutPawns/ENDGAME_LERP;
-        int endgameLerp = (std::clamp(14 - totalPiecesWithoutPawns, 0, 14))/ENDGAME_LERP;
+        // Calculate 'distance' along early game to late game by taking
+        // current number of major and minor pieces and initial number of those pieces
+        int earlygameLerp = totalPiecesWithoutPawns/INIT_MAJ_MIN_PIECES;
+        int endgameLerp = (std::clamp(14 - totalPiecesWithoutPawns, 0, 14))/INIT_MAJ_MIN_PIECES;
         if (color == WHITE) {
             // Evaluate pawn structure
             U64 pawns = board.getWhitePawns();
@@ -345,8 +355,7 @@ private:
                 int square = std::countr_zero(pawns);
 
                 // Add score from piece-square table
-                // Lerp from early to endgame based on total piece count
-                // not including pawns
+                // Lerp from early to endgame based on piece count
                 score +=  pawnSqTbEarly[square]*(earlygameLerp) +
                     pawnSqTbEnd[square]*(endgameLerp);
 
@@ -377,6 +386,7 @@ private:
                     score += SUPPORTED_PAWN_BONUS * popcount(supported);
                 }
                 // If this pawn is supporting a piece
+                /// @todo See if only using this with minor pieces is better
                 supports = ATKMASK_WPAWN[square] & (board.getWhitePieces() & ~pawnRef);
                 if (supports) {
                     score += SUPPORTING_PIECE_BONUS * popcount(supports);
@@ -388,7 +398,7 @@ private:
             while (knights) {
                 int square = std::countr_zero(knights);
                 // Add score from piece-square table
-                // Lerp from early to endgame based on total piece count
+                // Lerp from early to endgame based on piece count
                 score +=  knightSqTbEarly[square]*(earlygameLerp) +
                     knightSqTbEnd[square]*(endgameLerp);
                 knights &= knights - 1;
@@ -396,7 +406,6 @@ private:
             // Bishops
             U64 bishops = board.getWhiteBishops();
             // Bishop pair bonus
-            /// @todo Consider light square / dark square mask to determine real pair
             if (popcount(bishops) >= 2) {
                 if ((lightSquareMask & bishops) && (darkSquareMask & bishops))
                      score += BISHOP_PAIR_BONUS;
@@ -404,7 +413,7 @@ private:
             while (bishops) {
                 int square = std::countr_zero(bishops);
                 // Add score from piece-square table
-                // Lerp from early to endgame based on total piece count
+                // Lerp from early to endgame based on piece count
                 score +=  bishopSqTbEarly[square]*(earlygameLerp) +
                     bishopSqTbEnd[square]*(endgameLerp);
                 bishops &= bishops - 1;
@@ -444,8 +453,6 @@ private:
             if (attacksToKing) {
                 score += CHECKED_PENALTY * popcount(attacksToKing);
             }
-
-
         } else {
             // Evaluate pawn structure
             U64 pawns = board.getBlackPawns();
@@ -454,8 +461,7 @@ private:
                 int square = std::countr_zero(pawns);
 
                 // Add score from piece-square table
-                // Lerp from early to endgame based on total piece count
-                // not including pawns
+                // Lerp from early to endgame based on piece count
                 // For now 63 - is a hack for not having flipped piece-square tables
                 score +=  pawnSqTbEarly[63-square]*(earlygameLerp) +
                     pawnSqTbEnd[63-square]*(endgameLerp);
@@ -507,7 +513,6 @@ private:
             // Bishops
             U64 bishops = board.getBlackBishops();
             // Bishop pair bonus
-            /// @todo Consider light square / dark square mask to determine real pair
             if (popcount(bishops) >= 2) {
                 if ((lightSquareMask & bishops) && (darkSquareMask & bishops))
                      score += BISHOP_PAIR_BONUS;
@@ -595,7 +600,6 @@ private:
 
                 // Check move legality
                 if (tempBoard.isSideInCheck(WHITE)) {
-                    // isMate = false;
                     tempBoard.unmakeMove(moves[i], true);
                     continue;
                 }

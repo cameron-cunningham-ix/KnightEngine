@@ -22,7 +22,7 @@ public:
     virtual void stop() = 0;                   // Stop calculating
     virtual void quit() = 0;                   // Quit the program
     
-    // Engine status queries
+    // Engine statuses
     virtual bool isInitialized() const = 0;    // Check if engine is initialized
     virtual bool isThinking() const = 0;       // Check if engine is calculating
     virtual bool hasOption(const std::string& name) const = 0;  // Check if option exists

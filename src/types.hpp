@@ -9,7 +9,7 @@ const int MAX_PLY = 512;
 const int MAX_MOVES = 218;
 
 typedef unsigned long long U64;     // Used for bitboards
-typedef unsigned int U32;           // Used for dense move and game state representation
+typedef unsigned int U32;           // Used for dense move representation
 
 /// @brief Enum for piece types on the board + empty and invalid
 /// 3 LSB are used to represent the piece type, 4th bit is used to represent the color
@@ -62,15 +62,14 @@ const U32 moveMask_From =           0b00000000001111110000000000000000;
 const U32 moveMask_To =             0b00000000000000001111110000000000;
 const U32 moveMask_IsCastle =       0b00000000000000000000001000000000;
 const U32 moveMask_IsEnPass =       0b00000000000000000000000100000000;
-// Castling rights before this move is made:                  KQkq
-const U32 moveMask_CastleRights =   0b00000000000000000000000011110000;
 
 // Move struct using one unsigned 32-bit integer
 struct DenseMove {
-    // U32 structure [28 relevant bits]:
-    // [3 bits]    [3 bits] [1 bit] [3 bits]  [6 bits] [6 bits] [1 bit]    [1 bit]    [4 bits]       [4 bits]
-    // [Capt Type] [DType]  [Color] [PromoTo] [From]   [To]     [IsCastle] [isEnPass] [CastleRights] [Unused]
-    // This way important moves (checks, captures and high value pieces) can be easily sorted by highest to lowest value
+    // U32 structure [24 relevant bits]:
+    // [3 bits]    [3 bits] [1 bit] [3 bits]  [6 bits] [6 bits] [1 bit]    [1 bit]    [8 bits]
+    // [Capt Type] [DType]  [Color] [PromoTo] [From]   [To]     [IsCastle] [isEnPass] [Unused]
+    // This way important moves (checks, captures and high value pieces) can be
+    // more easily sorted by highest to lowest value
     U32 data;
 
     /// @brief Default constructor - 0, will correspond with EMPTY PieceType
@@ -80,13 +79,11 @@ struct DenseMove {
     DenseMove(DenseType piece, Color color, int from, int to,
               DenseType captureType = DenseType::D_EMPTY, 
               bool isCastle = false, bool isEnPassant = false,
-              DenseType promoteTo = DenseType::D_EMPTY,
-              int castleRights = 0b1111) {
+              DenseType promoteTo = DenseType::D_EMPTY) {
         if (from < 0 || from > 63 || to < 0 || to > 63) {
             throw std::invalid_argument("Invalid square index 1");
         }
         data = 0;
-        data |= (castleRights << 4);
         data |= (isEnPassant << 8);
         data |= (isCastle << 9);
         data |= (to << 10);
@@ -101,13 +98,11 @@ struct DenseMove {
     DenseMove(PieceType piece, int from, int to,
               DenseType captureType = DenseType::D_EMPTY, 
               bool isCastle = false, bool isEnPassant = false,
-              DenseType promoteTo = DenseType::D_EMPTY,
-              int castleRights = 0b1111) {
+              DenseType promoteTo = DenseType::D_EMPTY) {
         if (from < 0 || from > 63 || to < 0 || to > 63) {
             throw std::invalid_argument("Invalid square index 2");
         }
         data = 0;
-        data |= (castleRights << 4);
         data |= (isEnPassant << 8);
         data |= (isCastle << 9);
         data |= (to << 10);
@@ -149,8 +144,6 @@ struct DenseMove {
     }
     /// @return True if capture is not empty
     bool isCapture() const { return getCaptDense() != D_EMPTY; }
-    /// @return Castling rights before move is made
-    int getCastlingRights() const { return (data & moveMask_CastleRights) >> 4; }
     /// @return True if this is a castling move, false otherwise
     bool isCastle() const { return (data & moveMask_IsCastle) >> 9; }
     /// @return True if this is an en passant move, false otherwise
@@ -159,11 +152,6 @@ struct DenseMove {
     DenseType getPromoteDense() const { return static_cast<DenseType>((data & moveMask_PromoTo) >> 22); }
     /// @return PieceType of piece to promote to
     PieceType getPromotePiece() const {
-        // if (getColor() == WHITE) {
-        //     return static_cast<PieceType>(getPromoteDense());
-        // } else {
-        //     return static_cast<PieceType>(getPromoteDense() + 8);
-        // }
         int piece = (data & moveMask_PromoTo) >> 22;
         if (piece == 0) return PieceType::EMPTY;
         piece |= (data & moveMask_Color) >> 25;
@@ -188,12 +176,6 @@ struct DenseMove {
     void setEnPass(bool enpass) {
         data &= ~moveMask_IsEnPass;
         data |= (enpass << 8);
-    }
-    /// @brief 
-    /// @param rights 
-    void setCastleRights(int rights) {
-        data &= ~moveMask_CastleRights;
-        data |= (rights << 4);
     }
     /// @param isBrief If true, returns a shortened version. If false, returns all values
     /// @return String representation of the move
@@ -226,7 +208,6 @@ public:
 
     // Current turn
     Color sideToMove;              // Whose turn it is
-    // Color oppColor;                // Opposite color
 
     // Castling rights for each color and side
     bool canCastleWhiteKingside;   // White king's side (h1)
@@ -253,7 +234,6 @@ public:
         canCastleBlackQueenside(true),
         enPassantSquare(-1),
         sideToMove(WHITE),
-        // oppColor(BLACK),
         halfMoveClock(0),
         fullMoveNumber(1) {}
     

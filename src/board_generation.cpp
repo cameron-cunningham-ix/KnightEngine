@@ -206,6 +206,9 @@ void ChessBoard::movePiece(int from, int to, PieceType piece) {
     pieceBB[pieceType] ^= fromToBB;
 
     // Update empty squares bitboard
+    /// @todo See if we can also just XOR fromToBB. removePiece
+    /// should be taken care of before this, so it shouldn't
+    /// be an issue
     pieceBB[D_EMPTY] = ~(colorBB[WHITE] | colorBB[BLACK]);
     // If king moved, update king square
     if (piece == W_KING) kingSquares[WHITE] = to;
@@ -715,9 +718,6 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
             // En Passant square is the square behind the double pushed pawn
             currentGameState.enPassantSquare = (from + to) / 2;
         }
-        // int expectedFromRank = movedColor == WHITE ? 1 : 6;
-        // int expectedToRank = movedColor == WHITE ? 3 : 4;
-        // if ((from / 8) == expectedFromRank && (to / 8) == expectedToRank) {
         else {
             currentGameState.enPassantSquare = -1;
         }
@@ -725,7 +725,6 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
 
     // Switch side to move
     currentGameState.sideToMove = (Color)!currentGameState.sideToMove;
-    // currentGameState.oppColor = (Color)!currentGameState.oppColor;
 
     // Check if half-move clock should be reset or incremented
     if (capturedPiece != PieceType::EMPTY || movedPiece == W_PAWN || movedPiece == B_PAWN) {
