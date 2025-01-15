@@ -29,6 +29,10 @@ enum PieceType : int {
     B_QUEEN = 13,   // 13 - 1101
     B_KING = 14     // 14 - 1110
 };
+
+int pieceCode(PieceType ps);
+int colorCode(PieceType ps);
+
 /// @brief Enum for piece color
 enum Color : bool {
     WHITE,      // 0
@@ -237,6 +241,8 @@ public:
         halfMoveClock(0),
         fullMoveNumber(1) {}
     
+    /// @brief 
+    /// @return Current castling rights
     int getCastleRights() const {
         int rights = 0;
         rights  += (canCastleWhiteKingside * 8)
@@ -244,6 +250,11 @@ public:
                 + (canCastleBlackKingside * 2)
                 + (canCastleBlackQueenside);
         return rights;
+    }
+    /// @brief 
+    /// @return 
+    int getEnPassantFileIndex() const {
+        return enPassantSquare % 8;
     }
     std::string toString() const {
         std::string rights;

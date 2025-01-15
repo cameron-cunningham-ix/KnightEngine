@@ -1,5 +1,18 @@
 #include "types.hpp"
 
+// Return 
+
+/// @param ps 
+/// @return The corresponding piece value for ps
+int pieceCode(PieceType ps) {
+    return (ps & 7);
+}
+/// @param ps 
+/// @return The corresponding color value for ps
+int colorCode(PieceType ps) {
+    return (ps >> 3);
+}
+
 std::string colorToString(Color color) {
     switch (color) {
         case WHITE:

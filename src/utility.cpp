@@ -5,15 +5,7 @@ bool IsWithinBoard(int index) {
     return index >= 0 && index < 64;
 }
 
-// Return the corresponding piece value for PieceType
-int pieceCode(PieceType ps){
-    return (ps & 7);
-}
 
-// Return the corresponding color value for PieceType
-int colorCode(PieceType ps){
-    return (ps >> 3);
-}
 
 // Print a bitboard to std out in 8x8 grid format
 void printBitboard(U64 bitb) {

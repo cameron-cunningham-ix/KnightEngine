@@ -70,8 +70,6 @@ const std::map<PieceType, std::string> pieceToSAN = {
 };
 
 bool IsWithinBoard(int index);
-int pieceCode(PieceType ps);
-int colorCode(PieceType ps);
 void printBitboard(U64 bitb);
 void printBBLine(U64 bitb);
 int algebraicToIndex(const std::string& square);

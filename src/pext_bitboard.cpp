@@ -1,7 +1,6 @@
 #include "pext_bitboard.hpp"
 #include "board_utility.hpp"
 
-// Define static members
 bool PEXT::initialized = false;
 /// @brief Relevant occupancy masks for rooks (excludes edge squares)
 std::array<U64, 64> PEXT::rookMasks;
@@ -23,11 +22,9 @@ void PEXT::initialize() {
         
         // Pre-calculate all possible moves for each occupancy pattern
         int rookBits = popcount(rookMasks[square]);
-        // std::cout << "square " << square << " rook bits " << rookBits << "\n";
         int bishopBits = popcount(bishopMasks[square]);
         
         rookMoves[square].resize(1ULL << rookBits);
-        // std::cout << (1ULL << rookBits) << "vars\n";
         bishopMoves[square].resize(1ULL << bishopBits);
         
         // Generate all possible occupancy patterns
@@ -51,12 +48,6 @@ U64 PEXT::getRookAttacks(int square, U64 occupancy) {
     U64 index = _pext_u64(occupancy, rookMasks[square]);
     return rookMoves[square][index];
 }
-
-// U64 getBlockingRookMask(int square, U64 occupancy, U64 RQPieces) {
-//     U64 rookMoves = PEXT::getRookAttacks(square, occupancy);
-//     // Mask east
-//     if (RQPieces & rookMoves & )
-// }
 /// @brief 
 /// @param square 
 /// @param occupancy 
