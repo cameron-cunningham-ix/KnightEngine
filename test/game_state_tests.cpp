@@ -31,9 +31,10 @@ TEST_F(GameStateTest, CastlingRightsUpdate) {
 
 // Test en passant square updates
 TEST_F(GameStateTest, EnPassantUpdate) {
+    board.setupPositionFromFEN("rnbqkbnr/ppp1pppp/8/8/3p4/8/PPPPPPPP/RNBQKBNR w KQkq - 0 3");
     // Make a two-square pawn move
-    DenseMove pawnMove{W_PAWN, 8, 24};
+    DenseMove pawnMove{W_PAWN, 12, 28};
     board.makeMove(pawnMove, false);
     
-    EXPECT_EQ(board.currentGameState.enPassantSquare, 16);
+    EXPECT_EQ(board.currentGameState.enPassantSquare, 20);
 }

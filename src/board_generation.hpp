@@ -23,8 +23,10 @@ public:
     void printFEN();
     // Current board state
     GameState currentGameState;
+    // Zobrist key of current board
+    U64 zobristKey;
     // History of game states
-    std::array<GameState, MAX_PLY> stateHistory; /// STACK
+    std::array<GameState, MAX_PLY> stateHistory;
     // History of moves
     std::array<DenseMove, MAX_PLY> moveHistory;
 
@@ -80,6 +82,8 @@ public:
     // Public board alteration methods
     void makeMove(DenseMove move, bool searching);
     void unmakeMove(DenseMove move, bool searching);
+
+    U64 GenerateZobristKey();
 
     // Debug printing methods
     void printBB(int i);

@@ -2,6 +2,7 @@
 #include "../src/board_generation.hpp"
 #include "../src/pext_bitboard.hpp"
 #include "../src/board_utility.hpp"
+#include "../src/zobrist.hpp"
 #include <gtest/gtest.h>
 #include <iostream>
 #include <fstream>
@@ -539,7 +540,7 @@ TEST_F(ChessBoardTest, GameState5) {
 // Test game state from play
 TEST_F(ChessBoardTest, GameState6) {
     // Starting position
-    board.makeMove(DenseMove(W_PAWN, BUTIL::E2, BUTIL::E3), true);
+    board.makeMove(DenseMove(W_PAWN, BUTIL::D2, BUTIL::D4), true);
     EXPECT_EQ(board.currentGameState.sideToMove, BLACK);
     EXPECT_EQ(board.getSideToMove(), BLACK);
     EXPECT_EQ(board.getOppSide(), WHITE);
@@ -551,13 +552,37 @@ TEST_F(ChessBoardTest, GameState6) {
     EXPECT_EQ(board.currentGameState.canCastleBlackKingside, true);
     EXPECT_EQ(board.currentGameState.canCastleBlackQueenside, true);
 
+    board.makeMove(DenseMove(B_PAWN, BUTIL::A7, BUTIL::A5), true);
+    EXPECT_EQ(board.currentGameState.sideToMove, WHITE);
+    EXPECT_EQ(board.getSideToMove(), WHITE);
+    EXPECT_EQ(board.getOppSide(), BLACK);
+    EXPECT_EQ(board.currentGameState.enPassantSquare, -1);
+    EXPECT_EQ(board.currentGameState.fullMoveNumber, 2);
+    EXPECT_EQ(board.currentGameState.halfMoveClock, 0);
+    EXPECT_EQ(board.currentGameState.canCastleWhiteKingside, true);
+    EXPECT_EQ(board.currentGameState.canCastleWhiteQueenside, true);
+    EXPECT_EQ(board.currentGameState.canCastleBlackKingside, true);
+    EXPECT_EQ(board.currentGameState.canCastleBlackQueenside, true);
+
+    board.makeMove(DenseMove(W_PAWN, BUTIL::D4, BUTIL::D5), true);
+    EXPECT_EQ(board.currentGameState.sideToMove, BLACK);
+    EXPECT_EQ(board.getSideToMove(), BLACK);
+    EXPECT_EQ(board.getOppSide(), WHITE);
+    EXPECT_EQ(board.currentGameState.enPassantSquare, -1);
+    EXPECT_EQ(board.currentGameState.fullMoveNumber, 2);
+    EXPECT_EQ(board.currentGameState.halfMoveClock, 0);
+    EXPECT_EQ(board.currentGameState.canCastleWhiteKingside, true);
+    EXPECT_EQ(board.currentGameState.canCastleWhiteQueenside, true);
+    EXPECT_EQ(board.currentGameState.canCastleBlackKingside, true);
+    EXPECT_EQ(board.currentGameState.canCastleBlackQueenside, true);
+
     board.makeMove(DenseMove(B_PAWN, BUTIL::E7, BUTIL::E5), true);
     EXPECT_EQ(board.currentGameState.sideToMove, WHITE);
     EXPECT_EQ(board.getSideToMove(), WHITE);
     EXPECT_EQ(board.getOppSide(), BLACK);
     EXPECT_EQ(board.currentGameState.enPassantSquare, BUTIL::E6);    // Square behind pawn
-    EXPECT_EQ(board.currentGameState.fullMoveNumber, 2);
-    EXPECT_EQ(board.currentGameState.halfMoveClock, 0);
+    EXPECT_EQ(board.currentGameState.fullMoveNumber, 3);
+    EXPECT_EQ(board.currentGameState.halfMoveClock, 0);     // Pawns don't increase HMC
     EXPECT_EQ(board.currentGameState.canCastleWhiteKingside, true);
     EXPECT_EQ(board.currentGameState.canCastleWhiteQueenside, true);
     EXPECT_EQ(board.currentGameState.canCastleBlackKingside, true);
@@ -568,7 +593,7 @@ TEST_F(ChessBoardTest, GameState6) {
     EXPECT_EQ(board.getSideToMove(), BLACK);
     EXPECT_EQ(board.getOppSide(), WHITE);
     EXPECT_EQ(board.currentGameState.enPassantSquare, -1);    // Square behind pawn
-    EXPECT_EQ(board.currentGameState.fullMoveNumber, 1);
+    EXPECT_EQ(board.currentGameState.fullMoveNumber, 2);
     EXPECT_EQ(board.currentGameState.halfMoveClock, 0);     // Pawns don't increase HMC
     EXPECT_EQ(board.currentGameState.canCastleWhiteKingside, true);
     EXPECT_EQ(board.currentGameState.canCastleWhiteQueenside, true);
@@ -650,4 +675,113 @@ TEST_F(ChessBoardTest, GetFEN1) {
 TEST_F(ChessBoardTest, GetFEN2) {
     board.setupPositionFromFEN("r1bq1rk1/p1pp2pp/2n2n2/1p2pp2/3PPB2/b1N2N2/PPP1QPPP/R2K1B1R w - - 3 8");
     EXPECT_EQ(board.getFEN(), "r1bq1rk1/p1pp2pp/2n2n2/1p2pp2/3PPB2/b1N2N2/PPP1QPPP/R2K1B1R w - - 3 8");
+}
+
+// Test Zobrist key equality
+TEST_F(ChessBoardTest, Zobrist1) {
+    ChessBoard board1 = ChessBoard();
+    ChessBoard board2 = ChessBoard();
+
+    EXPECT_EQ(board1.zobristKey, board2.zobristKey);
+}
+
+// Test Zobrist key equality
+TEST_F(ChessBoardTest, Zobrist2) {
+    testing::internal::CaptureStdout();
+    std::ofstream outfile("TestOutput/ChessBoardTest_Zobrist2.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
+    if (outfile.is_open()) {
+        outfile << "ChessBoardTest_Zobrist2.txt\n";
+        std::cout.rdbuf(outfile.rdbuf());
+    }
+
+    ChessBoard board1 = ChessBoard();
+    ChessBoard board2 = ChessBoard();
+
+    DenseMove pawn = DenseMove(W_PAWN, BUTIL::E2, BUTIL::E4);
+    std::cout << "Board2 key before makeMove:\n";
+    printBBLine(board2.zobristKey);
+    board2.makeMove(pawn, false);
+    std::cout << "Board2 key after makeMove:\n";
+    printBBLine(board2.zobristKey);
+    board2.unmakeMove(pawn, false);
+    std::cout << "Board2 key after unmakeMove:\n";
+    printBBLine(board2.zobristKey);
+
+    EXPECT_EQ(board1.zobristKey, board2.zobristKey);
+
+    std::cout << "Board1 key:\n";
+    printBBLine(board1.zobristKey);
+    std::cout << "Board2 key:\n";
+    printBBLine(board2.zobristKey);
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
+    std::cout.rdbuf(coutBuf);
+}
+
+// Test Zobrist key equality
+TEST_F(ChessBoardTest, Zobrist3) {
+    testing::internal::CaptureStdout();
+    std::ofstream outfile("TestOutput/ChessBoardTest_Zobrist3.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
+    if (outfile.is_open()) {
+        outfile << "ChessBoardTest_Zobrist3.txt\n";
+        std::cout.rdbuf(outfile.rdbuf());
+    }
+
+    ChessBoard board1 = ChessBoard();
+    board1.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1");
+    ChessBoard board2 = ChessBoard();
+
+    DenseMove pawn = DenseMove(W_PAWN, BUTIL::E2, BUTIL::E4);
+
+    std::cout << "Board2 key before makeMove:\n";
+    printBBLine(board2.zobristKey);
+    board2.makeMove(pawn, false);
+    std::cout << "Board2 key after makeMove:\n";
+    printBBLine(board2.zobristKey);
+
+    EXPECT_EQ(board1.zobristKey, board2.zobristKey);
+
+    std::cout << "Board1 key:\n";
+    printBBLine(board1.zobristKey);
+    std::cout << "Board2 key:\n";
+    printBBLine(board2.zobristKey);
+
+    std::cout << std::format("\n\nWhite Pawn at e2 key: {}\nWhite Pawn at e4 key: {}\nInitial ZKey: {}\n",
+        Zobrist::getPieceSqKey(BUTIL::E2, W_PAWN), Zobrist::getPieceSqKey(BUTIL::E4, W_PAWN), board.zobristKey);
+    board.zobristKey ^= Zobrist::getPieceSqKey(BUTIL::E2, W_PAWN);
+
+    std::cout << std::format("ZKey after XOR wpe2: {}\n", board.zobristKey);
+
+    board.zobristKey ^= Zobrist::getPieceSqKey(BUTIL::E4, W_PAWN);
+    std::cout << std::format("ZKey after XOR wpe4: {}\n", board.zobristKey);
+
+    std::cout << std::format("Black to move key: {}\n", Zobrist::zobristBlackToMove);
+
+    board.zobristKey ^= Zobrist::zobristBlackToMove;
+    std::cout << std::format("ZKey after XOR black: {}\n", board.zobristKey);
+
+
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
+    std::cout.rdbuf(coutBuf);
+}
+
+// Test Zobrist key equality
+TEST_F(ChessBoardTest, Zobrist4) {
+    ChessBoard board1 = ChessBoard();
+
+    board.setupPositionFromFEN("r1bqkb1r/pppppppp/2n2n2/8/8/2N2N2/PPPPPPPP/R1BQKB1R w KQkq - 4 3");
+
+    board.makeMove(DenseMove(W_KNIGHT, BUTIL::B1, BUTIL::C3), false);
+    board.makeMove(DenseMove(B_KNIGHT, BUTIL::B8, BUTIL::C6), false);
+    board.makeMove(DenseMove(W_KNIGHT, BUTIL::G1, BUTIL::F3), false);
+    board.makeMove(DenseMove(B_KNIGHT, BUTIL::G8, BUTIL::F6), false);
+
+    EXPECT_EQ(board.zobristKey, board1.zobristKey);
 }

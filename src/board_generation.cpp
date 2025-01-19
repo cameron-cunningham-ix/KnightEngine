@@ -3,6 +3,8 @@
 #include "moves.hpp"
 #include "utility.hpp"
 #include "pext_bitboard.hpp"
+#include "zobrist.hpp"
+
 #include <iostream>
 #include <string>
 #include <stdlib.h>
@@ -33,6 +35,7 @@ void ChessBoard::setupPositionFromFEN(const std::string& fen) {
     kingSquares[BLACK] = 0;
     attacksToKings[WHITE] = 0ULL;
     attacksToKings[BLACK] = 0ULL;
+    zobristKey = 0ULL;
 
     // Clear castling rights
     currentGameState.canCastleBlackKingside = false;
@@ -102,9 +105,11 @@ void ChessBoard::setupPositionFromFEN(const std::string& fen) {
     std::from_chars(fullTurns.data(), fullTurns.data()+fullTurns.size(), currentGameState.fullMoveNumber);
     // Replace standard starting state
     stateHistory[0] = currentGameState;
-    // Calculate attacks
-    // calculateAttacksForSide(WHITE);
-    // calculateAttacksForSide(BLACK);
+    // Ensure Zobrist is initialized
+    if (!Zobrist::initialized) 
+        Zobrist::initialize();
+    // Get Zobrist key of the position
+    zobristKey = GenerateZobristKey();
 }
 
 std::string ChessBoard::getFEN() {
@@ -210,6 +215,21 @@ void ChessBoard::movePiece(int from, int to, PieceType piece) {
     /// should be taken care of before this, so it shouldn't
     /// be an issue
     pieceBB[D_EMPTY] = ~(colorBB[WHITE] | colorBB[BLACK]);
+    // Update Zobrist key
+    // std::cout << std::format("movePiece Initial key: {}\n", zobristKey);
+    // std::cout << std::format("movePiece Zobrist key (from {} color {} piece {}): {}\n",
+    //     from, pieceColor, pieceType, Zobrist::getPieceSqKey(from, piece));
+
+    zobristKey ^= Zobrist::getPieceSqKey(from, piece);
+
+    // std::cout << std::format("movePiece XOR from key: {}\n", zobristKey);
+
+    // std::cout << std::format("movePiece Zobrist key (to {} color {} piece {}): {}\n",
+    //     to, pieceColor, pieceType, Zobrist::getPieceSqKey(to, piece));
+
+    zobristKey ^= Zobrist::getPieceSqKey(to, piece);
+
+    // std::cout << std::format("movePiece XOR to key: {}\n", zobristKey);
     // If king moved, update king square
     if (piece == W_KING) kingSquares[WHITE] = to;
     else if (piece == B_KING) kingSquares[BLACK] = to;
@@ -222,16 +242,21 @@ void ChessBoard::removePiece(int square, PieceType piece) {
     U64 clearSquareBB = ~(1ULL << square);
 
     // Get color and piece type
-    bool isWhite = piece <= W_KING;
+    int pieceColor = colorCode(piece);
     int pieceType = pieceCode(piece);
 
     // Clear bit in color bitboard
-    colorBB[isWhite ? 0 : 1] &= clearSquareBB;
+    colorBB[pieceColor] &= clearSquareBB;
 
     // Clear bit in piece type bitboard
     pieceBB[pieceType] &= clearSquareBB;
     // Set bit in empty squares bitboard
     pieceBB[D_EMPTY] |= (1ULL << square);
+    // Update Zobrist key
+    // std::cout << std::format("removePiece Initial key: {}\n", zobristKey);
+    zobristKey ^= Zobrist::getPieceSqKey(square, piece);
+    // std::cout << std::format("removePiece XOR square key: {}\n", zobristKey);
+
 }
 /// @brief  Helper function to add a piece to the board
 /// @param square 
@@ -240,17 +265,22 @@ void ChessBoard::addPiece(int square, PieceType piece) {
     U64 squareBB = 1ULL << square;
 
     // Get color and piece type
-    bool isWhite = piece <= W_KING;
+    int pieceColor = colorCode(piece);
     int pieceType = pieceCode(piece);
 
     // Set bit in color bitboard
-    colorBB[isWhite ? 0 : 1] |= squareBB;
+    colorBB[pieceColor] |= squareBB;
 
     // Set bit in piece type bitboard
     pieceBB[pieceType] |= squareBB;
 
     // Clear bit in empty squares bitboard
     pieceBB[D_EMPTY] &= ~squareBB;
+    // Update Zobrist key
+    // std::cout << std::format("addPiece Initial key: {}\n", zobristKey);
+    zobristKey ^= Zobrist::getPieceSqKey(square, piece);
+    // std::cout << std::format("addPiece XOR square key: {}\n", zobristKey);
+
 }
 /// @brief Calculates whether current side to move is in check
 /// @return True if current side to move is in check, false otherwise
@@ -591,8 +621,13 @@ void ChessBoard::initializeGameState() {
     plyIndex = 0;
     // Store initial state onto stateHistory
     stateHistory[plyIndex] = currentGameState;
-    // Initialize cached check values as false, otherwise they have garbage values
     checkingCount = 0;
+    // Ensure Zobrist is initialized
+    if (!Zobrist::initialized) 
+        Zobrist::initialize();
+    // Generate Zobrist key for initial position
+    zobristKey = GenerateZobristKey();
+    // std::cout << std::format("Initial Zobrist key: {}\n", zobristKey);
 }
 /// @brief Find any opponent pieces that are attacking square 'index'
 /// @param index Index of square 
@@ -635,6 +670,10 @@ U64 ChessBoard::OppAttacksToSquare(int index, Color colorOfKing) const {
 /// @param move
 /// @param searching If searching, move is not added to moveHistory.
 void ChessBoard::makeMove(DenseMove move, bool searching) {
+    U64 initialKey = zobristKey;
+    // std::cout << std::format("Making move: {}\n", move.toString(false));
+    // std::cout << std::format("makeMove Initial Zobrist key: {}\n", initialKey);
+
     // Get move info
     PieceType movedPiece = move.getPieceType();
     Color movedColor = move.getColor();
@@ -644,6 +683,7 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
     bool isCastle = move.isCastle();
     bool isEnPass = move.isEnPassant();
     PieceType promoPiece = move.getPromotePiece();
+    int prevCastleRights = currentGameState.getCastleRights();
     
     // Handle captures and en passant
     if (capturedPiece != PieceType::EMPTY) {
@@ -710,15 +750,32 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
         currentGameState.canCastleBlackKingside = false;
     }
 
+
     // Update en passant
     if (movedPiece != W_PAWN && movedPiece != B_PAWN) {
         currentGameState.enPassantSquare = -1;
     } else {
         if (std::abs(to - from) == 16) {
-            // En Passant square is the square behind the double pushed pawn
-            currentGameState.enPassantSquare = (from + to) / 2;
-        }
-        else {
+            // Get file of the moved pawn
+            int file = to % 8;
+            // Get pawns that could capture
+            U64 adjacentFiles = 0;
+            if (file > 0) adjacentFiles |= BUTIL::FileMask << (file - 1);  // Left file
+            if (file < 7) adjacentFiles |= BUTIL::FileMask << (file + 1);  // Right file
+
+            // Check if there are any enemy pawns in adjacent files at the right rank
+            U64 enemyPawns = (movedPiece == W_PAWN) ? getBlackPawns() : getWhitePawns();
+            U64 enemyPawnsInPosition = enemyPawns & adjacentFiles & (movedPiece == W_PAWN ? 
+                BUTIL::Rank4 : BUTIL::Rank5);
+
+            // Only set en passant square if there are enemy pawns that could capture
+            if (enemyPawnsInPosition) {
+                currentGameState.enPassantSquare = (from + to) / 2;
+                zobristKey ^= Zobrist::zobristEnPass[currentGameState.getEnPassantFileIndex()];
+            } else {
+                currentGameState.enPassantSquare = -1;
+            }
+        } else {
             currentGameState.enPassantSquare = -1;
         }
     }
@@ -736,11 +793,19 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
     // Increment fullmove number if black just moved
     if (currentGameState.sideToMove == WHITE) {
         currentGameState.fullMoveNumber++;
+    } else {
+        // Update Zobrist key on Black's turns
+        zobristKey ^= Zobrist::zobristBlackToMove;
     }
     
     plyIndex++;
     // Add new state to history
     stateHistory[plyIndex] = currentGameState;
+    // Update Zobrist key
+    if (prevCastleRights != currentGameState.getCastleRights()) {
+        zobristKey ^= Zobrist::zobristCastle[prevCastleRights];
+        zobristKey ^= Zobrist::zobristCastle[currentGameState.getCastleRights()];
+    }
     
     if (!searching) {
         moveHistory[plyIndex] = move;
@@ -761,6 +826,7 @@ void ChessBoard::unmakeMove(DenseMove move, bool searching) {
     // to do it for every unmake, and we shouldn't be accessing old
     // values anyway, they'll be overwritten by makeMove
     plyIndex--;
+    int prevCastleRights = currentGameState.getCastleRights();
     // Get previous state
     currentGameState = stateHistory[plyIndex];
 
@@ -815,7 +881,60 @@ void ChessBoard::unmakeMove(DenseMove move, bool searching) {
             movePiece(rookFrom, rookTo, (movedPiece == W_KING) ? W_ROOK : B_ROOK);
         }
     }
+    // Update Zobrist key
+    if (prevCastleRights != currentGameState.getCastleRights()) {
+        zobristKey ^= Zobrist::zobristCastle[prevCastleRights];
+        zobristKey ^= Zobrist::zobristCastle[currentGameState.getCastleRights()];
+    }
+    if (currentGameState.enPassantSquare != -1) {
+        zobristKey ^= Zobrist::zobristEnPass[currentGameState.getEnPassantFileIndex()];
+    }
+    if (currentGameState.sideToMove == WHITE) {
+        zobristKey ^= Zobrist::zobristBlackToMove;
+    }
 }
+
+/// @brief 
+/// @param board 
+/// @return 
+U64 ChessBoard::GenerateZobristKey() {
+    U64 zobristKey = 0ULL;
+
+    for (int sq = 0; sq < 64; sq++) {
+        PieceType piece = getPieceAt(sq);
+        if (piece == PieceType::EMPTY) continue;
+
+        // std::cout << std::format("ZobristKey initial: {}\nZobristKey (sq: {}): {}\n",
+        //     zobristKey, sq, Zobrist::getPieceSqKey(sq, piece));
+        zobristKey ^= Zobrist::getPieceSqKey(sq, piece);
+        // std::cout << std::format("ZobristKey after: {}\n", zobristKey);
+    }
+
+    if (getSideToMove() == BLACK) {
+        // std::cout << std::format("ZobristKey before blacks turn: {}\n", zobristKey);
+        // std::cout << std::format("ZobristKey (BlackToMove): {}\n", Zobrist::zobristBlackToMove);
+        
+        zobristKey ^= Zobrist::zobristBlackToMove;
+        // std::cout << std::format("ZobristKey after BlackToMove: {}\n", zobristKey);
+
+    }
+
+    // std::cout << std::format("ZobristKey before castle: {}\n", zobristKey);
+    // std::cout << std::format("ZobristKey (Castle): {}\n", Zobrist::zobristCastle[currentGameState.getCastleRights()]);
+    zobristKey ^= Zobrist::zobristCastle[currentGameState.getCastleRights()];
+    // std::cout << std::format("ZobristKey after castle: {}\n", zobristKey);
+
+    if (currentGameState.enPassantSquare != -1) {
+        // std::cout << std::format("ZobristKey before enpass: {}\n", zobristKey);
+        // std::cout << std::format("ZobristKey (enpass): {}\n", Zobrist::zobristEnPass[currentGameState.getEnPassantFileIndex()]);
+        zobristKey ^= Zobrist::zobristEnPass[currentGameState.getEnPassantFileIndex()];
+        // std::cout << std::format("ZobristKey after enpass: {}\n", zobristKey);
+    }
+
+    // std::cout << std::format("ZobristKey final init: {}\n", zobristKey);
+    return zobristKey;
+}
+
 /// @brief Prints a piece bitboard to the console
 /// @param i corresponds to DenseType enum
 void ChessBoard::printBB(int i) {

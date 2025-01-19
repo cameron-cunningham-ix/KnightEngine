@@ -26,26 +26,6 @@ class PEXTTest : public ::testing::Test {
 
 };
 
-TEST_F(PEXTTest, GetRookAttacks) {
-    std::ofstream outfile("TestOutput/rookMoves.txt");
-    std::streambuf* coutBuf = std::cout.rdbuf();
-    if (outfile.is_open()) {
-        outfile << "Rook moves: " << std::endl;
-    }
-    std::cout.rdbuf(outfile.rdbuf());
-
-    for (int square = 0; square < 64; square++) {
-        int size = (int)PEXT::rookMoves[square].size();
-        for (int index = 0; index < size; index++) {
-            std::cout << "square " << square << " index " << index << " - " << std::bitset<12>(index) << "\n";
-            printBBLine(PEXT::rookMoves[square][index]);
-        }
-    }
-
-    std::cout.rdbuf(coutBuf);
-    outfile.close();
-}
-
 TEST_F(PEXTTest, RookAttacks) {
     std::ofstream outfile("TestOutput/rookMoves.txt");
     std::streambuf* coutBuf = std::cout.rdbuf();

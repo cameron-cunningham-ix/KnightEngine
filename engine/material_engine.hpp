@@ -1,6 +1,7 @@
 #pragma once
 
 #include "chess_engine_base.hpp"
+#include "transposition_table.hpp"
 #include "board_utility.hpp"
 #include <immintrin.h>
 #include <algorithm>
@@ -8,6 +9,7 @@
 
 static constexpr int INF_POS = 999999999;
 static constexpr int INF_NEG = -999999999;
+static constexpr int TT_SIZE = 44739242;
 
 /// @brief 
 class MaterialEngine : public ChessEngineBase {
@@ -18,6 +20,9 @@ private:
     DenseMove currentMove;
     int currentMoveNumber;
     int totalPiecesWithoutPawns;
+    // Transposition table
+    // 44 million 24-byte entries = 1 GB
+    std::array<TTEntry, TT_SIZE> transpositionTable;
 
     // Piece-Square tables
     // Pawns - Early game

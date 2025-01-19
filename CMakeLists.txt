@@ -56,10 +56,13 @@ add_library(KnightEngine
     src/moves.hpp
     src/pext_bitboard.cpp
     src/pext_bitboard.hpp
+    src/transposition_table.hpp
     src/types.cpp
     src/types.hpp
     src/utility.cpp
     src/utility.hpp
+    src/zobrist.cpp
+    src/zobrist.hpp
     engine/random_engine.hpp
     engine/material_engine.hpp
 )
