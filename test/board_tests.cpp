@@ -778,10 +778,80 @@ TEST_F(ChessBoardTest, Zobrist4) {
 
     board.setupPositionFromFEN("r1bqkb1r/pppppppp/2n2n2/8/8/2N2N2/PPPPPPPP/R1BQKB1R w KQkq - 4 3");
 
-    board.makeMove(DenseMove(W_KNIGHT, BUTIL::B1, BUTIL::C3), false);
-    board.makeMove(DenseMove(B_KNIGHT, BUTIL::B8, BUTIL::C6), false);
-    board.makeMove(DenseMove(W_KNIGHT, BUTIL::G1, BUTIL::F3), false);
-    board.makeMove(DenseMove(B_KNIGHT, BUTIL::G8, BUTIL::F6), false);
+    board1.makeMove(DenseMove(W_KNIGHT, BUTIL::B1, BUTIL::C3), false);
+    board1.makeMove(DenseMove(B_KNIGHT, BUTIL::G8, BUTIL::F6), false);
+    board1.makeMove(DenseMove(W_KNIGHT, BUTIL::G1, BUTIL::F3), false);
+    board1.makeMove(DenseMove(B_KNIGHT, BUTIL::B8, BUTIL::C6), false);
+    EXPECT_EQ(board.zobristKey, board1.zobristKey);
+
+    board.setupPositionFromFEN("r1bqkb1r/pppppppp/2n2n2/8/8/2N2N2/PPPPPPPP/1RBQKB1R b Kkq - 5 3");
+
+    board1.makeMove(DenseMove(W_ROOK, BUTIL::A1, BUTIL::B1), false);
+    EXPECT_EQ(board.zobristKey, board1.zobristKey);
+}
+
+// Test Zobrist key equality with castling rights
+TEST_F(ChessBoardTest, Zobrist5) {
+    ChessBoard board1 = ChessBoard();
+    // Position where both white rooks moved
+    board1.makeMove(DenseMove(W_PAWN, BUTIL::A2, BUTIL::A3), false);
+    board1.makeMove(DenseMove(B_PAWN, BUTIL::A7, BUTIL::A6), false);
+    board1.makeMove(DenseMove(W_ROOK, BUTIL::A1, BUTIL::A2), false);
+    board1.makeMove(DenseMove(B_ROOK, BUTIL::A8, BUTIL::A7), false);
+    board1.makeMove(DenseMove(W_PAWN, BUTIL::H2, BUTIL::H3), false);
+    board1.makeMove(DenseMove(B_PAWN, BUTIL::H7, BUTIL::H6), false);
+    board1.makeMove(DenseMove(W_ROOK, BUTIL::H1, BUTIL::H2), false);
+    board1.makeMove(DenseMove(B_ROOK, BUTIL::H8, BUTIL::H7), false);
+
+    // Set up same position directly - should have no castling rights
+    board.setupPositionFromFEN("1nbqkbn1/rppppppr/p6p/8/8/P6P/RPPPPPPR/1NBQKBN1 w - - 2 5");
+    EXPECT_EQ(board.zobristKey, board1.zobristKey);
+}
+
+// Test Zobrist key equality with en passant
+TEST_F(ChessBoardTest, Zobrist6) {
+    ChessBoard board1 = ChessBoard();
+    board.setupPositionFromFEN("rnbqkbnr/ppp1p1pp/8/3pPp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3");
+    
+    // Reach same position through moves
+    board1.makeMove(DenseMove(W_PAWN, BUTIL::E2, BUTIL::E4), false);
+    board1.makeMove(DenseMove(B_PAWN, BUTIL::D7, BUTIL::D5), false);
+    board1.makeMove(DenseMove(W_PAWN, BUTIL::E4, BUTIL::E5), false);
+    board1.makeMove(DenseMove(B_PAWN, BUTIL::F7, BUTIL::F5), false);
+    
+    EXPECT_EQ(board.zobristKey, board1.zobristKey);
+}
+
+// Test Zobrist key equality
+TEST_F(ChessBoardTest, Zobrist7) {
+    board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1");
+
+    ChessBoard board1 = ChessBoard();
+    board1.makeMove(DenseMove(W_PAWN, BUTIL::D2, BUTIL::D4), false);
+    EXPECT_EQ(board.zobristKey, board1.zobristKey);
+
+
+    board.setupPositionFromFEN("rnbqkbnr/pppp1ppp/8/4p3/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2");
+    board1.makeMove(DenseMove(B_PAWN, BUTIL::E7, BUTIL::E5), false);
+    EXPECT_EQ(board.zobristKey, board1.zobristKey);
+
+
+    board.setupPositionFromFEN("rnbqkbnr/pppp1ppp/8/4P3/8/8/PPP1PPPP/RNBQKBNR b KQkq - 0 2");
+
+    board1.makeMove(DenseMove(W_PAWN, BUTIL::D4, BUTIL::E5, D_PAWN), false);
+    EXPECT_EQ(board.zobristKey, board1.zobristKey);
+}
+
+// Test Zobrist key equality with promotions
+TEST_F(ChessBoardTest, Zobrist8) {
+    ChessBoard board1 = ChessBoard();
+    board.setupPositionFromFEN("5k2/8/8/8/8/8/8/4K2q w - - 0 2");
+
+    // Reach same position through promotion
+    board1.setupPositionFromFEN("5k2/8/8/8/8/8/6p1/4K2Q b - - 0 1");
+    DenseMove promo(B_PAWN, BUTIL::G2, BUTIL::H1, D_QUEEN);
+    promo.setPromoteTo(D_QUEEN);
+    board1.makeMove(promo, false);
 
     EXPECT_EQ(board.zobristKey, board1.zobristKey);
 }

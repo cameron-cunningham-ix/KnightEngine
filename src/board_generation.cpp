@@ -520,7 +520,7 @@ PieceType ChessBoard::getPieceAt(int index) const {
     // Reaching this point means there is an error in the bitboards,
     // specifically that this index is set in one of the color bitboards 
     // but not in any of the piece bitboards
-    std::cerr << "ChessBoard getPieceAt Error: Invalid piece at square " << index << "\n";
+    std::cout << "ChessBoard getPieceAt Error: Invalid piece at square " << index << "\n";
     return PieceType::INVALID;
 }
 /// @brief 
