@@ -12,6 +12,8 @@ struct TTEntry {
     static constexpr int ALPHA = 1;
     // If the score of the node was at least 'score'
     static constexpr int BETA = 2;
+    // If the score of the node is unknown
+    static constexpr int UNKNOWN = 1234567890;
 
     // Stored Zobrist key for this entry in the transposition table
     U64 key;
@@ -20,7 +22,7 @@ struct TTEntry {
     // are shallower than the current depth we're searching
     int depth;
     // Flag for indicating what score means for this entry;
-    // Set to either EXACT, ALPHA, or BETA
+    // Set to either EXACT, ALPHA, BETA, or UNKNOWN
     int flag;
     // 
     int score;

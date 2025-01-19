@@ -759,9 +759,9 @@ TEST_F(ChessBoardTest, Zobrist3) {
     board.zobristKey ^= Zobrist::getPieceSqKey(BUTIL::E4, W_PAWN);
     std::cout << std::format("ZKey after XOR wpe4: {}\n", board.zobristKey);
 
-    std::cout << std::format("Black to move key: {}\n", Zobrist::zobristBlackToMove);
+    std::cout << std::format("Black to move key: {}\n", Zobrist::zobristSideToMove);
 
-    board.zobristKey ^= Zobrist::zobristBlackToMove;
+    board.zobristKey ^= Zobrist::zobristSideToMove;
     std::cout << std::format("ZKey after XOR black: {}\n", board.zobristKey);
 
 
@@ -805,6 +805,20 @@ TEST_F(ChessBoardTest, Zobrist5) {
 
     // Set up same position directly - should have no castling rights
     board.setupPositionFromFEN("1nbqkbn1/rppppppr/p6p/8/8/P6P/RPPPPPPR/1NBQKBN1 w - - 2 5");
+    EXPECT_EQ(board.zobristKey, board1.zobristKey);
+
+    // Get back to initial pos
+    board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    
+    board1.unmakeMove(DenseMove(B_ROOK, BUTIL::H8, BUTIL::H7), false);
+    board1.unmakeMove(DenseMove(W_ROOK, BUTIL::H1, BUTIL::H2), false);
+    board1.unmakeMove(DenseMove(B_PAWN, BUTIL::H7, BUTIL::H6), false);
+    board1.unmakeMove(DenseMove(W_PAWN, BUTIL::H2, BUTIL::H3), false);
+    board1.unmakeMove(DenseMove(B_ROOK, BUTIL::A8, BUTIL::A7), false);
+    board1.unmakeMove(DenseMove(W_ROOK, BUTIL::A1, BUTIL::A2), false);
+    board1.unmakeMove(DenseMove(B_PAWN, BUTIL::A7, BUTIL::A6), false);
+    board1.unmakeMove(DenseMove(W_PAWN, BUTIL::A2, BUTIL::A3), false);
+
     EXPECT_EQ(board.zobristKey, board1.zobristKey);
 }
 

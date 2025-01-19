@@ -2,8 +2,8 @@
 // Whether Zobrist has been initialized yet or not
 bool Zobrist::initialized = false;
 std::array<U64, 768> Zobrist::zobristPieces;
-// When it's Black's turn, we also XOR this into the key
-U64 Zobrist::zobristBlackToMove = 0ULL;
+U64 Zobrist::zobristWhiteToMove = 0ULL;
+U64 Zobrist::zobristSideToMove = 0ULL;
 // 16 possibilities for castling rights of both players
 // Index corresponds to binary for rights: 0 - no rights
 // 15 - both players can castle either side; KQkq
@@ -31,7 +31,8 @@ void Zobrist::initialize() {
     for (int i = 0; i < 8; i++) {
         zobristEnPass[i] = rng();
     }
-    zobristBlackToMove = rng();
+    zobristWhiteToMove = rng();
+    zobristSideToMove = rng();
     initialized = true;
 }
 

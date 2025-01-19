@@ -22,8 +22,9 @@ public:
     // Whether Zobrist has been initialized yet or not
     static bool initialized;
     static std::array<U64, 768> zobristPieces;
+    static U64 zobristWhiteToMove;
     // When it's Black's turn, we also XOR this into the key
-    static U64 zobristBlackToMove;
+    static U64 zobristSideToMove;
     // 16 possibilities for castling rights of both players
     // Index corresponds to binary for rights: 0 - no rights
     // 15 - both players can castle either side; KQkq

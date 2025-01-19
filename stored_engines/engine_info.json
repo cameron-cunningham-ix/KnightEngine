@@ -118,5 +118,17 @@
     "author": "Cameron Cunningham",
     "build_type": "_R",
     "stored_date": "2025-01-13 13:43:35"
+  },
+  "MaterialEngine 0.5 _R": {
+    "filename": "MaterialEngine_v0_5_R.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_R",
+    "stored_date": "2025-01-19 14:01:17"
+  },
+  "MaterialEngine 0.51 _R": {
+    "filename": "MaterialEngine_v0_51_R.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_R",
+    "stored_date": "2025-01-19 15:13:32"
   }
 }

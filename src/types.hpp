@@ -204,6 +204,15 @@ struct DenseMove {
     std::string toAlgebraic() const;
 };
 
+// bool moveSort(DenseMove const& lhs, DenseMove const& rhs) {
+//     if (lhs.data & moveMask_CaptType != rhs.data & moveMask_CaptType) {
+//         return lhs.data & moveMask_CaptType < rhs.data & moveMask_CaptType;
+//     }
+//     if (lhs.data & moveMask_DType != rhs.data & moveMask_DType) {
+//         return lhs.data & moveMask_DType > rhs.data & moveMask_DType
+//     }
+// }
+
 /// @brief Struct representing the current state of the game.
 /// Contains information about castling rights, en passant square, side to move, etc.
 /// Used in ChessBoard class.

@@ -187,85 +187,133 @@ private:
 public:
 
     MaterialEngine() 
-        : ChessEngineBase("MaterialEngine", "0.431", "Cameron Cunningham", 6) {}
+        : ChessEngineBase("MaterialEngine", "0.51", "Cameron Cunningham", 6) {}
 
-    DenseMove findBestMove(ChessBoard& board, 
-                           int maxDepth = -1) override {
+    DenseMove MaterialEngine::findBestMove(ChessBoard& board, int maxDepth = -1) {
         startSearch();
         searchStartTime = std::chrono::steady_clock::now();
         nodeCount = 0;
         currentMoveNumber = 0;
 
         int actualDepth = (maxDepth > 0) ? maxDepth : searchDepth;
-
-        // Generate all psuedo legal moves
-        int moveNum = 0;
-        std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
-        Color sideToMove = board.getSideToMove();
         
-        // Initialize alpha beta values at this root node
-        int alpha = INF_NEG;
-        int beta = INF_POS;
-        // bestScore will determine what the best move to play is
-        // Negative bestScore means Black's position is better, positive means White's position is better
-        int bestScore = sideToMove == WHITE ? INF_NEG : INF_POS;
-        DenseMove bestMove;
+        // Start with minimal depth and increase
+        DenseMove bestMoveOverall;
+        int bestScoreOverall = 0;
+        const int MIN_DEPTH = 2;  // Start at depth 2 for efficiency
 
-        // Evaluate each move
-        for (int i = 0; i < moveNum; i++) {
-            currentMoveNumber = i + 1;
-            currentMove = moves[i];
+        // Iterative deepening loop
+        for (int currDepth = MIN_DEPTH; currDepth <= actualDepth && isSearching; currDepth++) {
+            // Reset counters for this iteration
+            nodeCount = 0;
+            currentMoveNumber = 0;
 
-            // Send current move info
-            sendInfo(std::format("currmove {} currmovenumber {}",
-                                currentMove.toAlgebraic(), currentMoveNumber));
-
-            // Make move on temporary board
-            ChessBoard tempBoard = board;
-            tempBoard.makeMove(moves[i], true);
-
-            // Store start time for this move
-            auto moveStartTime = std::chrono::steady_clock::now();
-
-            // Evaluate resulting position
-            int score = alphaBeta(tempBoard, actualDepth - 1, 
-                                 alpha, beta, tempBoard.getSideToMove() == WHITE);
-            // Update best move if better score found
-            if ((sideToMove == WHITE && score > bestScore) ||
-                (sideToMove == BLACK && score < bestScore)) {
-                bestScore = score;
-                bestMove = moves[i];
-
-                // Update alpha beta values for this root node
-                // Next nodes searched can be pruned if they lead to much better
-                // or worse positions than best move already found
-                if (sideToMove == WHITE) {
-                    if (score > alpha) alpha = score;
-                } else {
-                    if (score < beta) beta = score;
-                }
-
-                auto moveTime = std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::steady_clock::now() - searchStartTime).count();
-                
-                // Send updated info
-                std::string infoStr = std::format("depth {} score cp {} time {} nodes {} ",
-                    actualDepth, bestScore, moveTime, nodeCount, bestMove.toAlgebraic());
-                
-                // Add NPS if we have meaningful time elapsed
-                if (moveTime > 0) {
-                    U64 nps = (nodeCount * 1000) / moveTime;
-                    infoStr += std::format("nps {} ", nps);
-                }
-
-                sendInfo(infoStr);
+            // Check transposition table for any previously found best move
+            TTEntry* entry = &transpositionTable[board.zobristKey % TT_SIZE];
+            DenseMove ttMove;
+            if (entry->key == board.zobristKey) {
+                ttMove = entry->bestMove;
             }
+
+            // Generate all legal moves
+            int moveNum = 0;
+            std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
+            Color sideToMove = board.getSideToMove();
+            
+            // Initialize alpha beta values at this root node
+            int alpha = INF_NEG;
+            int beta = INF_POS;
+            int bestScore = sideToMove == WHITE ? INF_NEG : INF_POS;
+            DenseMove bestMove;
+
+            // If we have a TT move, search it first
+            if (ttMove != DenseMove()) {
+                // Find the TT move in our moves array
+                for (int i = 0; i < moveNum; i++) {
+                    if (moves[i] == ttMove) {
+                        // Swap it to first position
+                        if (i != 0) {
+                            std::swap(moves[0], moves[i]);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Evaluate each move
+            for (int i = 0; i < moveNum; i++) {
+                currentMoveNumber = i + 1;
+                currentMove = moves[i];
+
+                // Send current move info
+                sendInfo(std::format("currmove {} currmovenumber {}", 
+                                    currentMove.toAlgebraic(), currentMoveNumber));
+
+                // Make move on temporary board
+                ChessBoard tempBoard = board;
+                tempBoard.makeMove(moves[i], true);
+
+                // Store start time for this move
+                auto moveStartTime = std::chrono::steady_clock::now();
+
+                // Evaluate resulting position
+                int score = alphaBeta(tempBoard, currDepth - 1, 
+                                    alpha, beta, tempBoard.getSideToMove() == WHITE);
+
+                // Update best move if better score found
+                if ((sideToMove == WHITE && score > bestScore) ||
+                    (sideToMove == BLACK && score < bestScore)) {
+                    bestScore = score;
+                    bestMove = moves[i];
+
+                    // Update alpha beta values for this root node
+                    if (sideToMove == WHITE) {
+                        if (score > alpha) alpha = score;
+                    } else {
+                        if (score < beta) beta = score;
+                    }
+
+                    auto moveTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::steady_clock::now() - searchStartTime).count();
+                    
+                    // Send updated info
+                    std::string infoStr = std::format("depth {} score cp {} time {} nodes {} ",
+                        currDepth, bestScore, moveTime, nodeCount, bestMove.toAlgebraic());
+                    
+                    if (moveTime > 0) {
+                        U64 nps = (nodeCount * 1000) / moveTime;
+                        infoStr += std::format("nps {} ", nps);
+                    }
+                    sendInfo(infoStr);
+                }
+            }
+
+            // Store the root position result
+            int flag = TTEntry::EXACT;  // Root node is always exact
+            RecordTTEntry(board, bestMove, currDepth, bestScore, flag);
+
+            // Update overall best move for the search
+            bestMoveOverall = bestMove;
+            bestScoreOverall = bestScore;
+
+            // Log completion of this iteration 
+            auto totalTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - searchStartTime).count();
+            
+            std::string iterStr = std::format("Completed depth {} in {}ms, score: {}, nodes: {}", 
+                currDepth, totalTime, bestScore, nodeCount);
+            if (totalTime > 0) {
+                U64 nps = (nodeCount * 1000) / totalTime;
+                iterStr += std::format(", nps: {}", nps);
+            }
+            sendInfo(iterStr);
         }
 
-        this->bestMove = bestMove;
+        this->bestMove = bestMoveOverall;
         endSearch();
-        return bestMove;
+        return bestMoveOverall;
     }
+
 
     /// @brief Called at the terminal nodes of alphaBeta function.
     /// 
@@ -571,6 +619,54 @@ private:
         return score;
     }
 
+    /// @brief Records the given transposition table entry in the table
+    /// @param key 
+    /// @param best 
+    /// @param depth 
+    /// @param score 
+    /// @param flag 
+    void RecordTTEntry(ChessBoard& board, DenseMove best, int depth, int score, int flag) {
+        TTEntry* entry = &transpositionTable[board.zobristKey % TT_SIZE];
+
+        entry->key = board.zobristKey;
+        entry->bestMove = best;
+        entry->depth = depth;
+        entry->score = score;
+        entry->flag = flag;
+    }
+
+    bool checkTT(ChessBoard& board, int depth, int& alpha, int& beta, int& score) {
+        TTEntry* entry = &transpositionTable[board.zobristKey & TT_SIZE];
+
+        // Check if this is the position we want
+        if (entry->key == board.zobristKey) {
+            // Only use the entry if its depth is greater or equal to our current
+            // depth; lesser depth could be inaccurate due to other positions
+            // searched at greater depth
+            if (entry->depth >= depth) {
+                // Use the bestMove first next time we search this position
+                bestMove = entry->bestMove;
+
+                // Based on the type of score stored, we might be able to use it
+                if (entry->flag == TTEntry::EXACT) {
+                    score = entry->score;
+                    return true;
+                }
+                if (entry->flag == TTEntry::ALPHA && entry->score <= alpha) {
+                    score = alpha;
+                    return true;
+                }
+                if (entry->flag == TTEntry::BETA && entry->score >= beta) {
+                    score = beta;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
+
     /// @brief Alpha-Beta search algorithm.
     /// This is a recursively called function used to score a chess position.
     /// Positive means the position is better for White, negative better for Black
@@ -588,10 +684,17 @@ private:
             return evaluatePosition(board);
         }
 
+        // Check transposition table first
+        int score;
+        if (checkTT(board, depth, alpha, beta, score)) {
+            return score;
+        }
+
         int moveNum = 0;
         std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generatePsuedoMoves(board, moveNum);
-
+        DenseMove bestMoveSoFar;
         bool noLegalMoves = true;
+        int flag = TTEntry::ALPHA;  // Assume lower bound by default
 
         // White to move
         // Trying to improve alpha value by finding moves that give a higher score
@@ -615,21 +718,33 @@ private:
                 tempBoard.unmakeMove(moves[i], true);
                 // If eval is greater than any other score so far in this node,
                 // maxEval gets set to eval
-                if (eval > maxEval) maxEval = eval;
+                if (eval > maxEval) {
+                    maxEval = eval;
+                    bestMoveSoFar = moves[i];    // Remember best move found so far
+                }
 
                 // If maxEval is now greater than alpha (best maximizing score 
                 // guranteed across the search tree so far), set alpha to eval
-                if (maxEval > alpha) alpha = maxEval;
+                if (maxEval > alpha) {
+                    alpha = maxEval;
+                    flag = TTEntry::EXACT;
+                }
 
                 // If alpha is now so good that it's greater than beta (best minimizing 
                 // score guaranteed across the search tree so far), then minimizing
                 // player will never allow this position to be reached if playing optimally
                 // and we can break early
-                if (alpha >= beta) break;
+                if (alpha >= beta) {
+                    flag = TTEntry::BETA;   // Upper bound
+                    break;
+                }
             }
             // If there was at least 1 legal move, return eval
-            if (!noLegalMoves)
+            if (!noLegalMoves) {
+                // Store position in transposition table
+                RecordTTEntry(board, bestMoveSoFar, depth, maxEval, flag);
                 return maxEval;
+            }
             else {
                 // No legal moves means we're either in checkmate or stalemate
                 if (board.isSideInCheck(WHITE)) {
@@ -666,20 +781,32 @@ private:
 
                 // If eval is less than any other score so far in this node,
                 // minEval gets set to eval
-                if (eval < minEval) minEval = eval;
+                if (eval < minEval) {
+                    minEval = eval;
+                    bestMoveSoFar = moves[i];    // Remember best move found
+                }
 
                 // If minEval is now less than beta (best minimizing score guranteed across
                 // the search tree so far), set beta to minEval
-                if (minEval < beta) beta = minEval;
+                if (minEval < beta) {
+                    beta = minEval;
+                    flag = TTEntry::EXACT;
+                }
 
                 // If beta is now so good that it's less than alpha (best maximizing score
                 // guranteed across the search tree so far), then maximizing player
                 // will never allow this position to be reached if playing optimally
-                if (beta <= alpha) break;
+                if (beta <= alpha) {
+                    flag = TTEntry::ALPHA;  // Lower bound
+                    break;
+                }
             }
             // If there was at least 1 legal move, return eval
-            if (!noLegalMoves)
+            if (!noLegalMoves) {
+                // Store position in transposition table
+                RecordTTEntry(board, bestMoveSoFar, depth, minEval, flag);
                 return minEval;
+            }
             else {
                 // No legal moves means we're either in checkmate or stalemate
                 if (board.isSideInCheck(BLACK)) {

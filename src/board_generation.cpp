@@ -793,15 +793,13 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
     // Increment fullmove number if black just moved
     if (currentGameState.sideToMove == WHITE) {
         currentGameState.fullMoveNumber++;
-    } else {
-        // Update Zobrist key on Black's turns
-        zobristKey ^= Zobrist::zobristBlackToMove;
     }
     
     plyIndex++;
     // Add new state to history
     stateHistory[plyIndex] = currentGameState;
     // Update Zobrist key
+    zobristKey ^= Zobrist::zobristSideToMove;
     if (prevCastleRights != currentGameState.getCastleRights()) {
         zobristKey ^= Zobrist::zobristCastle[prevCastleRights];
         zobristKey ^= Zobrist::zobristCastle[currentGameState.getCastleRights()];
@@ -889,9 +887,9 @@ void ChessBoard::unmakeMove(DenseMove move, bool searching) {
     if (currentGameState.enPassantSquare != -1) {
         zobristKey ^= Zobrist::zobristEnPass[currentGameState.getEnPassantFileIndex()];
     }
-    if (currentGameState.sideToMove == WHITE) {
-        zobristKey ^= Zobrist::zobristBlackToMove;
-    }
+    zobristKey ^= Zobrist::zobristSideToMove;
+    // if (currentGameState.sideToMove == WHITE) {
+    // }
 }
 
 /// @brief 
@@ -912,9 +910,9 @@ U64 ChessBoard::GenerateZobristKey() {
 
     if (getSideToMove() == BLACK) {
         // std::cout << std::format("ZobristKey before blacks turn: {}\n", zobristKey);
-        // std::cout << std::format("ZobristKey (BlackToMove): {}\n", Zobrist::zobristBlackToMove);
+        // std::cout << std::format("ZobristKey (BlackToMove): {}\n", Zobrist::zobristSideToMove);
         
-        zobristKey ^= Zobrist::zobristBlackToMove;
+        zobristKey ^= Zobrist::zobristSideToMove;
         // std::cout << std::format("ZobristKey after BlackToMove: {}\n", zobristKey);
 
     }
