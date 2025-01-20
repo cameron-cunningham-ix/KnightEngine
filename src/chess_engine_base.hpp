@@ -17,8 +17,6 @@ protected:
     int defaultDepth;               // Default depth for the engine
     int searchDepth;                // Current search depth
     
-    // Engine options with their current values
-    std::map<std::string, std::string> options;
 
 public:
     // Constructor takes basic engine information
@@ -55,6 +53,8 @@ public:
     bool isThinking() const { return isSearching; }
     DenseMove getBestMove() const { return bestMove; }
     int getSearchDepth() const { return searchDepth; }
+    // Engine options with their current values
+    std::map<std::string, std::string> options;
 
 protected:
     // Utility methods for derived classes

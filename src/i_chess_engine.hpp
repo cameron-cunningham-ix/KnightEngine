@@ -1,9 +1,9 @@
 #pragma once
 
+#include "types.hpp"
 #include <string>
 #include <vector>
 #include <map>
-#include "types.hpp"
 
 // Interface for chess engines implementing the UCI protocol
 class IChessEngine {

@@ -181,7 +181,7 @@ void EnginePlayer::processCommand(const std::string& cmd) {
         sendResponse("id author " + engine->getAuthor());
         
         // Send options
-        for (const auto& [name, option] : options) {
+        for (const auto& [name, option] : engine->options) {
             std::string optionStr = "option name " + name;
             switch (option.type) {
                 case Option::Type::Check:
