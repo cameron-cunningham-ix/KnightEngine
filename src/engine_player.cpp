@@ -1,4 +1,5 @@
 #include "engine_player.hpp"
+#include "../engine/material_engine.hpp"
 #include <sstream>
 #include <string>
 
@@ -64,7 +65,6 @@ void EnginePlayer::isReady() {
 
 void EnginePlayer::setOption(const std::string& name, const std::string& value) {
     engine->setOption(name, value);
-    options[name].currentValue = value;
 }
 
 void EnginePlayer::uciNewGame() {
@@ -181,20 +181,11 @@ void EnginePlayer::processCommand(const std::string& cmd) {
         sendResponse("id author " + engine->getAuthor());
         
         // Send options
-        for (const auto& [name, option] : engine->options) {
-            std::string optionStr = "option name " + name;
-            switch (option.type) {
-                case Option::Type::Check:
-                    optionStr += " type check default " + option.defaultValue;
-                    break;
-                case Option::Type::Spin:
-                    optionStr += " type spin default " + option.defaultValue + 
-                                " min " + std::to_string(option.minValue) +
-                                " max " + std::to_string(option.maxValue);
-                    break;
-                // ... handle other option types
+        if (auto matEngine = dynamic_cast<MaterialEngine*>(engine.get())) {
+            for (const auto& optionStr : matEngine->UCI_OPTIONS) {
+                if (optionStr == std::string()) break;
+                sendResponse(optionStr);
             }
-            sendResponse(optionStr);
         }
         
         sendResponse("uciok");

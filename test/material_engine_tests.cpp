@@ -194,3 +194,45 @@ TEST_F(MaterialEngineTest, MultipleMatePosTest) {
     outfile.close();
     std::cout.rdbuf(coutBuf);
 }
+
+TEST_F(MaterialEngineTest, pvSearch1) {
+    testing::internal::CaptureStdout();
+    std::ofstream outfile("TestOutput/MatEngTest_pvSearch1.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
+    if (outfile.is_open()) {
+        outfile << "MatEngTest_pvSearch1.txt\n";
+        std::cout.rdbuf(outfile.rdbuf());
+    }
+    
+    board.setupPositionFromFEN("2k5/7Q/2K5/8/8/8/8/8 w - - 0 1");
+    engine->setSearchDepth(1);
+    DenseMove move1 = engine->findBestMove(board);
+    board.makeMove(move1, false);
+    EXPECT_TRUE(isCheckmate(board));
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
+    std::cout.rdbuf(coutBuf);
+}
+
+TEST_F(MaterialEngineTest, pvSearch2) {
+    testing::internal::CaptureStdout();
+    std::ofstream outfile("TestOutput/MatEngTest_pvSearch2.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
+    if (outfile.is_open()) {
+        outfile << "MatEngTest_pvSearch2.txt\n";
+        std::cout.rdbuf(outfile.rdbuf());
+    }
+    
+    board.setupPositionFromFEN("2k5/7Q/2K5/8/8/8/8/8 w - - 0 1");
+    engine->setSearchDepth(2);
+    DenseMove move1 = engine->findBestMove(board);
+    board.makeMove(move1, false);
+    EXPECT_TRUE(isCheckmate(board));
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
+    std::cout.rdbuf(coutBuf);
+}
