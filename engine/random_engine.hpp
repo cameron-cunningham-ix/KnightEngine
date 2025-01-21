@@ -33,9 +33,4 @@ public:
     int evaluatePosition(const ChessBoard& board) override {
         return 0;  // Random engine doesn't evaluate positions
     }
-
-    // setOption is not needed for this engine
-    bool setOption(const std::string& name, const std::string& value) override {
-        return false;
-    }
 };

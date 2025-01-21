@@ -1,4 +1,5 @@
 #include "engine_player.hpp"
+#include "../engine/material_engine.hpp"
 #include <sstream>
 #include <string>
 
@@ -62,9 +63,10 @@ void EnginePlayer::isReady() {
     cv.notify_one();
 }
 
-void EnginePlayer::setOption(const std::string& name, const std::string& value) {
-    engine->setOption(name, value);
-    options[name].currentValue = value;
+void EnginePlayer::setOption(const std::string &name, const std::string &value) {
+    std::unique_lock<std::mutex> lock(mutex);
+    commandQueue.push(std::format("setoption name {} value {}", name, value));
+    cv.notify_one();
 }
 
 void EnginePlayer::uciNewGame() {
@@ -118,10 +120,6 @@ bool EnginePlayer::isInitialized() const {
     std::lock_guard<std::mutex> lock(mutex);
     return initialized;
 }
-
-// bool EnginePlayer::hasOption(const std::string& name) const {
-//     return options.count(name) > 0;
-// }
 
 int EnginePlayer::calculateSearchDepth(const ChessClock& clock) const {
     // If clock is set to infinite, we can return the set search depth
@@ -180,25 +178,28 @@ void EnginePlayer::processCommand(const std::string& cmd) {
         sendResponse("id name " + engine->getName() + " " + engine->getVersion());
         sendResponse("id author " + engine->getAuthor());
         
-        // Send options
-        for (const auto& [name, option] : engine->options) {
-            std::string optionStr = "option name " + name;
-            switch (option.type) {
-                case Option::Type::Check:
-                    optionStr += " type check default " + option.defaultValue;
-                    break;
-                case Option::Type::Spin:
-                    optionStr += " type spin default " + option.defaultValue + 
-                                " min " + std::to_string(option.minValue) +
-                                " max " + std::to_string(option.maxValue);
-                    break;
-                // ... handle other option types
-            }
-            sendResponse(optionStr);
+        // Send all available options
+        const auto& engineOptions = engine->getOptions();
+        for (const auto& [name, option] : engineOptions) {
+            sendResponse(option.toUCIString());
         }
         
         sendResponse("uciok");
         initialized = true;
+    }
+    else if (token == "setoption") {
+        std::string nameToken, name, valueToken, value;
+        iss >> nameToken; // Skip "name"
+        iss >> name;
+        iss >> valueToken; // Should be "value"
+        
+        if (valueToken == "value") {
+            iss >> value;
+            if (!engine->setOption(name, value)) {
+                // Log error if option setting failed
+                std::cerr << "Failed to set option " << name << " to value " << value << std::endl;
+            }
+        }
     }
     else if (token == "ucinewgame") {
         uciNewGame();

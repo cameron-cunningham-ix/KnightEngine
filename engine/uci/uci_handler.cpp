@@ -116,13 +116,18 @@ void uciLoop(std::unique_ptr<EnginePlayer>& player) {
             player->stop();
         }
         else if (cmd == "setoption") {
-            std::string name, value;
-            std::string token;
-            iss >> token; // Skip "name"
+            std::string nameToken, name, valueToken, value;
+            iss >> nameToken;  // Skip "name"
+            if (nameToken != "name") continue;
+
             iss >> name;
-            iss >> token; // Skip "value"
-            iss >> value;
-            player->setOption(name, value);
+
+            // Check for value token (some options like "buttons" don't have values)
+            iss >> valueToken;
+            if (valueToken == "value") {
+                iss >> value;
+                player->setOption(name, value);
+            }
         }
     }
 }

@@ -25,25 +25,10 @@ public:
     // Engine statuses
     virtual bool isInitialized() const = 0;    // Check if engine is initialized
     virtual bool isThinking() const = 0;       // Check if engine is calculating
-    virtual bool hasOption(const std::string& name) const = 0;  // Check if option exists
     
     // Getters for engine information
     virtual std::string getName() const = 0;        // Get engine name
     virtual std::string getAuthor() const = 0;      // Get engine author
     virtual DenseMove getBestMove() const = 0;      // Get best move from last search
     virtual DenseMove getPonderMove() const = 0;    // Get ponder move from last search
-    
-    // Engine option management
-    struct Option {
-        enum class Type { Check, Spin, Combo, Button, String };
-        Type type;
-        std::string name;
-        std::string defaultValue;
-        std::string currentValue;
-        int minValue;     // For spin options
-        int maxValue;     // For spin options
-        std::vector<std::string> comboValues;  // For combo options
-    };
-    
-    virtual const std::map<std::string, Option>& getOptions() const = 0;  // Get all engine options
 };

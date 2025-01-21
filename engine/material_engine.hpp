@@ -9,101 +9,7 @@
 
 static constexpr int INF_POS = 999999999;
 static constexpr int INF_NEG = -999999999;
-static constexpr int TT_SIZE = 44739242;
-
-struct EvaluationParams {
-    // Piece values
-    int pawnValue = 100;
-    int knightValue = 320;
-    int bishopValue = 330;
-    int rookValue = 500;
-    int queenValue = 900;
-    int kingValue = 2000;
-
-    // Position bonuses
-    int pawnPositionBonus = 50;
-    int knightPositionBonus = 50;
-    int bishopPositionBonus = 50;
-    int rookPositionBonus = 50;
-    int queenPositionBonus = 50;
-    int kingPositionBonus = 50;
-
-    // Additional bonuses/penalties
-    int mateScore = 100000;
-    int supportedPawnBonus = 75;
-    int supportingPawnBonus = 90;
-    int supportingPieceBonus = 100;
-    int doubledPawnPenalty = -70;
-    int isolatedPawnPenalty = -80;
-    int checkedPenalty = -1000;
-    int checkingBonus = 1500;
-    int bishopPairBonus = 125;
-    int rookOpenFileBonus = 250;
-
-    // Static UCI option definitions
-    static constexpr const char* UCI_OPTIONS[] = {
-        // Piece values
-        "option name PawnValue type spin default 100 min 0 max 1000",
-        "option name KnightValue type spin default 320 min 0 max 1000",
-        "option name BishopValue type spin default 330 min 0 max 1000",
-        "option name RookValue type spin default 500 min 0 max 1500",
-        "option name QueenValue type spin default 900 min 0 max 2000",
-        "option name KingValue type spin default 2000 min 1000 max 5000",
-        
-        // Position bonuses
-        "option name PawnPositionBonus type spin default 50 min 0 max 200",
-        "option name KnightPositionBonus type spin default 50 min 0 max 200",
-        "option name BishopPositionBonus type spin default 50 min 0 max 200",
-        "option name RookPositionBonus type spin default 50 min 0 max 200",
-        "option name QueenPositionBonus type spin default 50 min 0 max 200",
-        "option name KingPositionBonus type spin default 50 min 0 max 200",
-        
-        // Additional bonuses/penalties
-        "option name MateScore type spin default 100000 min 50000 max 200000",
-        "option name SupportedPawnBonus type spin default 75 min 0 max 200",
-        "option name SupportingPawnBonus type spin default 90 min 0 max 200",
-        "option name SupportingPieceBonus type spin default 100 min 0 max 200",
-        "option name DoubledPawnPenalty type spin default -70 min -200 max 0",
-        "option name IsolatedPawnPenalty type spin default -80 min -200 max 0",
-        "option name CheckedPenalty type spin default -1000 min -2000 max 0",
-        "option name CheckingBonus type spin default 1500 min 0 max 3000",
-        "option name BishopPairBonus type spin default 125 min 0 max 300",
-        "option name RookOpenFileBonus type spin default 250 min 0 max 500"
-    };
-
-    // Update parameters based on UCI option
-    void updateFromUCI(const std::string& name, const std::string& value) {
-        int val = std::stoi(value);
-        
-        // Piece values
-        if (name == "PawnValue") pawnValue = val;
-        else if (name == "KnightValue") knightValue = val;
-        else if (name == "BishopValue") bishopValue = val;
-        else if (name == "RookValue") rookValue = val;
-        else if (name == "QueenValue") queenValue = val;
-        else if (name == "KingValue") kingValue = val;
-        
-        // Position bonuses
-        else if (name == "PawnPositionBonus") pawnPositionBonus = val;
-        else if (name == "KnightPositionBonus") knightPositionBonus = val;
-        else if (name == "BishopPositionBonus") bishopPositionBonus = val;
-        else if (name == "RookPositionBonus") rookPositionBonus = val;
-        else if (name == "QueenPositionBonus") queenPositionBonus = val;
-        else if (name == "KingPositionBonus") kingPositionBonus = val;
-        
-        // Additional bonuses/penalties
-        else if (name == "MateScore") mateScore = val;
-        else if (name == "SupportedPawnBonus") supportedPawnBonus = val;
-        else if (name == "SupportingPawnBonus") supportingPawnBonus = val;
-        else if (name == "SupportingPieceBonus") supportingPieceBonus = val;
-        else if (name == "DoubledPawnPenalty") doubledPawnPenalty = val;
-        else if (name == "IsolatedPawnPenalty") isolatedPawnPenalty = val;
-        else if (name == "CheckedPenalty") checkedPenalty = val;
-        else if (name == "CheckingBonus") checkingBonus = val;
-        else if (name == "BishopPairBonus") bishopPairBonus = val;
-        else if (name == "RookOpenFileBonus") rookOpenFileBonus = val;
-    }
-};
+static constexpr int TT_SIZE = 44739243;
 
 /// @brief 
 class MaterialEngine : public ChessEngineBase {
@@ -259,25 +165,22 @@ private:
     // Initial count of major pieces
     static constexpr int INIT_MAJ_MIN_PIECES = 14;
 
-    // Tunable parameters with defaults
-    struct EvalParams {
-        // Piece values
+     // Parameters struct without any option-related code
+    struct Parameters {
         int pawnValue = 100;
         int knightValue = 320;
         int bishopValue = 330;
         int rookValue = 500;
         int queenValue = 900;
         int kingValue = 2000;
-        
-        // Position bonuses (scaling factors for piece square tables)
+
         int pawnPositionBonus = 50;
         int knightPositionBonus = 50;
         int bishopPositionBonus = 50;
         int rookPositionBonus = 50;
         int queenPositionBonus = 50;
         int kingPositionBonus = 50;
-        
-        // Additional bonuses/penalties
+
         int mateScore = 100000;
         int supportedPawnBonus = 75;
         int supportingPawnBonus = 90;
@@ -293,98 +196,85 @@ private:
 public:
 
     MaterialEngine() 
-        : ChessEngineBase("MaterialEngine", "0.71", "Cameron Cunningham", 8) {
+        : ChessEngineBase("MaterialEngine", "0.72", "Cameron Cunningham", 8) {
+            // Register all engine options
+            registerOption(EngineOption::createSpin("PawnValue", 100, 0, 1000));
+            registerOption(EngineOption::createSpin("KnightValue", 320, 0, 1000));
+            registerOption(EngineOption::createSpin("BishopValue", 330, 0, 1000));
+            registerOption(EngineOption::createSpin("RookValue", 500, 0, 1500));
+            registerOption(EngineOption::createSpin("QueenValue", 900, 0, 2000));
+            registerOption(EngineOption::createSpin("KingValue", 2000, 1000, 5000));
 
-             // Register UCI options for all tunable parameters
-        
-            // Piece values
-            options["PawnValue"] = { std::to_string(params.pawnValue) };
-            options["KnightValue"] = { std::to_string(params.knightValue) };
-            options["BishopValue"] = { std::to_string(params.bishopValue) };
-            options["RookValue"] = { std::to_string(params.rookValue) };
-            options["QueenValue"] = { std::to_string(params.queenValue) };
-            options["KingValue"] = { std::to_string(params.kingValue) };
-            
-            // Position bonus scaling factors
-            options["PawnPositionBonus"] = { std::to_string(params.pawnPositionBonus) };
-            options["KnightPositionBonus"] = { std::to_string(params.knightPositionBonus) };
-            options["BishopPositionBonus"] = { std::to_string(params.bishopPositionBonus) };
-            options["RookPositionBonus"] = { std::to_string(params.rookPositionBonus) };
-            options["QueenPositionBonus"] = { std::to_string(params.queenPositionBonus) };
-            options["KingPositionBonus"] = { std::to_string(params.kingPositionBonus) };
-            
-            // Additional bonuses/penalties
-            options["MateScore"] = { std::to_string(params.mateScore) };
-            options["SupportedPawnBonus"] = { std::to_string(params.supportedPawnBonus) };
-            options["SupportingPawnBonus"] = { std::to_string(params.supportingPawnBonus) };
-            options["SupportingPieceBonus"] = { std::to_string(params.supportingPieceBonus) };
-            options["DoubledPawnPenalty"] = { std::to_string(-params.doubledPawnPenalty) };
-            options["IsolatedPawnPenalty"] = { std::to_string(-params.isolatedPawnPenalty) };
-            options["CheckedPenalty"] = { std::to_string(-params.checkedPenalty) };
-            options["CheckingBonus"] = { std::to_string(params.checkingBonus) };
-            options["BishopPairBonus"] = { std::to_string(params.bishopPairBonus) };
-            options["RookOpenFileBonus"] = { std::to_string(params.rookOpenFileBonus) };
-        }
+            registerOption(EngineOption::createSpin("PawnPositionBonus", 50, 0, 200));
+            registerOption(EngineOption::createSpin("KnightPositionBonus", 50, 0, 200));
+            registerOption(EngineOption::createSpin("BishopPositionBonus", 50, 0, 200));
+            registerOption(EngineOption::createSpin("RookPositionBonus", 50, 0, 200));
+            registerOption(EngineOption::createSpin("QueenPositionBonus", 50, 0, 200));
+            registerOption(EngineOption::createSpin("KingPositionBonus", 50, 0, 200));
 
-    bool setOption(const std::string& name, const std::string& value) override {
-        // Try to convert value to integer
-        try {
-            int intValue = std::stoi(value);
-            
-            // Update the appropriate parameter
-            if (name == "PawnValue") params.pawnValue = intValue;
-            else if (name == "KnightValue") params.knightValue = intValue;
-            else if (name == "BishopValue") params.bishopValue = intValue;
-            else if (name == "RookValue") params.rookValue = intValue;
-            else if (name == "QueenValue") params.queenValue = intValue;
-            else if (name == "KingValue") params.kingValue = intValue;
-            else if (name == "PawnPositionBonus") params.pawnPositionBonus = intValue;
-            else if (name == "KnightPositionBonus") params.knightPositionBonus = intValue;
-            else if (name == "BishopPositionBonus") params.bishopPositionBonus = intValue;
-            else if (name == "RookPositionBonus") params.rookPositionBonus = intValue;
-            else if (name == "QueenPositionBonus") params.queenPositionBonus = intValue;
-            else if (name == "KingPositionBonus") params.kingPositionBonus = intValue;
-            else if (name == "MateScore") params.mateScore = intValue;
-            else if (name == "SupportedPawnBonus") params.supportedPawnBonus = intValue;
-            else if (name == "SupportingPawnBonus") params.supportingPawnBonus = intValue;
-            else if (name == "SupportingPieceBonus") params.supportingPieceBonus = intValue;
-            else if (name == "DoubledPawnPenalty") params.doubledPawnPenalty = -intValue;
-            else if (name == "IsolatedPawnPenalty") params.isolatedPawnPenalty = -intValue;
-            else if (name == "CheckedPenalty") params.checkedPenalty = -intValue;
-            else if (name == "CheckingBonus") params.checkingBonus = intValue;
-            else if (name == "BishopPairBonus") params.bishopPairBonus = intValue;
-            else if (name == "RookOpenFileBonus") params.rookOpenFileBonus = intValue;
-            else return false;
-            
-            return true;
-        } catch (const std::exception& e) {
-            std::cout << "failed setOption\n";
-            return false;
-        }
+            registerOption(EngineOption::createSpin("MateScore", 100000, 50000, 200000));
+            registerOption(EngineOption::createSpin("SupportedPawnBonus", 75, 0, 200));
+            registerOption(EngineOption::createSpin("SupportingPawnBonus", 90, 0, 200));
+            registerOption(EngineOption::createSpin("SupportingPieceBonus", 100, 0, 200));
+            registerOption(EngineOption::createSpin("DoubledPawnPenalty", -70, -200, 0));
+            registerOption(EngineOption::createSpin("IsolatedPawnPenalty", -80, -200, 0));
+            registerOption(EngineOption::createSpin("CheckedPenalty", -1000, -2000, 0));
+            registerOption(EngineOption::createSpin("CheckingBonus", 1500, 0, 3000));
+            registerOption(EngineOption::createSpin("BishopPairBonus", 125, 0, 300));
+            registerOption(EngineOption::createSpin("RookOpenFileBonus", 250, 0, 500));
     }
 
+    // Handle option changes by updating corresponding parameter
+    void onOptionChanged(const EngineOption& option) override {
+        int value = std::get<int>(option.currentValue);  // All our options are Spin (integer)
+        
+        if (option.name == "PawnValue") params.pawnValue = value;
+        else if (option.name == "KnightValue") params.knightValue = value;
+        else if (option.name == "BishopValue") params.bishopValue = value;
+        else if (option.name == "RookValue") params.rookValue = value;
+        else if (option.name == "QueenValue") params.queenValue = value;
+        else if (option.name == "KingValue") params.kingValue = value;
+        else if (option.name == "PawnPositionBonus") params.pawnPositionBonus = value;
+        else if (option.name == "KnightPositionBonus") params.knightPositionBonus = value;
+        else if (option.name == "BishopPositionBonus") params.bishopPositionBonus = value;
+        else if (option.name == "RookPositionBonus") params.rookPositionBonus = value;
+        else if (option.name == "QueenPositionBonus") params.queenPositionBonus = value;
+        else if (option.name == "KingPositionBonus") params.kingPositionBonus = value;
+        else if (option.name == "MateScore") params.mateScore = value;
+        else if (option.name == "SupportedPawnBonus") params.supportedPawnBonus = value;
+        else if (option.name == "SupportingPawnBonus") params.supportingPawnBonus = value;
+        else if (option.name == "SupportingPieceBonus") params.supportingPieceBonus = value;
+        else if (option.name == "DoubledPawnPenalty") params.doubledPawnPenalty = value;
+        else if (option.name == "IsolatedPawnPenalty") params.isolatedPawnPenalty = value;
+        else if (option.name == "CheckedPenalty") params.checkedPenalty = value;
+        else if (option.name == "CheckingBonus") params.checkingBonus = value;
+        else if (option.name == "BishopPairBonus") params.bishopPairBonus = value;
+        else if (option.name == "RookOpenFileBonus") params.rookOpenFileBonus = value;
+    }
 
-    // Principal Variation Search function
-    int pvSearch(ChessBoard& board, int depth, int alpha, int beta, bool isPV, int ply) {
+    
+
+
+     // Enhanced alpha-beta search with move ordering and quiescence
+    int alphaBeta(ChessBoard& board, int depth, int alpha, int beta, int ply) {
         if (!isSearching) {
-            pv[ply].length = 0;  // No PV at leaf nodes
             return evaluatePosition(board);
         }
 
-        // At leaf nodes, enter quiescence search
+        // Check for checkmate/stalemate at leaf nodes
         if (depth <= 0) {
-            pv[ply].length = 0;
+            pv[ply].length = 0;  // Clear PV at leaf nodes
             return quiescence(board, alpha, beta, ply);
         }
-        
+
         // Check transposition table
         int score;
-        if (!isPV && checkTT(board, depth, alpha, beta, score)) {
+        TTEntry* entry = &transpositionTable[board.zobristKey % TT_SIZE];
+        if (checkTT(board, depth, alpha, beta, score)) {
             return score;
         }
 
-        // Get any hash move from the transposition table
-        TTEntry* entry = &transpositionTable[board.zobristKey % TT_SIZE];
+        // Get hash move from transposition table
         DenseMove hashMove;
         if (entry->key == board.zobristKey) {
             hashMove = entry->bestMove;
@@ -394,42 +284,26 @@ public:
         int moveNum = 0;
         std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generatePsuedoMoves(board, moveNum);
         orderMoves(moves, moveNum, ply, hashMove);
+        
         bool noLegalMoves = true;
         DenseMove bestMove;
         int flag = TTEntry::ALPHA;
-        bool sideToMove = board.getSideToMove() == WHITE;
-        
-        // First move is searched with full window
-        bool firstMove = true;
-        int eval = INF_NEG;
-        
-        ChessBoard tempBoard = board;
-        
+        Color sideToMove = board.getSideToMove();
+
+        // Search through ordered moves
         for (int i = 0; i < moveNum; i++) {
+            ChessBoard tempBoard = board;
             tempBoard.makeMove(moves[i], true);
-            
+
             // Skip illegal moves
-            if (tempBoard.isSideInCheck(sideToMove ? WHITE : BLACK)) {
+            if (tempBoard.isSideInCheck(sideToMove)) {
                 tempBoard.unmakeMove(moves[i], true);
                 continue;
             }
             noLegalMoves = false;
 
-            // Principal Variation Search logic
-            if (firstMove) {
-                // Search first move with full window
-                eval = -pvSearch(tempBoard, depth - 1, -beta, -alpha, isPV, ply + 1);
-                firstMove = false;
-            } else {
-                // Try to prove move is bad with null window search
-                eval = -pvSearch(tempBoard, depth - 1, -(alpha + 1), -alpha, false, ply + 1);
-                
-                // If the move might be good (failed high), do a full re-search
-                if (eval > alpha && eval < beta) {
-                    eval = -pvSearch(tempBoard, depth - 1, -beta, -alpha, isPV, ply + 1);
-                }
-            }
-            
+            // Full-depth search
+            int eval = -alphaBeta(tempBoard, depth - 1, -beta, -alpha, ply + 1);
             tempBoard.unmakeMove(moves[i], true);
 
             // Update best score
@@ -444,7 +318,6 @@ public:
                 // Beta cutoff
                 if (alpha >= beta) {
                     flag = TTEntry::BETA;
-                    // Store the cutoff move
                     RecordTTEntry(board, moves[i], depth, beta, flag);
                     return beta;
                 }
@@ -453,13 +326,13 @@ public:
 
         // Handle checkmate/stalemate
         if (noLegalMoves) {
-            if (board.isSideInCheck(sideToMove ? WHITE : BLACK)) {
+            if (board.isSideInCheck(sideToMove)) {
                 return sideToMove ? -params.mateScore - depth : params.mateScore + depth;
             }
             return 0;  // Stalemate
         }
 
-        // Store result in transposition table
+        // Store position in transposition table
         RecordTTEntry(board, bestMove, depth, alpha, flag);
         return alpha;
     }
@@ -470,27 +343,26 @@ public:
         searchStartTime = std::chrono::steady_clock::now();
         nodeCount = 0;
         currentMoveNumber = 0;
-        clearPV();  // Clear principal variation for new search
+        clearPV();
 
         int actualDepth = (maxDepth > 0) ? maxDepth : searchDepth;
-        
         DenseMove bestMoveOverall;
         int bestScoreOverall = 0;
         const int MIN_DEPTH = 2;
 
-        // Iterative deepening loop
+        // Iterative deepening
         for (int currDepth = MIN_DEPTH; currDepth <= actualDepth && isSearching; currDepth++) {
             nodeCount = 0;
             currentMoveNumber = 0;
 
-            // Check transposition table
+            // Get move from transposition table if available
             TTEntry* entry = &transpositionTable[board.zobristKey % TT_SIZE];
             DenseMove ttMove;
             if (entry->key == board.zobristKey) {
                 ttMove = entry->bestMove;
             }
 
-            // Generate moves
+            // Generate and order moves
             int moveNum = 0;
             std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
             Color sideToMove = board.getSideToMove();
@@ -498,16 +370,13 @@ public:
             int alpha = INF_NEG;
             int beta = INF_POS;
             DenseMove bestMove;
-            bool firstMove = true;
             int bestScore = sideToMove == WHITE ? INF_NEG : INF_POS;
 
-            // Try TT move first
+            // Try TT move first if available
             if (ttMove != DenseMove()) {
                 for (int i = 0; i < moveNum; i++) {
                     if (moves[i] == ttMove) {
-                        if (i != 0) {
-                            std::swap(moves[0], moves[i]);
-                        }
+                        if (i != 0) std::swap(moves[0], moves[i]);
                         break;
                     }
                 }
@@ -519,25 +388,12 @@ public:
                 currentMove = moves[i];
 
                 sendInfo(std::format("currmove {} currmovenumber {}", 
-                                    currentMove.toAlgebraic(), currentMoveNumber));
+                                   currentMove.toAlgebraic(), currentMoveNumber));
 
                 ChessBoard tempBoard = board;
                 tempBoard.makeMove(moves[i], true);
 
-                int score;
-                if (firstMove) {
-                    // Search first move with full window
-                    score = -pvSearch(tempBoard, currDepth - 1, -beta, -alpha, true, 1);
-                    firstMove = false;
-                } else {
-                    // Try null window search first
-                    score = -pvSearch(tempBoard, currDepth - 1, -(alpha + 1), -alpha, false, 1);
-                    
-                    // Re-search if it might be better than current best
-                    if (score > alpha && score < beta) {
-                        score = -pvSearch(tempBoard, currDepth - 1, -beta, -alpha, true, 1);
-                    }
-                }
+                int score = -alphaBeta(tempBoard, currDepth - 1, -beta, -alpha, 1);
 
                 // Update best move if better score found
                 if ((sideToMove == WHITE && score > bestScore) ||
@@ -545,30 +401,24 @@ public:
                     bestScore = score;
                     bestMove = moves[i];
 
-                    // Update alpha for future null window searches
-                    if (sideToMove == WHITE) {
-                        if (score > alpha) alpha = score;
-                    } else {
-                        if (score < beta) beta = score;
-                    }
-
                     auto moveTime = std::chrono::duration_cast<std::chrono::milliseconds>(
                         std::chrono::steady_clock::now() - searchStartTime).count();
                     
                     std::string infoStr = std::format("depth {} score cp {} time {} nodes {} {} ",
-                        currDepth, bestScore, moveTime, nodeCount, bestMove.toAlgebraic(), getPVString(0));
+                        currDepth, bestScore, moveTime, nodeCount, bestMove.toAlgebraic());
                     
                     if (moveTime > 0) {
                         U64 nps = (nodeCount * 1000) / moveTime;
                         infoStr += std::format("nps {} ", nps);
                     }
+                    
+                    infoStr += getPVString(0);
                     sendInfo(infoStr);
                 }
             }
 
-            // Store root position result
+            // Store best move for this iteration
             RecordTTEntry(board, bestMove, currDepth, bestScore, TTEntry::EXACT);
-
             bestMoveOverall = bestMove;
             bestScoreOverall = bestScore;
 
@@ -1218,148 +1068,4 @@ private:
     // /// in the position
     // /// @param maximizing 
     // /// @return 
-    // int alphaBeta(ChessBoard& board, int depth, int alpha, 
-    //               int beta, bool maximizing) {
-    //     if (depth == 0 || !isSearching) {
-    //         return evaluatePosition(board);
-    //     }
-
-    //     // Check transposition table first
-    //     int score;
-    //     if (checkTT(board, depth, alpha, beta, score)) {
-    //         return score;
-    //     }
-
-    //     int moveNum = 0;
-    //     std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generatePsuedoMoves(board, moveNum);
-    //     DenseMove bestMoveSoFar;
-    //     bool noLegalMoves = true;
-    //     int flag = TTEntry::ALPHA;  // Assume lower bound by default
-
-    //     // White to move
-    //     // Trying to improve alpha value by finding moves that give a higher score
-    //     if (maximizing) {
-    //         // maxEval is the best score that's been found so far in this node
-    //         int maxEval = INF_NEG;
-    //         ChessBoard tempBoard = board;
-    //         // Test every move in the position
-    //         for (int i = 0; i < moveNum; i++) {
-    //             tempBoard.makeMove(moves[i], true);
-
-    //             // Check move legality
-    //             if (tempBoard.isSideInCheck(WHITE)) {
-    //                 tempBoard.unmakeMove(moves[i], true);
-    //                 continue;
-    //             }
-    //             noLegalMoves = false;
-    //             // Evaluation of next alphabeta is minimizing
-    //             int eval = alphaBeta(tempBoard, depth - 1, alpha, beta, false);
-
-    //             tempBoard.unmakeMove(moves[i], true);
-    //             // If eval is greater than any other score so far in this node,
-    //             // maxEval gets set to eval
-    //             if (eval > maxEval) {
-    //                 maxEval = eval;
-    //                 bestMoveSoFar = moves[i];    // Remember best move found so far
-    //             }
-
-    //             // If maxEval is now greater than alpha (best maximizing score 
-    //             // guranteed across the search tree so far), set alpha to eval
-    //             if (maxEval > alpha) {
-    //                 alpha = maxEval;
-    //                 flag = TTEntry::EXACT;
-    //             }
-
-    //             // If alpha is now so good that it's greater than beta (best minimizing 
-    //             // score guaranteed across the search tree so far), then minimizing
-    //             // player will never allow this position to be reached if playing optimally
-    //             // and we can break early
-    //             if (alpha >= beta) {
-    //                 flag = TTEntry::BETA;   // Upper bound
-    //                 break;
-    //             }
-    //         }
-    //         // If there was at least 1 legal move, return eval
-    //         if (!noLegalMoves) {
-    //             // Store position in transposition table
-    //             RecordTTEntry(board, bestMoveSoFar, depth, maxEval, flag);
-    //             return maxEval;
-    //         }
-    //         else {
-    //             // No legal moves means we're either in checkmate or stalemate
-    //             if (board.isSideInCheck(WHITE)) {
-    //                 // If we're trying to maximize White's score and are in checkmate,
-    //                 // this is the worst possible outcome and should be avoided for White
-    //                 // and wanted for Black
-    //                 // Subtract depth so Black prefers faster checkmates
-    //                 return -MATE_SCORE - depth;
-    //             }
-    //             // Otherwise stalemate
-    //             return 0;
-    //         }
-    //     } 
-    //     // Black to move
-    //     // Trying to improve beta value by finding moves that give a lower score
-    //     else {
-    //         // minEval is the lowest score that's been found so far in this node
-    //         int minEval = INF_POS;
-    //         ChessBoard tempBoard = board;
-    //         // Test every move in the position
-    //         for (int i = 0; i < moveNum; i++) {
-    //             tempBoard.makeMove(moves[i], true);
-
-    //             // Check move legality
-    //             if (tempBoard.isSideInCheck(BLACK)) {
-    //                 tempBoard.unmakeMove(moves[i], true);
-    //                 continue;
-    //             }
-    //             noLegalMoves = false;
-    //             // Evaluation of next alphabeta is maximizing
-    //             int eval = alphaBeta(tempBoard, depth - 1, alpha, beta, true);
-
-    //             tempBoard.unmakeMove(moves[i], true);
-
-    //             // If eval is less than any other score so far in this node,
-    //             // minEval gets set to eval
-    //             if (eval < minEval) {
-    //                 minEval = eval;
-    //                 bestMoveSoFar = moves[i];    // Remember best move found
-    //             }
-
-    //             // If minEval is now less than beta (best minimizing score guranteed across
-    //             // the search tree so far), set beta to minEval
-    //             if (minEval < beta) {
-    //                 beta = minEval;
-    //                 flag = TTEntry::EXACT;
-    //             }
-
-    //             // If beta is now so good that it's less than alpha (best maximizing score
-    //             // guranteed across the search tree so far), then maximizing player
-    //             // will never allow this position to be reached if playing optimally
-    //             if (beta <= alpha) {
-    //                 flag = TTEntry::ALPHA;  // Lower bound
-    //                 break;
-    //             }
-    //         }
-    //         // If there was at least 1 legal move, return eval
-    //         if (!noLegalMoves) {
-    //             // Store position in transposition table
-    //             RecordTTEntry(board, bestMoveSoFar, depth, minEval, flag);
-    //             return minEval;
-    //         }
-    //         else {
-    //             // No legal moves means we're either in checkmate or stalemate
-    //             if (board.isSideInCheck(BLACK)) {
-    //                 // If we're trying to minimize Black's score and are in checkmate,
-    //                 // this is the worst possible outcome and should be avoided for Black
-    //                 // and wanted for White
-    //                 // Add depth so White prefers faster checkmates
-    //                 return MATE_SCORE + depth;
-    //             }
-    //             // Otherwise stalemate
-    //             return 0;
-    //         }
-    //         return minEval;
-    //     }
-    // }
 };

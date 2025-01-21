@@ -1,9 +1,13 @@
 #pragma once
 
 #include <stdexcept>
+#include <string>
 #include <array>
+#include <vector>
 #include <bitset>
 #include <format>
+#include <optional>
+#include <variant>
 
 const int MAX_PLY = 512;
 const int MAX_MOVES = 218;
@@ -280,5 +284,91 @@ public:
         enPassantSquare, halfMoveClock, fullMoveNumber);
 
         return result;
+    }
+};
+
+// Represents a single engine option
+struct EngineOption {
+    enum class Type {
+        Check,  // Boolean option
+        Spin,   // Integer within a range
+        String  // Text option
+    };
+
+    std::string name;
+    Type type;
+    std::variant<bool, int, std::string> defaultValue;
+    std::variant<bool, int, std::string> currentValue;
+    std::optional<int> minValue;  // Only for Spin
+    std::optional<int> maxValue;  // Only for Spin
+
+    // Construct a Check option
+    static EngineOption createCheck(const std::string& name, bool defaultVal) {
+        return EngineOption{name, Type::Check, defaultVal, defaultVal, std::nullopt, std::nullopt};
+    }
+
+    // Construct a Spin option
+    static EngineOption createSpin(const std::string& name, int defaultVal, int min, int max) {
+        return EngineOption{name, Type::Spin, defaultVal, defaultVal, min, max};
+    }
+
+    // Construct a String option  
+    static EngineOption createString(const std::string& name, const std::string& defaultVal) {
+        return EngineOption{name, Type::String, defaultVal, defaultVal, std::nullopt, std::nullopt};
+    }
+
+    // Convert to UCI option string
+    std::string toUCIString() const {
+        std::string result = "option name " + name + " type ";
+        switch (type) {
+            case Type::Check:
+                result += "check default " + std::to_string(std::get<bool>(defaultValue));
+                break;
+            case Type::Spin:
+                result += "spin default " + std::to_string(std::get<int>(defaultValue)) + 
+                         " min " + std::to_string(*minValue) + 
+                         " max " + std::to_string(*maxValue);
+                break;
+            case Type::String:
+                result += "string default " + std::get<std::string>(defaultValue);
+                break;
+        }
+        return result;
+    }
+
+    // Update option value from string
+    bool setValue(const std::string& value) {
+        try {
+            switch (type) {
+                case Type::Check:
+                    currentValue = (value == "true" || value == "1");
+                    break;
+                case Type::Spin: {
+                    int intVal = std::stoi(value);
+                    if (intVal < *minValue || intVal > *maxValue) return false;
+                    currentValue = intVal;
+                    break;
+                }
+                case Type::String:
+                    currentValue = value;
+                    break;
+            }
+            return true;
+        } catch (...) {
+            return false;
+        }
+    }
+
+    // Get current value as string
+    std::string getCurrentValueString() const {
+        switch (type) {
+            case Type::Check:
+                return std::get<bool>(currentValue) ? "true" : "false";
+            case Type::Spin:
+                return std::to_string(std::get<int>(currentValue));
+            case Type::String:
+                return std::get<std::string>(currentValue);
+        }
+        return "";
     }
 };

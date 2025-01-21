@@ -23,7 +23,6 @@ private:
     bool thinking;                            // Whether engine is calculating
     DenseMove bestMove;                       // Best move from last search
     DenseMove ponderMove;                     // Ponder move from last search
-    std::map<std::string, Option> options;    // Engine options
     
     // Thread management for UCI
     std::thread uciThread;                   // Thread for UCI communication
@@ -77,7 +76,6 @@ public:
     
     bool isInitialized() const override;
     bool isThinking() const override { return thinking; }
-    bool hasOption(const std::string& name) const override { return options.find(name) != options.end(); }
     bool waitForInitialization(std::chrono::milliseconds timeout = std::chrono::seconds(5)) {
         auto start = std::chrono::steady_clock::now();
         while (!isInitialized()) {
@@ -93,8 +91,6 @@ public:
     DenseMove getBestMove() const override { return bestMove; }
     DenseMove getPonderMove() const override { return ponderMove; }
     ChessEngineBase* getEngineForTesting() { return engine.get(); }
-    
-    const std::map<std::string, Option>& getOptions() const override { return options; }
     
     // Engine-specific methods
     void setSearchDepth(int depth) { engine->setSearchDepth(depth); }
