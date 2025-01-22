@@ -2,6 +2,7 @@
 
 #include "types.hpp"
 #include <iostream>
+#include <stack>
 #include <bitset>
 #include <vector>
 
@@ -26,7 +27,7 @@ public:
     // Zobrist key of current board
     U64 zobristKey;
     // History of game states
-    std::array<GameState, MAX_PLY> stateHistory;
+    std::stack<GameState> stateHistory;
     // History of moves
     std::array<DenseMove, MAX_PLY> moveHistory;
 

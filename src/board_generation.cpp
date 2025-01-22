@@ -103,8 +103,11 @@ void ChessBoard::setupPositionFromFEN(const std::string& fen) {
     std::from_chars(halfTurns.data(), halfTurns.data()+halfTurns.size(), currentGameState.halfMoveClock);
     // Parse full move number
     std::from_chars(fullTurns.data(), fullTurns.data()+fullTurns.size(), currentGameState.fullMoveNumber);
+    while (!stateHistory.empty()) {
+        stateHistory.pop();
+    }
     // Replace standard starting state
-    stateHistory[0] = currentGameState;
+    stateHistory.push(currentGameState);
     // Ensure Zobrist is initialized
     if (!Zobrist::initialized) 
         Zobrist::initialize();
@@ -618,9 +621,8 @@ void ChessBoard::initializeKingsBB() {
 void ChessBoard::initializeGameState() {
     // New GameState
     currentGameState = GameState();
-    plyIndex = 0;
     // Store initial state onto stateHistory
-    stateHistory[0] = currentGameState;
+    stateHistory.push(currentGameState);
     checkingCount = 0;
     // Ensure Zobrist is initialized
     if (!Zobrist::initialized) 
@@ -796,7 +798,8 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
     }
     plyIndex++;
     // Add new state to history
-    stateHistory[plyIndex] = currentGameState;
+    stateHistory.push(currentGameState);
+
     // Update Zobrist key
     zobristKey ^= Zobrist::zobristSideToMove;
     if (prevCastleRights != currentGameState.getCastleRights()) {
