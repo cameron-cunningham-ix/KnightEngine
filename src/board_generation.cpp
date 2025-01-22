@@ -620,7 +620,7 @@ void ChessBoard::initializeGameState() {
     currentGameState = GameState();
     plyIndex = 0;
     // Store initial state onto stateHistory
-    stateHistory[plyIndex] = currentGameState;
+    stateHistory[0] = currentGameState;
     checkingCount = 0;
     // Ensure Zobrist is initialized
     if (!Zobrist::initialized) 
@@ -794,7 +794,6 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
     if (currentGameState.sideToMove == WHITE) {
         currentGameState.fullMoveNumber++;
     }
-    
     plyIndex++;
     // Add new state to history
     stateHistory[plyIndex] = currentGameState;
@@ -817,14 +816,17 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
 void ChessBoard::unmakeMove(DenseMove move, bool searching) {
     // If not searching, clear last played move
     if (!searching) {
-        moveHistory[plyIndex] = {};
+        moveHistory[plyIndex] = 0;
     }
+    
     // Move plyIndex back to last state
     // We do not clear the state at plyIndex because it uses too much time
     // to do it for every unmake, and we shouldn't be accessing old
     // values anyway, they'll be overwritten by makeMove
+    stateHistory[plyIndex] = GameState();
     plyIndex--;
     int prevCastleRights = currentGameState.getCastleRights();
+    Color prevSide = currentGameState.sideToMove;
     // Get previous state
     currentGameState = stateHistory[plyIndex];
 
@@ -888,6 +890,11 @@ void ChessBoard::unmakeMove(DenseMove move, bool searching) {
         zobristKey ^= Zobrist::zobristEnPass[currentGameState.getEnPassantFileIndex()];
     }
     zobristKey ^= Zobrist::zobristSideToMove;
+
+    if (getFEN() == "k7/7Q/2K5/8/8/8/8/8 w - - 0 1" ||
+        getFEN() == "k7/7Q/2K5/8/8/8/8/8 b - - 1 1") {
+        std::cout << std::format("unmakeMove grab prev state: {}, sidetoMove {} plyIndex {}\n", getFEN(), (int)currentGameState.sideToMove, plyIndex);
+    }
     // if (currentGameState.sideToMove == WHITE) {
     // }
 }
@@ -999,7 +1006,7 @@ void ChessBoard::printBoardInfo(bool fullInfo) {
 
 void ChessBoard::printStateHistory() {
     std::cout << "\n\nBoard history\n\n";
-    for (int i = 0; i < plyIndex; i++) {
+    for (int i = 0; i < plyIndex+1; i++) {
         std::cout << stateHistory[i].toString() << "\n";
     }
     std::cout << "\n\n";

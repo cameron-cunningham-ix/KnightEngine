@@ -264,21 +264,22 @@ public:
         // Check for checkmate/stalemate at leaf nodes
         if (depth <= 0) {
             pv[ply].length = 0;  // Clear PV at leaf nodes
-            return quiescence(board, alpha, beta, ply);
+            int eval = quiescence(board, alpha, beta, ply);
+            return eval;
         }
 
         // Check transposition table
         int score;
+        DenseMove hashMove;
         TTEntry* entry = &transpositionTable[board.zobristKey % TT_SIZE];
-        if (checkTT(board, depth, alpha, beta, score)) {
+        if (checkTT(board, depth, alpha, beta, score, hashMove)) {
             return score;
         }
 
-        // Get hash move from transposition table
-        DenseMove hashMove;
-        if (entry->key == board.zobristKey) {
-            hashMove = entry->bestMove;
-        }
+        // // Get hash move from transposition table
+        // if (entry->key == board.zobristKey) {
+        //     hashMove = entry->bestMove;
+        // }
 
         // Generate and order moves
         int moveNum = 0;
@@ -292,19 +293,18 @@ public:
 
         // Search through ordered moves
         for (int i = 0; i < moveNum; i++) {
-            ChessBoard tempBoard = board;
-            tempBoard.makeMove(moves[i], true);
+            board.makeMove(moves[i], true);
 
             // Skip illegal moves
-            if (tempBoard.isSideInCheck(sideToMove)) {
-                tempBoard.unmakeMove(moves[i], true);
+            if (board.isSideInCheck(sideToMove)) {
+                board.unmakeMove(moves[i], true);
                 continue;
             }
             noLegalMoves = false;
 
             // Full-depth search
-            int eval = -alphaBeta(tempBoard, depth - 1, -beta, -alpha, ply + 1);
-            tempBoard.unmakeMove(moves[i], true);
+            int eval = -alphaBeta(board, depth - 1, -beta, -alpha, ply + 1);
+            board.unmakeMove(moves[i], true);
 
             // Update best score
             if (eval > alpha) {
@@ -327,7 +327,10 @@ public:
         // Handle checkmate/stalemate
         if (noLegalMoves) {
             if (board.isSideInCheck(sideToMove)) {
-                return sideToMove ? -params.mateScore - depth : params.mateScore + depth;
+                int eval = sideToMove == WHITE ? params.mateScore + depth : -params.mateScore - depth;
+                // std::cout << std::format("Color {} in mate; board FEN {}\nscore returned {} alpha {} beta {} ply {}\n",
+                //     (int)sideToMove, board.getFEN(), eval, alpha, beta, ply);
+                return eval;
             }
             return 0;  // Stalemate
         }
@@ -337,8 +340,8 @@ public:
         return alpha;
     }
 
-    // Modified findBestMove to use PVS
     DenseMove findBestMove(ChessBoard& board, int maxDepth = -1) {
+        std::cout << std::format("2nd Test board FEN inside findBestMove1: {}\n", board.getFEN());
         startSearch();
         searchStartTime = std::chrono::steady_clock::now();
         nodeCount = 0;
@@ -350,6 +353,18 @@ public:
         int bestScoreOverall = 0;
         const int MIN_DEPTH = 2;
 
+        // Generate and order moves
+        std::cout << std::format("2nd Test board FEN inside findBestMove2: {}\n", board.getFEN());
+        int moveNum = 0;
+        std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
+        if (board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 w - - 0 1" ||
+            board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 b - - 1 1" ||
+            board.getFEN() == "2k5/7Q/2K5/8/8/8/8/8 w - - 0 1" ||
+            board.getFEN() == "2k5/7Q/2K5/8/8/8/8/8 b - - 1 1") {
+            std::cout << std::format("2nd Test board FEN inside findBestMove3: {}\n", board.getFEN());
+        }
+        Color sideToMove = board.getSideToMove();
+
         // Iterative deepening
         for (int currDepth = MIN_DEPTH; currDepth <= actualDepth && isSearching; currDepth++) {
             nodeCount = 0;
@@ -357,35 +372,29 @@ public:
 
             // Get move from transposition table if available
             TTEntry* entry = &transpositionTable[board.zobristKey % TT_SIZE];
-            DenseMove ttMove;
+            DenseMove hashMove;
             if (entry->key == board.zobristKey) {
-                ttMove = entry->bestMove;
+                hashMove = entry->bestMove;
             }
 
-            // Generate and order moves
-            int moveNum = 0;
-            std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
-            Color sideToMove = board.getSideToMove();
             
             int alpha = INF_NEG;
             int beta = INF_POS;
             DenseMove bestMove;
             int bestScore = sideToMove == WHITE ? INF_NEG : INF_POS;
 
-            // Try TT move first if available
-            if (ttMove != DenseMove()) {
-                for (int i = 0; i < moveNum; i++) {
-                    if (moves[i] == ttMove) {
-                        if (i != 0) std::swap(moves[0], moves[i]);
-                        break;
-                    }
-                }
-            }
+            orderMoves(moves, moveNum, 0, hashMove);
 
             // Search each move
             for (int i = 0; i < moveNum; i++) {
                 currentMoveNumber = i + 1;
                 currentMove = moves[i];
+
+                // debugging
+                if (currentMove.toAlgebraic() == "b7b2") {
+                    std::cout << std::format("b7b2 analysis: alpha {} beta {} bestMove {} bestScore {}\n",
+                        alpha, beta, bestMove.toAlgebraic(), bestScore);
+                }
 
                 sendInfo(std::format("currmove {} currmovenumber {}", 
                                    currentMove.toAlgebraic(), currentMoveNumber));
@@ -436,6 +445,7 @@ public:
         }
 
         this->bestMove = bestMoveOverall;
+        std::cout << std::format("bestMove: {}\n", bestMoveOverall.toAlgebraic()); 
         endSearch();
         return bestMoveOverall;
     }
@@ -1025,7 +1035,8 @@ private:
         entry->flag = flag;
     }
 
-    bool checkTT(ChessBoard& board, int depth, int& alpha, int& beta, int& score) {
+    bool checkTT(ChessBoard& board, int depth, int& alpha, int& beta,
+        int& score, DenseMove& hashMove) {
         TTEntry* entry = &transpositionTable[board.zobristKey & TT_SIZE];
 
         // Check if this is the position we want
@@ -1035,7 +1046,7 @@ private:
             // searched at greater depth
             if (entry->depth >= depth) {
                 // Use the bestMove first next time we search this position
-                bestMove = entry->bestMove;
+                hashMove = entry->bestMove;
 
                 // Based on the type of score stored, we might be able to use it
                 if (entry->flag == TTEntry::EXACT) {

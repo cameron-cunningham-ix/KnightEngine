@@ -157,37 +157,71 @@ TEST_F(MaterialEngineTest, MultipleMatePosTest) {
         std::cout.rdbuf(outfile.rdbuf());
     }
     // King Queen mates
+    DenseMove move;
     // White
     board.setupPositionFromFEN("2k5/7Q/2K5/8/8/8/8/8 w - - 0 1");
-    DenseMove move1 = engine->findBestMove(board);
-    board.makeMove(move1, false);
+    move = engine->findBestMove(board);
+    std::cout << std::format("board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
+    board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));
 
-    board.setupPositionFromFEN("k7/7Q/2K5/8/8/8/8/8 w - - 0 1");
-    DenseMove move2 = engine->findBestMove(board);
-    board.makeMove(move2, false);
+    board.setupPositionFromFEN("k7/7Q/2K5/8/8/8/8/8 w - - 0 1");    // Problem
+    std::cout << std::format("2nd Test board FEN initial: {}\n",  board.getFEN());
+    move = engine->findBestMove(board);
+    std::cout << std::format("2nd Test board FEN after FBM: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
+    board.makeMove(move, false);
+    std::cout << std::format("2nd Test board FEN after making move: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     EXPECT_TRUE(isCheckmate(board));
 
     board.setupPositionFromFEN("k7/8/2K5/8/8/8/1Q6/8 w - - 0 1");
-    DenseMove move3 = engine->findBestMove(board);
-    board.makeMove(move3, false);
+    move = engine->findBestMove(board);
+    std::cout << std::format("board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
+    board.makeMove(move, false);
+    EXPECT_TRUE(isCheckmate(board));
+    
+    board.setupPositionFromFEN("8/1Q6/8/8/8/2K5/8/k7 w - - 0 1");   // Problem
+    move = engine->findBestMove(board);
+    std::cout << std::format("board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
+    board.makeMove(move, false);
+    EXPECT_TRUE(isCheckmate(board));
+
+    board.setupPositionFromFEN("8/1Q6/8/8/8/2K5/k7/8 w - - 0 1");
+    move = engine->findBestMove(board);
+    std::cout << std::format("board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
+    board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));
 
     // Black
     board.setupPositionFromFEN("2K5/7q/2k5/8/8/8/8/8 b - - 0 1");
-    DenseMove move4 = engine->findBestMove(board);
-    board.makeMove(move4, false);
+    move = engine->findBestMove(board);
+    std::cout << std::format("board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
+    board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));
 
-    board.setupPositionFromFEN("K7/7q/2k5/8/8/8/8/8 b - - 0 1");
-    DenseMove move5 = engine->findBestMove(board);
-    board.makeMove(move5, false);
+    board.setupPositionFromFEN("K7/7q/2k5/8/8/8/8/8 b - - 0 1");    // Problem
+    move = engine->findBestMove(board);
+    std::cout << std::format("board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
+    board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));
 
     board.setupPositionFromFEN("K7/8/2k5/8/8/8/1q6/8 b - - 0 1");
-    DenseMove move6 = engine->findBestMove(board);
-    board.makeMove(move6, false);
+    move = engine->findBestMove(board);
+    std::cout << std::format("board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
+    board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));
+
+    board.setupPositionFromFEN("8/1q6/8/8/8/2k5/8/K7 b - - 0 1");   // Problem
+    move = engine->findBestMove(board);
+    std::cout << std::format("board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
+    board.makeMove(move, false);
+    EXPECT_TRUE(isCheckmate(board));
+
+    board.setupPositionFromFEN("8/1q6/8/8/8/2k5/K7/8 b - - 0 1");
+    move = engine->findBestMove(board);
+    std::cout << std::format("board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
+    board.makeMove(move, false);
+    EXPECT_TRUE(isCheckmate(board));
+
 
     std::string output = testing::internal::GetCapturedStdout();
     outfile << output;

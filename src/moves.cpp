@@ -274,29 +274,6 @@ void MoveGenerator::generatePieceMoves(const ChessBoard &board, std::array<Dense
         // Free spaces from index
         U64 freeSpace;
 
-        // King
-        pieceBB = board.getWhiteKings();
-        while (pieceBB) {
-            int index = std::countr_zero(pieceBB);
-            attackMask = ATKMASK_KING[index];
-            attacks = attackMask & opposition;
-            freeSpace = attackMask & emptySquares;
-
-            while (attacks) {
-                int targetSquare = std::countr_zero(attacks);
-                moves[moveNum++] = DenseMove(W_KING, index, targetSquare, 
-                                board.getDenseTypeAt(targetSquare), false, false,
-                                D_EMPTY);
-                attacks &= (attacks - 1);
-            }
-            while (freeSpace) {
-                int targetSquare = std::countr_zero(freeSpace);
-                moves[moveNum++] = DenseMove(W_KING, index, targetSquare, 
-                                D_EMPTY, false, false, D_EMPTY);
-                freeSpace &= (freeSpace - 1);
-            }
-            pieceBB &= (pieceBB - 1);
-        }
         // Queens
         pieceBB = board.getWhiteQueens();
         while (pieceBB) {
@@ -404,6 +381,29 @@ void MoveGenerator::generatePieceMoves(const ChessBoard &board, std::array<Dense
             }
             pieceBB &= (pieceBB - 1);
         }
+        // King
+        pieceBB = board.getWhiteKings();
+        while (pieceBB) {
+            int index = std::countr_zero(pieceBB);
+            attackMask = ATKMASK_KING[index];
+            attacks = attackMask & opposition;
+            freeSpace = attackMask & emptySquares;
+
+            while (attacks) {
+                int targetSquare = std::countr_zero(attacks);
+                moves[moveNum++] = DenseMove(W_KING, index, targetSquare, 
+                                board.getDenseTypeAt(targetSquare), false, false,
+                                D_EMPTY);
+                attacks &= (attacks - 1);
+            }
+            while (freeSpace) {
+                int targetSquare = std::countr_zero(freeSpace);
+                moves[moveNum++] = DenseMove(W_KING, index, targetSquare, 
+                                D_EMPTY, false, false, D_EMPTY);
+                freeSpace &= (freeSpace - 1);
+            }
+            pieceBB &= (pieceBB - 1);
+        }
     } else {
         U64 opposition = board.getWhitePieces();
         // Mask of attacks from index
@@ -413,29 +413,6 @@ void MoveGenerator::generatePieceMoves(const ChessBoard &board, std::array<Dense
         // Free spaces from index
         U64 freeSpace;
 
-        // King
-        pieceBB = board.getBlackKings();
-        while (pieceBB) {
-            int index = std::countr_zero(pieceBB);
-            attackMask = ATKMASK_KING[index];
-            attacks = attackMask & opposition;
-            freeSpace = attackMask & emptySquares;
-
-            while (attacks) {
-                int targetSquare = std::countr_zero(attacks);
-                moves[moveNum++] = DenseMove(B_KING, index, targetSquare, 
-                                board.getDenseTypeAt(targetSquare), false, false,
-                                D_EMPTY);
-                attacks &= (attacks - 1);
-            }
-            while (freeSpace) {
-                int targetSquare = std::countr_zero(freeSpace);
-                moves[moveNum++] = DenseMove(B_KING, index, targetSquare, 
-                                D_EMPTY, false, false, D_EMPTY);
-                freeSpace &= (freeSpace - 1);
-            }
-            pieceBB &= (pieceBB - 1);
-        }
         // Queens
         pieceBB = board.getBlackQueens();
         while (pieceBB) {
@@ -543,6 +520,29 @@ void MoveGenerator::generatePieceMoves(const ChessBoard &board, std::array<Dense
             }
             pieceBB &= (pieceBB - 1);
         }
+        // King
+        pieceBB = board.getBlackKings();
+        while (pieceBB) {
+            int index = std::countr_zero(pieceBB);
+            attackMask = ATKMASK_KING[index];
+            attacks = attackMask & opposition;
+            freeSpace = attackMask & emptySquares;
+
+            while (attacks) {
+                int targetSquare = std::countr_zero(attacks);
+                moves[moveNum++] = DenseMove(B_KING, index, targetSquare, 
+                                board.getDenseTypeAt(targetSquare), false, false,
+                                D_EMPTY);
+                attacks &= (attacks - 1);
+            }
+            while (freeSpace) {
+                int targetSquare = std::countr_zero(freeSpace);
+                moves[moveNum++] = DenseMove(B_KING, index, targetSquare, 
+                                D_EMPTY, false, false, D_EMPTY);
+                freeSpace &= (freeSpace - 1);
+            }
+            pieceBB &= (pieceBB - 1);
+        }
     }
 }
 
@@ -563,13 +563,30 @@ std::array<DenseMove, MAX_MOVES> MoveGenerator::generatePsuedoMoves(const ChessB
 }
 
 std::array<DenseMove, MAX_MOVES> MoveGenerator::generateLegalMoves(ChessBoard& board, int& moveNum) {
+    if (board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 w - - 0 1" ||
+        board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 b - - 1 1") {
+        std::cout << std::format("2nd Test board FEN inside genLegal1: {}\n", board.getFEN());
+    }
+    
     // std::cout << "MoveGenerator.generateLegalMoves start\n";
     // Reset moveNum to 0, since moveNum should always indicate number of moves in array
     moveNum = 0;
     // generatePsuedoMoves will set moveNum to correct number of moves to check
     std::array<DenseMove, MAX_MOVES> legal = generatePsuedoMoves(board, moveNum);
 
+    if (board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 w - - 0 1" ||
+        board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 b - - 1 1") {
+        std::cout << std::format("2nd Test board FEN inside genLegal2: {}\n", board.getFEN());
+    }
+
     Color sideToMove = board.getSideToMove();
+    if (board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 w - - 0 1" ||
+        board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 b - - 1 1") {
+        std::cout << std::format("2nd Test board FEN inside genLegal3: {}\n", board.getFEN());
+    }
+
+    std::string prevFEN = board.getFEN();
+    std::string newFEN;
     // std::vector<DenseMove> legal;
     // For each psuedo legal move generated
     for (int i = 0; i < moveNum; i) {
@@ -583,12 +600,27 @@ std::array<DenseMove, MAX_MOVES> MoveGenerator::generateLegalMoves(ChessBoard& b
             // Unmake the move to return board to prev state
             board.unmakeMove(legal[i], true);
             legal[i] = legal[--moveNum];
+            newFEN = board.getFEN();
+            if (newFEN != prevFEN) {
+                std::cout << std::format("i {} move 'illegal' {}\nPrevFEN {} NewFen {}\n", i, legal[i].toAlgebraic(), prevFEN, newFEN);
+            }
             // moveNum--;
             continue;
         }
         board.unmakeMove(legal[i], true);
         i++;
+        newFEN = board.getFEN();
+        if (newFEN != prevFEN) {
+            std::cout << std::format("i {} move 'legal' {}\nPrevFEN {} NewFen {}\n", i, legal[i].toAlgebraic(), prevFEN, newFEN);
+        }
     }
+
+    if (board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 w - - 0 1" ||
+        board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 b - - 1 1") {
+        std::cout << std::format("2nd Test board FEN inside genLegal4: {}\nstateHistory:", board.getFEN());
+        board.printStateHistory();
+    }
+
     // No legal moves, ensure indices are empty move
     if (moveNum == 0) legal.fill(DenseMove());
     // std::cout << "    generateLegalMoves returning, size " << moveNum << "\n";
