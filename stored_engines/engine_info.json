@@ -142,5 +142,23 @@
     "author": "Cameron Cunningham",
     "build_type": "_R",
     "stored_date": "2025-01-19 19:20:51"
+  },
+  "MaterialEngine 0.8 _R": {
+    "filename": "MaterialEngine_v0_8_R.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_R",
+    "stored_date": "2025-01-25 22:41:27"
+  },
+  "MaterialEngine 0.81 _R": {
+    "filename": "MaterialEngine_v0_81_R.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_R",
+    "stored_date": "2025-01-26 01:34:49"
+  },
+  "MaterialEngine 0.811 _R": {
+    "filename": "MaterialEngine_v0_811_R.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_R",
+    "stored_date": "2025-01-26 10:36:18"
   }
 }

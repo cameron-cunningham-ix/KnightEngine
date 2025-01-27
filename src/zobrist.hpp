@@ -11,7 +11,7 @@ class Zobrist {
 private:
     // RNG seed
     // DO NOT CHANGE
-    static constexpr U64 RNG_SEED = 917346852;
+    static constexpr U64 RNG_SEED = 917346853;
     // Color offsets for indexing into zobristPieces
     static constexpr int whiteOffset = 0;
     static constexpr int blackOffset = 1;

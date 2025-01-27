@@ -104,12 +104,15 @@ void ChessBoard::setupPositionFromFEN(const std::string& fen) {
     // Parse full move number
     std::from_chars(fullTurns.data(), fullTurns.data()+fullTurns.size(), currentGameState.fullMoveNumber);
     // Replace standard starting state
-    stateHistory[0] = currentGameState;
+    plyIndex = 0;
+    stateHistory[plyIndex] = currentGameState;
     // Ensure Zobrist is initialized
     if (!Zobrist::initialized) 
         Zobrist::initialize();
     // Get Zobrist key of the position
     zobristKey = GenerateZobristKey();
+    keySet.clear();
+    keySet.insert(zobristKey);
 }
 
 std::string ChessBoard::getFEN() {
@@ -627,7 +630,10 @@ void ChessBoard::initializeGameState() {
         Zobrist::initialize();
     // Generate Zobrist key for initial position
     zobristKey = GenerateZobristKey();
-    // std::cout << std::format("Initial Zobrist key: {}\n", zobristKey);
+    // keySet will only hold at most 100 keys, due to clearing after
+    // capture moves and the 50-move rule
+    keySet.reserve(128);
+    keySet.insert(zobristKey);
 }
 /// @brief Find any opponent pieces that are attacking square 'index'
 /// @param index Index of square 
@@ -670,10 +676,6 @@ U64 ChessBoard::OppAttacksToSquare(int index, Color colorOfKing) const {
 /// @param move
 /// @param searching If searching, move is not added to moveHistory.
 void ChessBoard::makeMove(DenseMove move, bool searching) {
-    U64 initialKey = zobristKey;
-    // std::cout << std::format("Making move: {}\n", move.toString(false));
-    // std::cout << std::format("makeMove Initial Zobrist key: {}\n", initialKey);
-
     // Get move info
     PieceType movedPiece = move.getPieceType();
     Color movedColor = move.getColor();
@@ -803,9 +805,14 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
         zobristKey ^= Zobrist::zobristCastle[prevCastleRights];
         zobristKey ^= Zobrist::zobristCastle[currentGameState.getCastleRights()];
     }
-    
+    // Move actually made on board, update keys
     if (!searching) {
-        moveHistory[plyIndex] = move;
+        // If it was a capture, we can clear the keySet since no new positions
+        // will possibly repeat old positions
+        if (capturedPiece != PieceType::EMPTY) {
+            keySet.clear();
+        }
+        keySet.insert(zobristKey);
     }
 }
 /// @brief Umake a move on the board (should be the most recent move made)
@@ -814,20 +821,20 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
 /// @param move
 /// @param searching If not searching, latest move is removed from moveHistory
 void ChessBoard::unmakeMove(DenseMove move, bool searching) {
-    // If not searching, clear last played move
+    // If not searching, clear last position in key history
     if (!searching) {
-        moveHistory[plyIndex] = 0;
+        keySet.erase(zobristKey);
     }
     
     // Move plyIndex back to last state
     // We do not clear the state at plyIndex because it uses too much time
     // to do it for every unmake, and we shouldn't be accessing old
     // values anyway, they'll be overwritten by makeMove
-    stateHistory[plyIndex] = GameState();
-    plyIndex--;
+    // stateHistory[plyIndex] = GameState();
     int prevCastleRights = currentGameState.getCastleRights();
     Color prevSide = currentGameState.sideToMove;
     // Get previous state
+    plyIndex--;
     currentGameState = stateHistory[plyIndex];
 
     // Get move info
@@ -891,10 +898,10 @@ void ChessBoard::unmakeMove(DenseMove move, bool searching) {
     }
     zobristKey ^= Zobrist::zobristSideToMove;
 
-    if (getFEN() == "k7/7Q/2K5/8/8/8/8/8 w - - 0 1" ||
-        getFEN() == "k7/7Q/2K5/8/8/8/8/8 b - - 1 1") {
-        std::cout << std::format("unmakeMove grab prev state: {}, sidetoMove {} plyIndex {}\n", getFEN(), (int)currentGameState.sideToMove, plyIndex);
-    }
+    // if (getFEN() == "k7/7Q/2K5/8/8/8/8/8 w - - 0 1" ||
+    //     getFEN() == "k7/7Q/2K5/8/8/8/8/8 b - - 1 1") {
+    //     std::cout << std::format("unmakeMove grab prev state: {}, sidetoMove {} plyIndex {}\n", getFEN(), (int)currentGameState.sideToMove, plyIndex);
+    // }
     // if (currentGameState.sideToMove == WHITE) {
     // }
 }

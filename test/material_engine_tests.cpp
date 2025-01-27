@@ -161,11 +161,11 @@ TEST_F(MaterialEngineTest, MultipleMatePosTest) {
     // White
     board.setupPositionFromFEN("2k5/7Q/2K5/8/8/8/8/8 w - - 0 1");
     move = engine->findBestMove(board);
-    std::cout << std::format("board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
+    std::cout << std::format("1st Test board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));
 
-    board.setupPositionFromFEN("k7/7Q/2K5/8/8/8/8/8 w - - 0 1");    // Problem
+    board.setupPositionFromFEN("k7/7Q/2K5/8/8/8/8/8 w - - 0 1");
     std::cout << std::format("2nd Test board FEN initial: {}\n",  board.getFEN());
     move = engine->findBestMove(board);
     std::cout << std::format("2nd Test board FEN after FBM: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
@@ -175,50 +175,50 @@ TEST_F(MaterialEngineTest, MultipleMatePosTest) {
 
     board.setupPositionFromFEN("k7/8/2K5/8/8/8/1Q6/8 w - - 0 1");
     move = engine->findBestMove(board);
-    std::cout << std::format("board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
+    std::cout << std::format("3rd Test board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     board.makeMove(move, false);
-    EXPECT_TRUE(isCheckmate(board));
+    EXPECT_TRUE(isCheckmate(board));    // Problem
     
-    board.setupPositionFromFEN("8/1Q6/8/8/8/2K5/8/k7 w - - 0 1");   // Problem
+    board.setupPositionFromFEN("8/1Q6/8/8/8/2K5/8/k7 w - - 0 1");
     move = engine->findBestMove(board);
-    std::cout << std::format("board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
+    std::cout << std::format("4th Test board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));
 
     board.setupPositionFromFEN("8/1Q6/8/8/8/2K5/k7/8 w - - 0 1");
     move = engine->findBestMove(board);
-    std::cout << std::format("board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
+    std::cout << std::format("5th Testboard FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));
 
     // Black
     board.setupPositionFromFEN("2K5/7q/2k5/8/8/8/8/8 b - - 0 1");
     move = engine->findBestMove(board);
-    std::cout << std::format("board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
+    std::cout << std::format("6th Test board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));
 
-    board.setupPositionFromFEN("K7/7q/2k5/8/8/8/8/8 b - - 0 1");    // Problem
+    board.setupPositionFromFEN("K7/7q/2k5/8/8/8/8/8 b - - 0 1");
     move = engine->findBestMove(board);
-    std::cout << std::format("board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
+    std::cout << std::format("7th Test board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));
 
     board.setupPositionFromFEN("K7/8/2k5/8/8/8/1q6/8 b - - 0 1");
     move = engine->findBestMove(board);
-    std::cout << std::format("board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
+    std::cout << std::format("8th Test board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     board.makeMove(move, false);
-    EXPECT_TRUE(isCheckmate(board));
+    EXPECT_TRUE(isCheckmate(board));    // Problem
 
-    board.setupPositionFromFEN("8/1q6/8/8/8/2k5/8/K7 b - - 0 1");   // Problem
+    board.setupPositionFromFEN("8/1q6/8/8/8/2k5/8/K7 b - - 0 1");
     move = engine->findBestMove(board);
-    std::cout << std::format("board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
+    std::cout << std::format("9th Test board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));
 
     board.setupPositionFromFEN("8/1q6/8/8/8/2k5/K7/8 b - - 0 1");
     move = engine->findBestMove(board);
-    std::cout << std::format("board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
+    std::cout << std::format("10th Test board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));
 
@@ -228,3 +228,112 @@ TEST_F(MaterialEngineTest, MultipleMatePosTest) {
     outfile.close();
     std::cout.rdbuf(coutBuf);
 }
+
+// Test search depth time
+TEST_F(MaterialEngineTest, SearchDepth2) {
+    engine->setSearchDepth(2); // Set shallow depth for testing
+    
+    auto startTime = std::chrono::steady_clock::now();
+    DenseMove move = engine->findBestMove(board);
+    auto endTime = std::chrono::steady_clock::now();
+    
+    // With depth 2, search shouldn't take too long
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    EXPECT_LT(duration.count(), 1000); // Should complete within 1 second
+}
+
+// Test search depth time
+TEST_F(MaterialEngineTest, SearchDepth3) {
+    engine->setSearchDepth(3);
+
+    auto startTime = std::chrono::steady_clock::now();
+    DenseMove move = engine->findBestMove(board);
+    auto endTime = std::chrono::steady_clock::now();
+    
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    EXPECT_LT(duration.count(), 1000); // Should complete within 1 second
+}
+
+// Test search depth time
+TEST_F(MaterialEngineTest, SearchDepth4) {
+    engine->setSearchDepth(4);
+
+    auto startTime = std::chrono::steady_clock::now();
+    DenseMove move = engine->findBestMove(board);
+    auto endTime = std::chrono::steady_clock::now();
+    
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    EXPECT_LT(duration.count(), 10000); // Should complete within 10 seconds
+}
+
+// Test search depth time
+TEST_F(MaterialEngineTest, SearchDepth5) {
+    engine->setSearchDepth(5);
+
+    auto startTime = std::chrono::steady_clock::now();
+    DenseMove move = engine->findBestMove(board);
+    auto endTime = std::chrono::steady_clock::now();
+    
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    EXPECT_LT(duration.count(), 15000); // Should complete within 15 seconds
+}
+
+// Test search depth time
+TEST_F(MaterialEngineTest, SearchDepth6) {
+    engine->setSearchDepth(6);
+
+    auto startTime = std::chrono::steady_clock::now();
+    DenseMove move = engine->findBestMove(board);
+    auto endTime = std::chrono::steady_clock::now();
+    
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    EXPECT_LT(duration.count(), 15000); // Should complete within 15 seconds
+}
+
+// Test search depth time
+TEST_F(MaterialEngineTest, SearchDepth7) {
+    engine->setSearchDepth(7);
+
+    auto startTime = std::chrono::steady_clock::now();
+    DenseMove move = engine->findBestMove(board);
+    auto endTime = std::chrono::steady_clock::now();
+    
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    EXPECT_LT(duration.count(), 15000); // Should complete within 15 seconds
+}
+
+// Test search depth time
+TEST_F(MaterialEngineTest, SearchDepth8) {
+    engine->setSearchDepth(8);
+
+    auto startTime = std::chrono::steady_clock::now();
+    DenseMove move = engine->findBestMove(board);
+    auto endTime = std::chrono::steady_clock::now();
+    
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    EXPECT_LT(duration.count(), 15000); // Should complete within 15 seconds
+}
+
+// // Test search depth time
+// TEST_F(MaterialEngineTest, SearchDepth9) {
+//     engine->setSearchDepth(9);
+
+//     auto startTime = std::chrono::steady_clock::now();
+//     DenseMove move = engine->findBestMove(board);
+//     auto endTime = std::chrono::steady_clock::now();
+    
+//     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+//     EXPECT_LT(duration.count(), 15000); // Should complete within 15 seconds
+// }
+
+// // Test search depth time
+// TEST_F(MaterialEngineTest, SearchDepth10) {
+//     engine->setSearchDepth(10);
+
+//     auto startTime = std::chrono::steady_clock::now();
+//     DenseMove move = engine->findBestMove(board);
+//     auto endTime = std::chrono::steady_clock::now();
+    
+//     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+//     EXPECT_LT(duration.count(), 15000); // Should complete within 15 seconds
+// }

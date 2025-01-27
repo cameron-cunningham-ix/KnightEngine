@@ -6,6 +6,7 @@
 #include <immintrin.h>
 #include <algorithm>
 #include <chrono>
+#include <unordered_set>
 
 static constexpr int INF_POS = 999999999;
 static constexpr int INF_NEG = -999999999;
@@ -23,6 +24,7 @@ private:
     // Transposition table
     // 44 million 24-byte entries = 1 GB
     std::array<TTEntry, TT_SIZE> transpositionTable;
+    U64 TTHits = 0;
 
     // Piece-Square tables
     // Pawns - Early game
@@ -75,9 +77,9 @@ private:
         -10,  0,  0,  0,  0,  0,  0,-10,
         -10,  0,  5,  5,  5,  5,  0,-10,
          -5,  0,  5,  5,  5,  5,  0, -5,
-          0,  0,  5,  5,  5,  5,  0, -5,
+         -5,  0,  5,  5,  5,  5,  0, -5,
         -10,  5,  5,  5,  5,  5,  0,-10,
-        -10,  0,  5,  0,  0,  0,  0,-10,
+        -10,  0,  0,  0,  0,  0,  0,-10,
         -20,-10,-10, -5, -5,-10,-10,-20
     };
     // King - Early game
@@ -88,8 +90,8 @@ private:
         -30,-40,-40,-50,-50,-40,-40,-30,
         -20,-30,-30,-40,-40,-30,-30,-20,
         -10,-20,-20,-20,-20,-20,-20,-10,
-         20, 20,  0,  0,  0,  0, 20, 20,
-         20, 30, 10,  0,  0, 10, 30, 20
+          5,  5,  0,  0,  0,  0,  5,  5,
+         20, 40, 10,  0,  0, 10, 40, 20
     };
     // Piece-Square tables for endgame
     // Pawns - Endgame
@@ -182,10 +184,10 @@ private:
         int kingPositionBonus = 50;
 
         int mateScore = 100000;
-        int supportedPawnBonus = 75;
-        int supportingPawnBonus = 90;
-        int supportingPieceBonus = 100;
-        int doubledPawnPenalty = -70;
+        int supportedPawnBonus = 70;
+        int supportingPawnBonus = 35;
+        int supportingPieceBonus = 25;
+        int doubledPawnPenalty = -50;
         int isolatedPawnPenalty = -80;
         int checkedPenalty = -1000;
         int checkingBonus = 1500;
@@ -196,14 +198,14 @@ private:
 public:
 
     MaterialEngine() 
-        : ChessEngineBase("MaterialEngine", "0.72", "Cameron Cunningham", 8) {
+        : ChessEngineBase("MaterialEngine", "0.812", "Cameron Cunningham", 8) {
             // Register all engine options
-            registerOption(EngineOption::createSpin("PawnValue", 100, 0, 1000));
-            registerOption(EngineOption::createSpin("KnightValue", 320, 0, 1000));
-            registerOption(EngineOption::createSpin("BishopValue", 330, 0, 1000));
-            registerOption(EngineOption::createSpin("RookValue", 500, 0, 1500));
-            registerOption(EngineOption::createSpin("QueenValue", 900, 0, 2000));
-            registerOption(EngineOption::createSpin("KingValue", 2000, 1000, 5000));
+            registerOption(EngineOption::createSpin("PawnValue", 100, 10, 1000));
+            registerOption(EngineOption::createSpin("KnightValue", 320, 10, 1000));
+            registerOption(EngineOption::createSpin("BishopValue", 330, 10, 1000));
+            registerOption(EngineOption::createSpin("RookValue", 500, 20, 1500));
+            registerOption(EngineOption::createSpin("QueenValue", 900, 30, 2000));
+            registerOption(EngineOption::createSpin("KingValue", 2000, 100, 5000));
 
             registerOption(EngineOption::createSpin("PawnPositionBonus", 50, 0, 200));
             registerOption(EngineOption::createSpin("KnightPositionBonus", 50, 0, 200));
@@ -213,13 +215,13 @@ public:
             registerOption(EngineOption::createSpin("KingPositionBonus", 50, 0, 200));
 
             registerOption(EngineOption::createSpin("MateScore", 100000, 50000, 200000));
-            registerOption(EngineOption::createSpin("SupportedPawnBonus", 75, 0, 200));
-            registerOption(EngineOption::createSpin("SupportingPawnBonus", 90, 0, 200));
-            registerOption(EngineOption::createSpin("SupportingPieceBonus", 100, 0, 200));
-            registerOption(EngineOption::createSpin("DoubledPawnPenalty", -70, -200, 0));
+            registerOption(EngineOption::createSpin("SupportedPawnBonus", 70, 0, 200));
+            registerOption(EngineOption::createSpin("SupportingPawnBonus", 35, 0, 200));
+            registerOption(EngineOption::createSpin("SupportingPieceBonus", 25, 0, 200));
+            registerOption(EngineOption::createSpin("DoubledPawnPenalty", -50, -200, 0));
             registerOption(EngineOption::createSpin("IsolatedPawnPenalty", -80, -200, 0));
-            registerOption(EngineOption::createSpin("CheckedPenalty", -1000, -2000, 0));
-            registerOption(EngineOption::createSpin("CheckingBonus", 1500, 0, 3000));
+            registerOption(EngineOption::createSpin("CheckedPenalty", -1000, -5000, 0));
+            registerOption(EngineOption::createSpin("CheckingBonus", 1500, 1000, 5000));
             registerOption(EngineOption::createSpin("BishopPairBonus", 125, 0, 300));
             registerOption(EngineOption::createSpin("RookOpenFileBonus", 250, 0, 500));
     }
@@ -255,17 +257,36 @@ public:
     
 
 
-     // Enhanced alpha-beta search with move ordering and quiescence
+    // Enhanced alpha-beta search with move ordering and quiescence
     int alphaBeta(ChessBoard& board, int depth, int alpha, int beta, int ply) {
         if (!isSearching) {
             return evaluatePosition(board);
         }
 
-        // Check for checkmate/stalemate at leaf nodes
         if (depth <= 0) {
             pv[ply].length = 0;  // Clear PV at leaf nodes
+
             int eval = quiescence(board, alpha, beta, ply);
             return eval;
+        }
+
+        // Check for repetition and 50-move rule
+        if (ply > 0) {
+            // If the 50-move rule is reached in this position, or it has occured once on the actual board, return 0
+            if (board.currentGameState.halfMoveClock >= 100){
+                return 0;
+            } else if (board.keySet.find(board.zobristKey) != board.keySet.end()) {
+                std::cout << "rep\n";
+                return 0;
+            }
+
+            // We can skip looking through this position if there is already a mate found earlier in the search
+            // that is shorter than any mate from this position.
+            alpha = std::max(alpha, -params.mateScore + ply);
+            beta = std::min(beta, params.mateScore - ply);
+            if (alpha >= beta) {
+                return alpha;
+            }
         }
 
         // Check transposition table
@@ -273,6 +294,7 @@ public:
         DenseMove hashMove;
         TTEntry* entry = &transpositionTable[board.zobristKey % TT_SIZE];
         if (checkTT(board, depth, alpha, beta, score, hashMove)) {
+            std::cout << std::format("tt hit, TTHits: {}\n", TTHits);
             return score;
         }
 
@@ -327,10 +349,7 @@ public:
         // Handle checkmate/stalemate
         if (noLegalMoves) {
             if (board.isSideInCheck(sideToMove)) {
-                int eval = sideToMove == WHITE ? params.mateScore + depth : -params.mateScore - depth;
-                // std::cout << std::format("Color {} in mate; board FEN {}\nscore returned {} alpha {} beta {} ply {}\n",
-                //     (int)sideToMove, board.getFEN(), eval, alpha, beta, ply);
-                return eval;
+                return sideToMove == WHITE ? params.mateScore - ply : -params.mateScore + ply;
             }
             return 0;  // Stalemate
         }
@@ -341,7 +360,6 @@ public:
     }
 
     DenseMove findBestMove(ChessBoard& board, int maxDepth = -1) {
-        std::cout << std::format("2nd Test board FEN inside findBestMove1: {}\n", board.getFEN());
         startSearch();
         searchStartTime = std::chrono::steady_clock::now();
         nodeCount = 0;
@@ -354,15 +372,8 @@ public:
         const int MIN_DEPTH = 2;
 
         // Generate and order moves
-        std::cout << std::format("2nd Test board FEN inside findBestMove2: {}\n", board.getFEN());
         int moveNum = 0;
         std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
-        if (board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 w - - 0 1" ||
-            board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 b - - 1 1" ||
-            board.getFEN() == "2k5/7Q/2K5/8/8/8/8/8 w - - 0 1" ||
-            board.getFEN() == "2k5/7Q/2K5/8/8/8/8/8 b - - 1 1") {
-            std::cout << std::format("2nd Test board FEN inside findBestMove3: {}\n", board.getFEN());
-        }
         Color sideToMove = board.getSideToMove();
 
         // Iterative deepening
@@ -390,25 +401,24 @@ public:
                 currentMoveNumber = i + 1;
                 currentMove = moves[i];
 
-                // debugging
-                if (currentMove.toAlgebraic() == "b7b2") {
-                    std::cout << std::format("b7b2 analysis: alpha {} beta {} bestMove {} bestScore {}\n",
-                        alpha, beta, bestMove.toAlgebraic(), bestScore);
-                }
-
                 sendInfo(std::format("currmove {} currmovenumber {}", 
                                    currentMove.toAlgebraic(), currentMoveNumber));
 
-                ChessBoard tempBoard = board;
-                tempBoard.makeMove(moves[i], true);
-
-                int score = -alphaBeta(tempBoard, currDepth - 1, -beta, -alpha, 1);
+                board.makeMove(moves[i], true);
+                int score = -alphaBeta(board, currDepth - 1, -beta, -alpha, 1);
+                board.unmakeMove(moves[i], true);
 
                 // Update best move if better score found
                 if ((sideToMove == WHITE && score > bestScore) ||
                     (sideToMove == BLACK && score < bestScore)) {
                     bestScore = score;
                     bestMove = moves[i];
+
+                    if (sideToMove == WHITE) {
+                        if (score > alpha) alpha = score;
+                    } else {
+                        if (score < beta) beta = score;
+                    }
 
                     auto moveTime = std::chrono::duration_cast<std::chrono::milliseconds>(
                         std::chrono::steady_clock::now() - searchStartTime).count();
@@ -445,7 +455,6 @@ public:
         }
 
         this->bestMove = bestMoveOverall;
-        std::cout << std::format("bestMove: {}\n", bestMoveOverall.toAlgebraic()); 
         endSearch();
         return bestMoveOverall;
     }
@@ -602,64 +611,9 @@ private:
         }
     }
 
-    // Add to MaterialEngine class private section:
-
     // Constants for quiescence search
-    static constexpr int MAX_QSEARCH_DEPTH = 8;    // Maximum depth for qsearch
+    static constexpr int MAX_QSEARCH_DEPTH = 8;     // Maximum depth for qsearch
     static constexpr int DELTA_MARGIN = 200;        // Margin for delta pruning (in centipawns)
-
-    // Static Exchange Evaluation
-    // Returns estimated score after sequence of captures on a square
-    int staticExchangeEvaluation(ChessBoard& board, int square, Color side) {
-        PieceType target = board.getPieceAt(square);
-        if (target == EMPTY) return 0;
-
-        int targetValue = getPieceValue(target);
-        U64 attackers = board.getAttacksForSide((Color)!side);
-
-        // No attackers means no capture possible
-        if (!(attackers & (1ULL << square))) return 0;
-
-        // Find least valuable attacker
-        PieceType nextAttacker = EMPTY;
-        int lvaValue = INF_POS;
-        U64 pieces = board.getWhitePawns() | board.getBlackPawns();
-        if (pieces & attackers) {
-            nextAttacker = side == WHITE ? W_PAWN : B_PAWN;
-            lvaValue = getPieceValue(nextAttacker);
-        }
-        pieces = board.getWhiteKnights() | board.getBlackKnights();
-        if (pieces & attackers && getPieceValue(side == WHITE ? W_KNIGHT : B_KNIGHT) < lvaValue) {
-            nextAttacker = side == WHITE ? W_KNIGHT : B_KNIGHT;
-            lvaValue = getPieceValue(nextAttacker);
-        }
-        pieces = board.getWhiteBishops() | board.getBlackBishops();
-        if (pieces & attackers && getPieceValue(side == WHITE ? W_BISHOP : B_BISHOP) < lvaValue) {
-            nextAttacker = side == WHITE ? W_BISHOP : B_BISHOP;
-            lvaValue = getPieceValue(nextAttacker);
-        }
-        pieces = board.getWhiteRooks() | board.getBlackRooks();
-        if (pieces & attackers && getPieceValue(side == WHITE ? W_ROOK : B_ROOK) < lvaValue) {
-            nextAttacker = side == WHITE ? W_ROOK : B_ROOK;
-            lvaValue = getPieceValue(nextAttacker);
-        }
-        pieces = board.getWhiteQueens() | board.getBlackQueens();
-        if (pieces & attackers && getPieceValue(side == WHITE ? W_QUEEN : B_QUEEN) < lvaValue) {
-            nextAttacker = side == WHITE ? W_QUEEN : B_QUEEN;
-            lvaValue = getPieceValue(nextAttacker);
-        }
-        pieces = board.getWhiteKings() | board.getBlackKings();
-        if (pieces & attackers && getPieceValue(side == WHITE ? W_KING : B_KING) < lvaValue) {
-            nextAttacker = side == WHITE ? W_KING : B_KING;
-            lvaValue = getPieceValue(nextAttacker);
-        }
-
-        if (nextAttacker == EMPTY) return targetValue;
-
-        // Recursively evaluate subsequent captures
-        int score = targetValue - staticExchangeEvaluation(board, square, (Color)!side);
-        return score > 0 ? score : 0;
-    }
 
     // Enhanced quiescence search with SEE and delta pruning
     int quiescence(ChessBoard& board, int alpha, int beta, int ply, int qDepth = 0) {
@@ -691,7 +645,7 @@ private:
 
         // Generate and score captures
         int moveNum = 0;
-        std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generatePsuedoMoves(board, moveNum);
+        std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
         std::vector<ScoredMove> captureMoves;
 
         // Filter captures and score them
@@ -706,18 +660,9 @@ private:
                     continue;
                 }
 
-                // Static Exchange Evaluation
-                int see = staticExchangeEvaluation(board, moves[i].getTo(), board.getSideToMove());
-                if (see <= 0) {
-                    continue;  // Skip losing captures
-                }
-
-                // Final move score combines MVV/LVA and SEE
-                score += see;
-                captureMoves.emplace_back(moves[i], score);
+                captureMoves.emplace_back(ScoredMove(moves[i], score));
             }
         }
-
         // Sort captures by score
         std::sort(captureMoves.begin(), captureMoves.end());
 
@@ -740,7 +685,6 @@ private:
                 alpha = score;
             }
         }
-
         return alpha;
     }
 
@@ -789,8 +733,8 @@ private:
         // Get total piece count (not including pawns or kings)
         // for endgame lerp
         totalPiecesWithoutPawns = popcount(board.getAllPieces() & 
-                                        (~board.getDenseSet(D_PAWN) | 
-                                         ~board.getDenseSet(D_KING)));
+                                        (~(board.getDenseSet(D_PAWN) | 
+                                         board.getDenseSet(D_KING))));
         return score;
     }
 
@@ -798,8 +742,8 @@ private:
         int score = 0;
         // Calculate 'distance' along early game to late game by taking
         // current number of major and minor pieces and initial number of those pieces
-        int earlygameLerp = totalPiecesWithoutPawns/INIT_MAJ_MIN_PIECES;
-        int endgameLerp = (std::clamp(14 - totalPiecesWithoutPawns, 0, 14))/INIT_MAJ_MIN_PIECES;
+        float earlygameLerp = (float)totalPiecesWithoutPawns/INIT_MAJ_MIN_PIECES;
+        float endgameLerp = (float)(std::clamp(8 - totalPiecesWithoutPawns, 0, 8))/INIT_MAJ_MIN_PIECES;
         if (color == WHITE) {
             // Evaluate pawn structure
             U64 pawns = board.getWhitePawns();

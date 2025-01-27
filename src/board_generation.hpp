@@ -3,7 +3,7 @@
 #include "types.hpp"
 #include <iostream>
 #include <bitset>
-#include <vector>
+#include <unordered_set>
 
 /// @brief Class representing a current state of a chess board, including game state and
 /// previous played moves. 
@@ -26,9 +26,10 @@ public:
     // Zobrist key of current board
     U64 zobristKey;
     // History of game states
+    int plyIndex;               // Current ply; used to index into stateHistory and keyHistory
     std::array<GameState, MAX_PLY> stateHistory;
-    // History of moves
-    std::array<DenseMove, MAX_PLY> moveHistory;
+    // Set of zobrist keys of actual positions, useful for repetition table
+    std::unordered_set<U64> keySet;
 
     // Bitboard getters
 
@@ -100,7 +101,6 @@ private:
     // King squares - 0 = WHITE, 1 - BLACK for easy calculating
     int kingSquares[2];
     int checkingCount;          // The number of pieces currently checking the current side's king
-    int plyIndex;               // Current ply; used to index into stateHistory and moveHistory
 
     // Normal board initialization methods
     void initializeWhiteBB();
