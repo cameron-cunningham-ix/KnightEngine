@@ -57,10 +57,10 @@ TEST_F(MaterialEngineTest, WhiteAdvantageEvaluation) {
 // Test mate in one detection - Scholar's mate position
 TEST_F(MaterialEngineTest, MateInOneDetection) {
     testing::internal::CaptureStdout();
-    std::ofstream outfile("TestOutput/MaterialEngineTest_MateInOne.txt");
+    std::ofstream outfile("TestOutput/MatEngTest_MateInOne.txt");
     std::streambuf* coutBuf = std::cout.rdbuf();
     if (outfile.is_open()) {
-        outfile << "MaterialEngineTest_MateInOne.txt\n";
+        outfile << "MatEngTest_MateInOne.txt\n";
         std::cout.rdbuf(outfile.rdbuf());
     }
 
@@ -148,12 +148,12 @@ TEST_F(MaterialEngineTest, KingSafetyEvaluation) {
 }
 
 // Test that the engine finds mate in one from multiple positions
-TEST_F(MaterialEngineTest, MultipleMatePosTest) {
+TEST_F(MaterialEngineTest, MultMate1PosTest) {
     testing::internal::CaptureStdout();
-    std::ofstream outfile("TestOutput/MaterialEngineTest_MultipleMatePosTest.txt");
+    std::ofstream outfile("TestOutput/MatEngTest_MultMate1PosTest.txt");
     std::streambuf* coutBuf = std::cout.rdbuf();
     if (outfile.is_open()) {
-        outfile << "MaterialEngineTest_MateInOne.txt\n";
+        outfile << "MatEngTest_MateInOne.txt\n";
         std::cout.rdbuf(outfile.rdbuf());
     }
     // King Queen mates
@@ -228,6 +228,8 @@ TEST_F(MaterialEngineTest, MultipleMatePosTest) {
     outfile.close();
     std::cout.rdbuf(coutBuf);
 }
+
+
 
 // Test search depth time
 TEST_F(MaterialEngineTest, SearchDepth2) {
@@ -337,3 +339,279 @@ TEST_F(MaterialEngineTest, SearchDepth8) {
 //     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
 //     EXPECT_LT(duration.count(), 15000); // Should complete within 15 seconds
 // }
+
+// Test move picking
+TEST_F(MaterialEngineTest, GoodMovePicking1) {
+    testing::internal::CaptureStdout();
+    std::ofstream outfile("TestOutput/MatEngTest_GMP1.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
+    if (outfile.is_open()) {
+        outfile << "MatEngTest_GMP1.txt\n";
+        std::cout.rdbuf(outfile.rdbuf());
+    }
+
+    // Setup position
+    board.setupPositionFromFEN("r1bqkbnr/pppppppp/8/8/3nP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3");
+    
+    // Find best move - should be Qxd4
+    DenseMove bestMove = engine->findBestMove(board);
+    
+    // Print the board and move for debugging
+    printBoard(board);
+    std::cout << "Best move found: " << bestMove.toString(false) << "\n";
+    
+    // The engine should find Qxd4
+    EXPECT_EQ(bestMove.getPieceType(), W_QUEEN);
+    EXPECT_EQ(bestMove.getFrom(), BUTIL::D1);
+    EXPECT_EQ(bestMove.getTo(), BUTIL::D4);
+    EXPECT_TRUE(bestMove.isCapture());
+    EXPECT_EQ(bestMove.getCaptPiece(), B_KNIGHT);
+    
+    // Verify it's the correct move
+    board.makeMove(bestMove, false);
+    printBoard(board);
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
+    std::cout.rdbuf(coutBuf);
+}
+
+// Test move picking
+TEST_F(MaterialEngineTest, GoodMovePicking2) {
+    testing::internal::CaptureStdout();
+    std::ofstream outfile("TestOutput/MatEngTest_GMP2.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
+    if (outfile.is_open()) {
+        outfile << "MatEngTest_GMP2.txt\n";
+        std::cout.rdbuf(outfile.rdbuf());
+    }
+
+    // Setup position
+    board.setupPositionFromFEN("r1bqkbnr/pppppppp/8/8/3nP1Q1/8/PPP2PPP/RNB1KBNR b KQkq - 1 3");
+    
+    // Find best move - should be Nxc2
+    DenseMove bestMove = engine->findBestMove(board);
+    
+    // Print the board and move for debugging
+    printBoard(board);
+    std::cout << "Best move found: " << bestMove.toString(false) << "\n";
+    
+    // The engine should find Nxc2
+    EXPECT_EQ(bestMove.getPieceType(), B_KNIGHT);
+    EXPECT_EQ(bestMove.getFrom(), BUTIL::D4);
+    EXPECT_EQ(bestMove.getTo(), BUTIL::C2);
+    EXPECT_TRUE(bestMove.isCapture());
+    EXPECT_EQ(bestMove.getCaptPiece(), W_PAWN);
+    
+    // Verify it's the correct move
+    board.makeMove(bestMove, false);
+    printBoard(board);
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
+    std::cout.rdbuf(coutBuf);
+}
+
+// Test move picking
+TEST_F(MaterialEngineTest, GoodMovePicking3) {
+    testing::internal::CaptureStdout();
+    std::ofstream outfile("TestOutput/MatEngTest_GMP3.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
+    if (outfile.is_open()) {
+        outfile << "MatEngTest_GMP3.txt\n";
+        std::cout.rdbuf(outfile.rdbuf());
+    }
+
+    // Setup position
+    board.setupPositionFromFEN("r1bqkbnr/pppppppp/8/4n3/8/2N2N2/PPPPPPPP/R1BQKB1R w KQkq - 4 3");
+    
+    // Find best move - should be Nxe5
+    DenseMove bestMove = engine->findBestMove(board);
+    
+    // Print the board and move for debugging
+    printBoard(board);
+    std::cout << "Best move found: " << bestMove.toString(false) << "\n";
+    
+    // The engine should find Nxe5
+    EXPECT_EQ(bestMove.getPieceType(), W_KNIGHT);
+    EXPECT_EQ(bestMove.getFrom(), BUTIL::F3);
+    EXPECT_EQ(bestMove.getTo(), BUTIL::E5);
+    EXPECT_TRUE(bestMove.isCapture());
+    EXPECT_EQ(bestMove.getCaptPiece(), B_KNIGHT);
+    
+    // Verify it's the correct move
+    board.makeMove(bestMove, false);
+    printBoard(board);
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
+    std::cout.rdbuf(coutBuf);
+}
+
+// Test move picking
+TEST_F(MaterialEngineTest, GoodMovePicking4) {
+    testing::internal::CaptureStdout();
+    std::ofstream outfile("TestOutput/MatEngTest_GMP4.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
+    if (outfile.is_open()) {
+        outfile << "MatEngTest_GMP4.txt\n";
+        std::cout.rdbuf(outfile.rdbuf());
+    }
+
+    // Setup position
+    board.setupPositionFromFEN("k7/8/8/7p/6P1/8/8/7K w - - 0 1");
+    
+    // Find best move - should be gxh5
+    DenseMove bestMove = engine->findBestMove(board);
+    
+    // Print the board and move for debugging
+    printBoard(board);
+    std::cout << "Best move found: " << bestMove.toString(false) << "\n";
+    
+    // The engine should find Nxe5
+    EXPECT_EQ(bestMove.getPieceType(), W_PAWN);
+    EXPECT_EQ(bestMove.getFrom(), BUTIL::G4);
+    EXPECT_EQ(bestMove.getTo(), BUTIL::H5);
+    EXPECT_TRUE(bestMove.isCapture());
+    EXPECT_EQ(bestMove.getCaptPiece(), B_PAWN);
+    
+    // Verify it's the correct move
+    board.makeMove(bestMove, false);
+    printBoard(board);
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
+    std::cout.rdbuf(coutBuf);
+}
+
+// Test move picking
+TEST_F(MaterialEngineTest, GoodMovePicking5) {
+    testing::internal::CaptureStdout();
+    std::ofstream outfile("TestOutput/MatEngTest_GMP5.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
+    if (outfile.is_open()) {
+        outfile << "MatEngTest_GMP5.txt\n";
+        std::cout.rdbuf(outfile.rdbuf());
+    }
+
+    // Setup position
+    board.setupPositionFromFEN("k7/8/8/p7/1P6/8/8/7K b - - 0 1");
+    
+    // Find best move - should be gxh5
+    DenseMove bestMove = engine->findBestMove(board);
+    
+    // Print the board and move for debugging
+    printBoard(board);
+    std::cout << "Best move found: " << bestMove.toString(false) << "\n";
+    
+    // The engine should find Nxe5
+    EXPECT_EQ(bestMove.getPieceType(), B_PAWN);
+    EXPECT_EQ(bestMove.getFrom(), BUTIL::A5);
+    EXPECT_EQ(bestMove.getTo(), BUTIL::B4);
+    EXPECT_TRUE(bestMove.isCapture());
+    EXPECT_EQ(bestMove.getCaptPiece(), W_PAWN);
+    
+    // Verify it's the correct move
+    board.makeMove(bestMove, false);
+    printBoard(board);
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
+    std::cout.rdbuf(coutBuf);
+}
+
+// Test move picking
+TEST_F(MaterialEngineTest, GoodMovePicking6) {
+    testing::internal::CaptureStdout();
+    std::ofstream outfile("TestOutput/MatEngTest_GMP6.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
+    if (outfile.is_open()) {
+        outfile << "MatEngTest_GMP6.txt\n";
+        std::cout.rdbuf(outfile.rdbuf());
+    }
+
+    // Setup position
+    board.setupPositionFromFEN("k7/8/8/p7/1P6/8/8/7K b - - 0 1");
+    
+    // Find best move - should be gxh5
+    DenseMove bestMove = engine->findBestMove(board);
+    
+    // Print the board and move for debugging
+    printBoard(board);
+    std::cout << "Best move found: " << bestMove.toString(false) << "\n";
+    
+    // The engine should find Nxe5
+    EXPECT_EQ(bestMove.getPieceType(), B_PAWN);
+    EXPECT_EQ(bestMove.getFrom(), BUTIL::A5);
+    EXPECT_EQ(bestMove.getTo(), BUTIL::B4);
+    EXPECT_TRUE(bestMove.isCapture());
+    EXPECT_EQ(bestMove.getCaptPiece(), W_PAWN);
+    
+    // Verify it's the correct move
+    board.makeMove(bestMove, false);
+    printBoard(board);
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
+    std::cout.rdbuf(coutBuf);
+}
+
+// Test positions from matein2.txt file
+TEST_F(MaterialEngineTest, MateIn2Positions) {
+    testing::internal::CaptureStdout();
+    std::ofstream outfile("TestOutput/MatEngTest_MateIn2.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
+    if (outfile.is_open()) {
+        outfile << "MatEngTest_MateIn2.txt\n";
+        std::cout.rdbuf(outfile.rdbuf());
+    }
+
+    // Read the FEN positions from file
+    std::ifstream inFile("matein2.txt");
+    std::string fen;
+
+    if (!inFile.is_open()) {
+        std::cout << "Failed to open matein2.txt" << std::endl;
+        FAIL();
+    }
+
+    int positionNumber = 1;
+    while (std::getline(inFile, fen)) {
+        if (fen.empty()) continue;  // Skip empty lines
+
+        std::cout << "\nTesting position " << positionNumber << ":\n";
+        std::cout << "FEN: " << fen << "\n";
+
+        // Set up the position
+        board.setupPositionFromFEN(fen);
+        
+        // Print initial position
+        printBoard(board);
+        
+        // Find best move
+        DenseMove bestMove = engine->findBestMove(board);
+        std::cout << "Best move found: " << bestMove.toString(false) << "\n";
+        
+        // Make the move
+        board.makeMove(bestMove, false);
+        printBoard(board);
+        
+        // Verify it's mate in 1 for opponent
+        EXPECT_TRUE(isCheckmate(board)) 
+            << "Position " << positionNumber << " is not mate after move " 
+            << bestMove.toString(false);
+
+        positionNumber++;
+    }
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
+    std::cout.rdbuf(coutBuf);
+}

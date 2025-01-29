@@ -2,6 +2,7 @@
 #include "../src/board_generation.hpp"
 #include "../src/pext_bitboard.hpp"
 #include "../src/board_utility.hpp"
+#include "../src/utility.hpp"
 #include "../src/zobrist.hpp"
 #include <gtest/gtest.h>
 #include <iostream>
@@ -868,4 +869,118 @@ TEST_F(ChessBoardTest, Zobrist8) {
     board1.makeMove(promo, false);
 
     EXPECT_EQ(board.zobristKey, board1.zobristKey);
+}
+
+// Test Zobrist key equality with different move orders
+TEST_F(ChessBoardTest, Zobrist9) {
+    ChessBoard board1 = ChessBoard();
+
+    // Reach same position through different moves
+    DenseMove nc3(W_KNIGHT, BUTIL::B1, BUTIL::C3);
+    DenseMove nf3(W_KNIGHT, BUTIL::G1, BUTIL::F3);
+    DenseMove nf6(B_KNIGHT, BUTIL::G8, BUTIL::F6);
+    DenseMove nc6(B_KNIGHT, BUTIL::B8, BUTIL::C6);
+
+    board.makeMove(nc3, false);
+    board.makeMove(nc6, false);
+    board.makeMove(nf3, false);
+    board.makeMove(nf6, false);
+
+    board1.makeMove(nf3, false);
+    board1.makeMove(nc6, false);
+    board1.makeMove(nc3, false);
+    board1.makeMove(nf6, false);
+
+    EXPECT_EQ(board.zobristKey, board1.zobristKey);
+}
+
+// Test Zobrist key equality with different move orders
+TEST_F(ChessBoardTest, Zobrist10) {
+    ChessBoard board1 = ChessBoard();
+
+    // Reach same position through different moves
+    DenseMove g4(W_PAWN, BUTIL::G2, BUTIL::G4);
+    DenseMove h4(W_PAWN, BUTIL::H2, BUTIL::H4);
+    DenseMove h5(B_PAWN, BUTIL::H7, BUTIL::H5);
+
+    board.makeMove(g4, false);
+    board.makeMove(h5, false);
+    board.makeMove(h4, false);
+
+    board1.setupPositionFromFEN("rnbqkbnr/ppppppp1/8/7p/6PP/8/PPPPPP2/RNBQKBNR b KQkq - 0 2");
+
+    EXPECT_EQ(board.zobristKey, board1.zobristKey);
+}
+
+// Test Zobrist keys
+TEST_F(ChessBoardTest, CheckZobrist1) {
+    testing::internal::CaptureStdout();
+    std::ofstream outfile("TestOutput/ChessBoardTest_CheckZobrist1.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
+    if (outfile.is_open()) {
+        outfile << "ChessBoardTest_CheckZobrist1.txt\n";
+        std::cout.rdbuf(outfile.rdbuf());
+    }
+    
+    debugZobristKeys(board, 5);
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
+    std::cout.rdbuf(coutBuf);
+}
+
+// Test Zobrist keys
+TEST_F(ChessBoardTest, CheckZobrist2) {
+    testing::internal::CaptureStdout();
+    std::ofstream outfile("TestOutput/ChessBoardTest_CheckZobrist2.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
+    if (outfile.is_open()) {
+        outfile << "ChessBoardTest_CheckZobrist2.txt\n";
+        std::cout.rdbuf(outfile.rdbuf());
+    }
+    board.setupPositionFromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+    debugZobristKeys(board, 5);
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
+    std::cout.rdbuf(coutBuf);
+}
+
+// Test Zobrist keys
+TEST_F(ChessBoardTest, CheckZobrist3) {
+    testing::internal::CaptureStdout();
+    std::ofstream outfile("TestOutput/ChessBoardTest_CheckZobrist3.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
+    if (outfile.is_open()) {
+        outfile << "ChessBoardTest_CheckZobrist3.txt\n";
+        std::cout.rdbuf(outfile.rdbuf());
+    }
+    board.setupPositionFromFEN("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
+    debugZobristKeys(board, 5);
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
+    std::cout.rdbuf(coutBuf);
+}
+
+
+// Test Zobrist keys
+TEST_F(ChessBoardTest, CheckZobrist4) {
+    testing::internal::CaptureStdout();
+    std::ofstream outfile("TestOutput/ChessBoardTest_CheckZobrist4.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
+    if (outfile.is_open()) {
+        outfile << "ChessBoardTest_CheckZobrist4.txt\n";
+        std::cout.rdbuf(outfile.rdbuf());
+    }
+    board.setupPositionFromFEN("r1bqkbnr/pppppppp/8/8/3nP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3");
+    debugZobristKeys(board, 5);
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
+    std::cout.rdbuf(coutBuf);
 }

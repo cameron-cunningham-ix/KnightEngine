@@ -9,6 +9,7 @@
 #include <sstream>
 #include <format>
 #include <map>
+#include <unordered_map>
 #include <charconv>
 #include <cstdint>
 #include <vector>
@@ -43,6 +44,16 @@ struct PerftMetrics {
         checkmates += other.checkmates;
         return *this;
     }
+};
+
+// Helper struct to store position information for comparison
+struct PositionInfo {
+    U64 zobristKey;
+    std::string fen;
+    std::vector<std::string> moveSequence;  // Sequence of moves that led to this position
+
+    PositionInfo(U64 key, const std::string& fenStr, const std::vector<std::string>& moves)
+        : zobristKey(key), fen(fenStr), moveSequence(moves) {}
 };
 
 // Map to convert FEN piece characters to PieceType
@@ -86,6 +97,11 @@ bool verifyAttackPattern(const ChessBoard& board, int square,
 DenseMove sanToMove(const std::string &san, ChessBoard &board);
 void printBoard(const ChessBoard& board);
 U64 setBitsBetween(int startIndex, int endIndex, int direction = 0);
+U64 checkZobristConsistency(ChessBoard& board, int maxDepth, int depth, 
+                           std::unordered_map<std::string, PositionInfo>& seenPositions,
+                           std::vector<std::string>& currentMoveSequence,
+                           bool displaySubPositions = false);
+U64 debugZobristKeys(ChessBoard& board, int depth, bool displaySubPositions = false);
 
 inline int popcount(U64 x) {
     return (int)_mm_popcnt_u64(x);

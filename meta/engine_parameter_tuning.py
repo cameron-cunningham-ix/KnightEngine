@@ -157,35 +157,35 @@ class EngineEvaluator:
 def main():
     # Define parameters to tune
     parameters = [
-        Parameter("PawnValue", 50, 150, True),
-        Parameter("KnightValue", 250, 400, True),
-        Parameter("BishopValue", 250, 400, True),
-        Parameter("RookValue", 400, 600, True),
-        Parameter("QueenValue", 800, 1000, True),
-        Parameter("KingValue", 1500, 2000, True),
-        Parameter("PawnPositionBonus", 0, 100, True),
-        Parameter("KnightPositionBonus", 0, 100, True),
-        Parameter("BishopPositionBonus", 0, 100, True),
-        Parameter("RookPositionBonus", 0, 100, True),
-        Parameter("QueenPositionBonus", 0, 100, True),
-        Parameter("KingPositionBonus", 0, 100, True),
-        Parameter("MateScore", 5000, 1000000, True),
-        Parameter("SupportedPawnBonus", 10, 300, True),
-        Parameter("SupportingPawnBonus", 10, 300, True),
-        Parameter("SupportingPieceBonus", 10, 300, True),
-        Parameter("DoubledPawnPenalty", 0, -200, True),
-        Parameter("IsolatedPawnPenalty", 0, -200, True),
-        Parameter("CheckedPenalty", -100, -1000, True),
-        Parameter("CheckingBonus", 100, 15000, True),
-        Parameter("BishopPairBonus", 10, 250, True),
-        Parameter("RookOpenFileBonus", 10, 350, True)
+        Parameter("PawnValue", 10, 1000, True),
+        Parameter("KnightValue", 10, 1000, True),
+        Parameter("BishopValue", 10, 1000, True),
+        Parameter("RookValue", 20, 1500, True),
+        Parameter("QueenValue", 30, 2000, True),
+        Parameter("KingValue", 100, 5000, True),
+        Parameter("PawnPositionBonus", 0, 200, True),
+        Parameter("KnightPositionBonus", 0, 200, True),
+        Parameter("BishopPositionBonus", 0, 200, True),
+        Parameter("RookPositionBonus", 0, 200, True),
+        Parameter("QueenPositionBonus", 0, 200, True),
+        Parameter("KingPositionBonus", 0, 200, True),
+        Parameter("MateScore", 50000, 200000, True),
+        Parameter("SupportedPawnBonus", 0, 200, True),
+        Parameter("SupportingPawnBonus", 0, 200, True),
+        Parameter("SupportingPieceBonus", 0, 200, True),
+        Parameter("DoubledPawnPenalty",  -200, 0, True),
+        Parameter("IsolatedPawnPenalty",  -200, 0, True),
+        Parameter("CheckedPenalty",  -5000, 0, True),
+        Parameter("CheckingBonus", 1000, 5000, True),
+        Parameter("BishopPairBonus", 0, 300, True),
+        Parameter("RookOpenFileBonus", 0, 500, True)
     ]
     
     # Initialize PBIL
     pbil = PBIL(parameters)
     evaluator = EngineEvaluator(
         "D:/dev/SoftDevProjects/GitHub/KnightEngine/meta/CuteChess/cutechess-cli.exe",
-        "D:/dev/SoftDevProjects/GitHub/KnightEngine/stored_engines/MaterialEngine_v0_71_R.exe"
+        "D:/dev/SoftDevProjects/GitHub/KnightEngine/stored_engines/MaterialEngine_v0_815_R.exe"
     )
     
     # Open results file

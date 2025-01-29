@@ -1,5 +1,6 @@
 #include "utility.hpp"
 #include "types.hpp"
+#include <unordered_map>
 
 bool IsWithinBoard(int index) {
     return index >= 0 && index < 64;
@@ -548,4 +549,99 @@ U64 setBitsBetween(int startIndex, int endIndex, int direction) {
         default:
             break;
     }
+}
+
+// Function to check Zobrist key consistency across positions
+U64 checkZobristConsistency(ChessBoard& board, int maxDepth, int depth, 
+                           std::unordered_map<std::string, PositionInfo>& seenPositions,
+                           std::vector<std::string>& currentMoveSequence,
+                           bool displaySubPositions) {
+    // Base case - return 1 for leaf nodes
+    if (depth == 0) return 1ULL;
+
+    U64 nodes = 0;
+    int moveNum = 0;
+    // Get all possible moves from current position
+    std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generatePsuedoMoves(board, moveNum);
+
+    // Get current position's FEN and Zobrist key
+    std::string currentFEN = board.getFEN();
+    U64 currentKey = board.zobristKey;
+
+    // Check if we've seen this position before
+    auto it = seenPositions.find(currentFEN);
+    if (it != seenPositions.end()) {
+        // If we've seen this FEN before but with a different Zobrist key, report the error
+        if (it->second.zobristKey != currentKey) {
+            std::cout << "\nZobrist key mismatch found!\n";
+            std::cout << "Position: " << currentFEN << "\n";
+            std::cout << "Current key: " << std::hex << currentKey << std::dec << "\n";
+            std::cout << "Previous key: " << std::hex << it->second.zobristKey << std::dec << "\n";
+            std::cout << "Key difference: " << std::hex << (currentKey ^ it->second.zobristKey) << std::dec << "\n";
+            std::cout << "Current move sequence: ";
+            for (const auto& move : currentMoveSequence) {
+                std::cout << move << " ";
+            }
+            std::cout << "\nPrevious move sequence: ";
+            for (const auto& move : it->second.moveSequence) {
+                std::cout << move << " ";
+            }
+            std::cout << "\n";
+        }
+    } else {
+        // Store new position
+        seenPositions.emplace(currentFEN, PositionInfo(currentKey, currentFEN, currentMoveSequence));
+    }
+
+    // Display current node if requested
+    if (displaySubPositions) {
+        std::cout << "Depth " << depth << " Position:\n";
+        std::cout << "FEN: " << currentFEN << "\n";
+        std::cout << "Key: " << std::hex << currentKey << std::dec << "\n";
+        printBoard(board);
+    }
+
+    // Try each move
+    for (int i = 0; i < moveNum; i++) {
+        // Make the move on the board
+        board.makeMove(moves[i], true);
+
+        // Skip if the move leaves own king in check
+        if (!board.isSideInCheck(board.getOppSide())) {
+            // Add current move to sequence
+            currentMoveSequence.push_back(moves[i].toAlgebraic());
+            
+            // Recursively check next positions
+            nodes += checkZobristConsistency(board, maxDepth, depth - 1, 
+                                          seenPositions, currentMoveSequence, 
+                                          displaySubPositions);
+            
+            // Remove move from sequence
+            currentMoveSequence.pop_back();
+        }
+
+        // Unmake the move
+        board.unmakeMove(moves[i], true);
+    }
+
+    return nodes;
+}
+
+// Wrapper function to initialize tracking structures and start the check
+U64 debugZobristKeys(ChessBoard& board, int depth, bool displaySubPositions) {
+    std::unordered_map<std::string, PositionInfo> seenPositions;
+    std::vector<std::string> currentMoveSequence;
+    
+    std::cout << "Starting Zobrist key consistency check to depth " << depth << "\n";
+    std::cout << "Initial position:\n";
+    std::cout << "FEN: " << board.getFEN() << "\n";
+    std::cout << "Key: " << std::hex << board.zobristKey << std::dec << "\n";
+    
+    U64 totalNodes = checkZobristConsistency(board, depth, depth, seenPositions, 
+                                           currentMoveSequence, displaySubPositions);
+    
+    std::cout << "\nChecked " << seenPositions.size() << " unique positions\n";
+    std::cout << "Total nodes searched: " << totalNodes << "\n";
+    
+    return totalNodes;
 }

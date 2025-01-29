@@ -129,8 +129,8 @@ int EnginePlayer::calculateSearchDepth(const ChessClock& clock) const {
                         clock.getWhiteTime() : 
                         clock.getBlackTime();
     
-    // Calculate maximum time we can spend on this move (10th of remaining time)
-    auto timePerMove = remainingTime / 10;
+    // Calculate maximum time we can spend on this move (20th of remaining time)
+    auto timePerMove = remainingTime / 20;
     
     auto maxMoveTime = std::min(maxTime, timePerMove);    
     auto actualMoveTime = std::max(maxMoveTime, minTime);
@@ -139,9 +139,9 @@ int EnginePlayer::calculateSearchDepth(const ChessClock& clock) const {
     int depth = 1;
     auto timeForDepth = std::chrono::milliseconds(20);
     
-    while (timeForDepth * 2 < actualMoveTime) {
+    while (timeForDepth * 3 < actualMoveTime) {
         depth++;
-        timeForDepth *= 2;
+        timeForDepth *= 3;
     }
     
     int finalDepth = std::clamp(depth, 1, engine->getSearchDepth());

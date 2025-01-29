@@ -230,3 +230,15 @@ TEST_F(EnginePlayerTest, ErrorHandling1) {
     std::string invalidMoves = "a1a1";  // Invalid move
     player->position("", invalidMoves);  // Should handle gracefully
 }
+
+// Test that MatEng doesn't lose one time
+TEST_F(EnginePlayerTest, MatEngTime) {
+    // Create player with MaterialEngine
+    auto materialEngine = std::make_unique<MaterialEngine>();
+    auto materialPlayer = std::make_unique<EnginePlayer>(std::move(materialEngine));
+    
+    // Test getting a move
+    DenseMove move = materialPlayer->getMove(board, clock);
+    
+    // EXPECT_TRUE(validator.isMoveLegal(move));
+}

@@ -24,7 +24,6 @@ private:
     // Transposition table
     // 44 million 24-byte entries = 1 GB
     std::array<TTEntry, TT_SIZE> transpositionTable;
-    U64 TTHits = 0;
 
     // Piece-Square tables
     // Pawns - Early game
@@ -198,7 +197,7 @@ private:
 public:
 
     MaterialEngine() 
-        : ChessEngineBase("MaterialEngine", "0.812", "Cameron Cunningham", 8) {
+        : ChessEngineBase("MaterialEngine", "0.815", "Cameron Cunningham", 8) {
             // Register all engine options
             registerOption(EngineOption::createSpin("PawnValue", 100, 10, 1000));
             registerOption(EngineOption::createSpin("KnightValue", 320, 10, 1000));
@@ -276,7 +275,6 @@ public:
             if (board.currentGameState.halfMoveClock >= 100){
                 return 0;
             } else if (board.keySet.find(board.zobristKey) != board.keySet.end()) {
-                std::cout << "rep\n";
                 return 0;
             }
 
@@ -292,9 +290,7 @@ public:
         // Check transposition table
         int score;
         DenseMove hashMove;
-        TTEntry* entry = &transpositionTable[board.zobristKey % TT_SIZE];
         if (checkTT(board, depth, alpha, beta, score, hashMove)) {
-            std::cout << std::format("tt hit, TTHits: {}\n", TTHits);
             return score;
         }
 
@@ -388,7 +384,6 @@ public:
                 hashMove = entry->bestMove;
             }
 
-            
             int alpha = INF_NEG;
             int beta = INF_POS;
             DenseMove bestMove;
@@ -612,7 +607,7 @@ private:
     }
 
     // Constants for quiescence search
-    static constexpr int MAX_QSEARCH_DEPTH = 8;     // Maximum depth for qsearch
+    static constexpr int MAX_QSEARCH_DEPTH = 6;     // Maximum depth for qsearch
     static constexpr int DELTA_MARGIN = 200;        // Margin for delta pruning (in centipawns)
 
     // Enhanced quiescence search with SEE and delta pruning
@@ -977,11 +972,14 @@ private:
         entry->depth = depth;
         entry->score = score;
         entry->flag = flag;
+        // std::cout << std::format("record entry for FEN: {}\nmove: {} key: {} index: {} depth: {} score: {} flag: {}\n",
+        //     board.getFEN(), entry->bestMove.toAlgebraic(), entry->key, (board.zobristKey % TT_SIZE), entry->depth, entry->score, entry->flag);
     }
 
     bool checkTT(ChessBoard& board, int depth, int& alpha, int& beta,
         int& score, DenseMove& hashMove) {
-        TTEntry* entry = &transpositionTable[board.zobristKey & TT_SIZE];
+        TTEntry* entry = &transpositionTable[board.zobristKey % TT_SIZE];
+        // std::cout << std::format("board FEN: {} board key: {}\nentry key: {}\n", board.getFEN(), board.zobristKey, entry->key);
 
         // Check if this is the position we want
         if (entry->key == board.zobristKey) {

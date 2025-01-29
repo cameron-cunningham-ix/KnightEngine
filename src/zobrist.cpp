@@ -1,8 +1,9 @@
 #include "zobrist.hpp"
+#include <format>
+#include <iostream>
 // Whether Zobrist has been initialized yet or not
 bool Zobrist::initialized = false;
 std::array<U64, 768> Zobrist::zobristPieces;
-U64 Zobrist::zobristWhiteToMove = 0ULL;
 U64 Zobrist::zobristSideToMove = 0ULL;
 // 16 possibilities for castling rights of both players
 // Index corresponds to binary for rights: 0 - no rights
@@ -18,8 +19,8 @@ void Zobrist::initialize() {
     // Generate random numbers for each piece, color, and square combo
     for (int square = 0; square < 64; square++) {   // Per square
         for (int color = 0; color < 2; color++) {
-            for (int type = 1; type < 7; type++) {
-                zobristPieces[(square*12) + (color*6) + (type - 1)] = rng();
+            for (int type = 0; type < 6; type++) {
+                zobristPieces[(square*12) + (color*6) + type] = rng();
             }
         }
     }
@@ -31,7 +32,6 @@ void Zobrist::initialize() {
     for (int i = 0; i < 8; i++) {
         zobristEnPass[i] = rng();
     }
-    zobristWhiteToMove = rng();
     zobristSideToMove = rng();
     initialized = true;
 }

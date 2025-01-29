@@ -754,6 +754,10 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
 
 
     // Update en passant
+    if (currentGameState.enPassantSquare != -1) {
+        // Undo current en pass in key if there is one
+        zobristKey ^= Zobrist::zobristEnPass[currentGameState.getEnPassantFileIndex()];
+    }
     if (movedPiece != W_PAWN && movedPiece != B_PAWN) {
         currentGameState.enPassantSquare = -1;
     } else {
@@ -796,11 +800,11 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
     if (currentGameState.sideToMove == WHITE) {
         currentGameState.fullMoveNumber++;
     }
+    // Update Zobrist key
+    zobristKey ^= Zobrist::zobristSideToMove;
     plyIndex++;
     // Add new state to history
     stateHistory[plyIndex] = currentGameState;
-    // Update Zobrist key
-    zobristKey ^= Zobrist::zobristSideToMove;
     if (prevCastleRights != currentGameState.getCastleRights()) {
         zobristKey ^= Zobrist::zobristCastle[prevCastleRights];
         zobristKey ^= Zobrist::zobristCastle[currentGameState.getCastleRights()];
@@ -826,12 +830,14 @@ void ChessBoard::unmakeMove(DenseMove move, bool searching) {
         keySet.erase(zobristKey);
     }
     
+    
     // Move plyIndex back to last state
     // We do not clear the state at plyIndex because it uses too much time
     // to do it for every unmake, and we shouldn't be accessing old
     // values anyway, they'll be overwritten by makeMove
     // stateHistory[plyIndex] = GameState();
     int prevCastleRights = currentGameState.getCastleRights();
+    int prevEnPass = currentGameState.enPassantSquare;
     Color prevSide = currentGameState.sideToMove;
     // Get previous state
     plyIndex--;
@@ -846,6 +852,18 @@ void ChessBoard::unmakeMove(DenseMove move, bool searching) {
     bool undoCastle = move.isCastle();
     bool undoEnPass = move.isEnPassant();
     PieceType undoPromoPiece = move.getPromotePiece();
+
+
+    // Undo Zobrist key
+    if (prevCastleRights != currentGameState.getCastleRights()) {
+        zobristKey ^= Zobrist::zobristCastle[prevCastleRights];
+        zobristKey ^= Zobrist::zobristCastle[currentGameState.getCastleRights()];
+    }
+    if (prevEnPass != -1)
+        zobristKey ^= Zobrist::zobristEnPass[prevEnPass % 8];
+    if (currentGameState.enPassantSquare != -1)
+        zobristKey ^= Zobrist::zobristEnPass[currentGameState.getEnPassantFileIndex()];
+    zobristKey ^= Zobrist::zobristSideToMove;
     
     // Move piece back, undo promotion if necessary
     if (undoPromoPiece != PieceType::EMPTY) {
@@ -888,15 +906,7 @@ void ChessBoard::unmakeMove(DenseMove move, bool searching) {
             movePiece(rookFrom, rookTo, (movedPiece == W_KING) ? W_ROOK : B_ROOK);
         }
     }
-    // Update Zobrist key
-    if (prevCastleRights != currentGameState.getCastleRights()) {
-        zobristKey ^= Zobrist::zobristCastle[prevCastleRights];
-        zobristKey ^= Zobrist::zobristCastle[currentGameState.getCastleRights()];
-    }
-    if (currentGameState.enPassantSquare != -1) {
-        zobristKey ^= Zobrist::zobristEnPass[currentGameState.getEnPassantFileIndex()];
-    }
-    zobristKey ^= Zobrist::zobristSideToMove;
+    
 
     // if (getFEN() == "k7/7Q/2K5/8/8/8/8/8 w - - 0 1" ||
     //     getFEN() == "k7/7Q/2K5/8/8/8/8/8 b - - 1 1") {

@@ -13,7 +13,7 @@ struct TTEntry {
     // If the score of the node was at least 'score'
     static constexpr int BETA = 2;
     // If the score of the node is unknown
-    static constexpr int UNKNOWN = 1234567890;
+    static constexpr int UNKNOWN = 3;
 
     // Stored Zobrist key for this entry in the transposition table
     U64 key;
