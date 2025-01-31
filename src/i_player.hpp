@@ -21,7 +21,7 @@ public:
     // Get a move from this player given the current game state
     // Returns the chosen move, or throws if no valid move can be made
     virtual DenseMove getMove(ChessBoard& board, 
-                              const ChessClock& clock) = 0;
+                              ChessClock& clock) = 0;
     
     // Notify the player of the opponent's move
     // Useful for AI players to update their game tree

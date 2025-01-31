@@ -16,8 +16,11 @@ static constexpr int TT_SIZE = 44739243;
 class MaterialEngine : public ChessEngineBase {
 private:
     // Search statistics
-    U64 nodeCount;
+    U64 nodeCount;      // Number of nodes searched
+    // Start time of curr search
     std::chrono::steady_clock::time_point searchStartTime;
+    // Amount of time previous depth took to search
+    std::chrono::milliseconds prevDepthTime;
     DenseMove currentMove;
     int currentMoveNumber;
     int totalPiecesWithoutPawns;
@@ -197,7 +200,12 @@ private:
 public:
 
     MaterialEngine() 
-        : ChessEngineBase("MaterialEngine", "0.815", "Cameron Cunningham", 8) {
+        : ChessEngineBase("MaterialEngine",
+                          "0.815",
+                          "Cameron Cunningham",
+                          8,
+                          std::chrono::milliseconds(200),
+                          std::chrono::milliseconds(20000)) {
             // Register all engine options
             registerOption(EngineOption::createSpin("PawnValue", 100, 10, 1000));
             registerOption(EngineOption::createSpin("KnightValue", 320, 10, 1000));
@@ -355,9 +363,32 @@ public:
         return alpha;
     }
 
-    DenseMove findBestMove(ChessBoard& board, int maxDepth = -1) {
+    bool keepSearching(ChessClock& clock) const {
+        // If clock is set to infinite, always keep searching
+        if (clock.isInfinite()) return true;
+        // Get remaining time for current player
+        auto remainingTime = (clock.getActiveColor() == WHITE) ? 
+                            clock.getWhiteTime() : 
+                            clock.getBlackTime();
+        
+        // Estimate time for next depth based on previous depth
+        // Each depth typically takes ~4-5x longer than the previous
+        auto estimatedNextDepthTime = prevDepthTime * 4;
+
+        // Leave some buffer time for move selection and communication
+        auto bufferTime = std::chrono::milliseconds(100);
+
+        // Don't use more than 20% of remaining time on one move
+        auto maxTimeForMove = remainingTime / 5;
+
+        return estimatedNextDepthTime + bufferTime < maxTimeForMove;
+    }
+
+    DenseMove findBestMove(ChessBoard& board, ChessClock& clock, int maxDepth = -1) {
         startSearch();
         searchStartTime = std::chrono::steady_clock::now();
+        prevDepthTime = std::chrono::milliseconds(0);   // Reset any previous time
+
         nodeCount = 0;
         currentMoveNumber = 0;
         clearPV();
@@ -376,6 +407,11 @@ public:
         for (int currDepth = MIN_DEPTH; currDepth <= actualDepth && isSearching; currDepth++) {
             nodeCount = 0;
             currentMoveNumber = 0;
+
+            // If we're using too much time, stop iterating
+            if (currDepth > MIN_DEPTH && !keepSearching(clock)) {
+                break;  
+            }
 
             // Get move from transposition table if available
             TTEntry* entry = &transpositionTable[board.zobristKey % TT_SIZE];
@@ -438,15 +474,17 @@ public:
 
             // Log iteration completion
             auto totalTime = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now() - searchStartTime).count();
+                std::chrono::steady_clock::now() - searchStartTime);
             
             std::string iterStr = std::format("Completed depth {} in {}ms, score: {}, nodes: {}", 
-                currDepth, totalTime, bestScore, nodeCount);
-            if (totalTime > 0) {
-                U64 nps = (nodeCount * 1000) / totalTime;
+                currDepth, totalTime.count(), bestScore, nodeCount);
+            if (totalTime.count() > 0) {
+                U64 nps = (nodeCount * 1000) / totalTime.count();
                 iterStr += std::format(", nps: {}", nps);
             }
             sendInfo(iterStr);
+            // Update how long this depth took
+            prevDepthTime = totalTime;
         }
 
         this->bestMove = bestMoveOverall;

@@ -1,5 +1,4 @@
-// test/material_engine_tests.cpp
-#include "../engine/material_engine.hpp"
+#include "../src/engine/material_engine.hpp"
 #include "../src/pext_bitboard.hpp"
 #include <gtest/gtest.h>
 #include <iostream>
@@ -9,12 +8,16 @@ class MaterialEngineTest : public ::testing::Test {
 protected:
     std::unique_ptr<MaterialEngine> engine;
     ChessBoard board;
+    ChessClock clock;
 
     void SetUp() override {
         // Initialize PEXT
         PEXT::initialize();
         engine = std::make_unique<MaterialEngine>();
         board = ChessBoard();
+        // Set up infinite time control for most tests
+        TimeControl tc(std::chrono::hours(1), std::chrono::seconds(0), std::chrono::seconds(0), -1, true);
+        clock = ChessClock(tc);
     }
 
     void TearDown() override {
@@ -68,7 +71,7 @@ TEST_F(MaterialEngineTest, MateInOneDetection) {
     board.setupPositionFromFEN("rnbqkbnr/pppp1ppp/8/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4");
     
     // Find best move - should be Qxf7#
-    DenseMove bestMove = engine->findBestMove(board);
+    DenseMove bestMove = engine->findBestMove(board, clock);
     
     // Print the board and move for debugging
     printBoard(board);
@@ -123,7 +126,7 @@ TEST_F(MaterialEngineTest, SearchDepthAdherence) {
     engine->setSearchDepth(2); // Set shallow depth for testing
     
     auto startTime = std::chrono::steady_clock::now();
-    DenseMove move = engine->findBestMove(board);
+    DenseMove move = engine->findBestMove(board, clock);
     auto endTime = std::chrono::steady_clock::now();
     
     // With depth 2, search shouldn't take too long
@@ -160,64 +163,64 @@ TEST_F(MaterialEngineTest, MultMate1PosTest) {
     DenseMove move;
     // White
     board.setupPositionFromFEN("2k5/7Q/2K5/8/8/8/8/8 w - - 0 1");
-    move = engine->findBestMove(board);
+    move = engine->findBestMove(board, clock);
     std::cout << std::format("1st Test board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));
 
     board.setupPositionFromFEN("k7/7Q/2K5/8/8/8/8/8 w - - 0 1");
     std::cout << std::format("2nd Test board FEN initial: {}\n",  board.getFEN());
-    move = engine->findBestMove(board);
+    move = engine->findBestMove(board, clock);
     std::cout << std::format("2nd Test board FEN after FBM: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     board.makeMove(move, false);
     std::cout << std::format("2nd Test board FEN after making move: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     EXPECT_TRUE(isCheckmate(board));
 
     board.setupPositionFromFEN("k7/8/2K5/8/8/8/1Q6/8 w - - 0 1");
-    move = engine->findBestMove(board);
+    move = engine->findBestMove(board, clock);
     std::cout << std::format("3rd Test board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));    // Problem
     
     board.setupPositionFromFEN("8/1Q6/8/8/8/2K5/8/k7 w - - 0 1");
-    move = engine->findBestMove(board);
+    move = engine->findBestMove(board, clock);
     std::cout << std::format("4th Test board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));
 
     board.setupPositionFromFEN("8/1Q6/8/8/8/2K5/k7/8 w - - 0 1");
-    move = engine->findBestMove(board);
+    move = engine->findBestMove(board, clock);
     std::cout << std::format("5th Testboard FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));
 
     // Black
     board.setupPositionFromFEN("2K5/7q/2k5/8/8/8/8/8 b - - 0 1");
-    move = engine->findBestMove(board);
+    move = engine->findBestMove(board, clock);
     std::cout << std::format("6th Test board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));
 
     board.setupPositionFromFEN("K7/7q/2k5/8/8/8/8/8 b - - 0 1");
-    move = engine->findBestMove(board);
+    move = engine->findBestMove(board, clock);
     std::cout << std::format("7th Test board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));
 
     board.setupPositionFromFEN("K7/8/2k5/8/8/8/1q6/8 b - - 0 1");
-    move = engine->findBestMove(board);
+    move = engine->findBestMove(board, clock);
     std::cout << std::format("8th Test board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));    // Problem
 
     board.setupPositionFromFEN("8/1q6/8/8/8/2k5/8/K7 b - - 0 1");
-    move = engine->findBestMove(board);
+    move = engine->findBestMove(board, clock);
     std::cout << std::format("9th Test board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));
 
     board.setupPositionFromFEN("8/1q6/8/8/8/2k5/K7/8 b - - 0 1");
-    move = engine->findBestMove(board);
+    move = engine->findBestMove(board, clock);
     std::cout << std::format("10th Test board FEN: {} found bestMove {}\n", board.getFEN(), move.toAlgebraic());
     board.makeMove(move, false);
     EXPECT_TRUE(isCheckmate(board));
@@ -236,7 +239,7 @@ TEST_F(MaterialEngineTest, SearchDepth2) {
     engine->setSearchDepth(2); // Set shallow depth for testing
     
     auto startTime = std::chrono::steady_clock::now();
-    DenseMove move = engine->findBestMove(board);
+    DenseMove move = engine->findBestMove(board, clock);
     auto endTime = std::chrono::steady_clock::now();
     
     // With depth 2, search shouldn't take too long
@@ -249,7 +252,7 @@ TEST_F(MaterialEngineTest, SearchDepth3) {
     engine->setSearchDepth(3);
 
     auto startTime = std::chrono::steady_clock::now();
-    DenseMove move = engine->findBestMove(board);
+    DenseMove move = engine->findBestMove(board, clock);
     auto endTime = std::chrono::steady_clock::now();
     
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
@@ -261,7 +264,7 @@ TEST_F(MaterialEngineTest, SearchDepth4) {
     engine->setSearchDepth(4);
 
     auto startTime = std::chrono::steady_clock::now();
-    DenseMove move = engine->findBestMove(board);
+    DenseMove move = engine->findBestMove(board, clock);
     auto endTime = std::chrono::steady_clock::now();
     
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
@@ -273,7 +276,7 @@ TEST_F(MaterialEngineTest, SearchDepth5) {
     engine->setSearchDepth(5);
 
     auto startTime = std::chrono::steady_clock::now();
-    DenseMove move = engine->findBestMove(board);
+    DenseMove move = engine->findBestMove(board, clock);
     auto endTime = std::chrono::steady_clock::now();
     
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
@@ -285,7 +288,7 @@ TEST_F(MaterialEngineTest, SearchDepth6) {
     engine->setSearchDepth(6);
 
     auto startTime = std::chrono::steady_clock::now();
-    DenseMove move = engine->findBestMove(board);
+    DenseMove move = engine->findBestMove(board, clock);
     auto endTime = std::chrono::steady_clock::now();
     
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
@@ -297,7 +300,7 @@ TEST_F(MaterialEngineTest, SearchDepth7) {
     engine->setSearchDepth(7);
 
     auto startTime = std::chrono::steady_clock::now();
-    DenseMove move = engine->findBestMove(board);
+    DenseMove move = engine->findBestMove(board, clock);
     auto endTime = std::chrono::steady_clock::now();
     
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
@@ -309,7 +312,7 @@ TEST_F(MaterialEngineTest, SearchDepth8) {
     engine->setSearchDepth(8);
 
     auto startTime = std::chrono::steady_clock::now();
-    DenseMove move = engine->findBestMove(board);
+    DenseMove move = engine->findBestMove(board, clock);
     auto endTime = std::chrono::steady_clock::now();
     
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
@@ -321,7 +324,7 @@ TEST_F(MaterialEngineTest, SearchDepth8) {
 //     engine->setSearchDepth(9);
 
 //     auto startTime = std::chrono::steady_clock::now();
-//     DenseMove move = engine->findBestMove(board);
+//     DenseMove move = engine->findBestMove(board, clock);
 //     auto endTime = std::chrono::steady_clock::now();
     
 //     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
@@ -333,7 +336,7 @@ TEST_F(MaterialEngineTest, SearchDepth8) {
 //     engine->setSearchDepth(10);
 
 //     auto startTime = std::chrono::steady_clock::now();
-//     DenseMove move = engine->findBestMove(board);
+//     DenseMove move = engine->findBestMove(board, clock);
 //     auto endTime = std::chrono::steady_clock::now();
     
 //     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
@@ -354,7 +357,7 @@ TEST_F(MaterialEngineTest, GoodMovePicking1) {
     board.setupPositionFromFEN("r1bqkbnr/pppppppp/8/8/3nP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3");
     
     // Find best move - should be Qxd4
-    DenseMove bestMove = engine->findBestMove(board);
+    DenseMove bestMove = engine->findBestMove(board, clock);
     
     // Print the board and move for debugging
     printBoard(board);
@@ -391,7 +394,7 @@ TEST_F(MaterialEngineTest, GoodMovePicking2) {
     board.setupPositionFromFEN("r1bqkbnr/pppppppp/8/8/3nP1Q1/8/PPP2PPP/RNB1KBNR b KQkq - 1 3");
     
     // Find best move - should be Nxc2
-    DenseMove bestMove = engine->findBestMove(board);
+    DenseMove bestMove = engine->findBestMove(board, clock);
     
     // Print the board and move for debugging
     printBoard(board);
@@ -428,7 +431,7 @@ TEST_F(MaterialEngineTest, GoodMovePicking3) {
     board.setupPositionFromFEN("r1bqkbnr/pppppppp/8/4n3/8/2N2N2/PPPPPPPP/R1BQKB1R w KQkq - 4 3");
     
     // Find best move - should be Nxe5
-    DenseMove bestMove = engine->findBestMove(board);
+    DenseMove bestMove = engine->findBestMove(board, clock);
     
     // Print the board and move for debugging
     printBoard(board);
@@ -465,7 +468,7 @@ TEST_F(MaterialEngineTest, GoodMovePicking4) {
     board.setupPositionFromFEN("k7/8/8/7p/6P1/8/8/7K w - - 0 1");
     
     // Find best move - should be gxh5
-    DenseMove bestMove = engine->findBestMove(board);
+    DenseMove bestMove = engine->findBestMove(board, clock);
     
     // Print the board and move for debugging
     printBoard(board);
@@ -502,7 +505,7 @@ TEST_F(MaterialEngineTest, GoodMovePicking5) {
     board.setupPositionFromFEN("k7/8/8/p7/1P6/8/8/7K b - - 0 1");
     
     // Find best move - should be gxh5
-    DenseMove bestMove = engine->findBestMove(board);
+    DenseMove bestMove = engine->findBestMove(board, clock);
     
     // Print the board and move for debugging
     printBoard(board);
@@ -539,7 +542,7 @@ TEST_F(MaterialEngineTest, GoodMovePicking6) {
     board.setupPositionFromFEN("k7/8/8/p7/1P6/8/8/7K b - - 0 1");
     
     // Find best move - should be gxh5
-    DenseMove bestMove = engine->findBestMove(board);
+    DenseMove bestMove = engine->findBestMove(board, clock);
     
     // Print the board and move for debugging
     printBoard(board);
@@ -595,7 +598,7 @@ TEST_F(MaterialEngineTest, MateIn2Positions) {
         printBoard(board);
         
         // Find best move
-        DenseMove bestMove = engine->findBestMove(board);
+        DenseMove bestMove = engine->findBestMove(board, clock);
         std::cout << "Best move found: " << bestMove.toString(false) << "\n";
         
         // Make the move

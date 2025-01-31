@@ -1,6 +1,5 @@
-// test/chess_clock_tests.cpp
-#include <gtest/gtest.h>
 #include "../src/chess_clock.hpp"
+#include <gtest/gtest.h>
 #include <thread>
 
 class ChessClockTest : public ::testing::Test {

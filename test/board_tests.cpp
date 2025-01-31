@@ -1,4 +1,3 @@
-// test/board_tests.cpp
 #include "../src/board_generation.hpp"
 #include "../src/pext_bitboard.hpp"
 #include "../src/board_utility.hpp"

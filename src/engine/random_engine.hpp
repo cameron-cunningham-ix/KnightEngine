@@ -1,6 +1,7 @@
 #pragma once
 
 #include "chess_engine_base.hpp"
+#include "chess_clock.hpp"
 #include <random>
 
 class RandomEngine : public ChessEngineBase {
@@ -12,8 +13,9 @@ public:
         : ChessEngineBase("RandomEngine", "1.0", "Cameron Cunningham", 1)  // Only needs depth 1
         , rng(std::random_device{}()) {}
 
-    DenseMove findBestMove(ChessBoard& board, 
-                           int maxDepth = -1) override {
+    DenseMove findBestMove(ChessBoard& board,
+                           ChessClock& clock,
+                           int maxDepth) override {
         startSearch();
         // Generate all legal moves
         int moveNum = 0;

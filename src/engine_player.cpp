@@ -1,5 +1,4 @@
 #include "engine_player.hpp"
-#include "../engine/material_engine.hpp"
 #include <sstream>
 #include <string>
 
@@ -9,8 +8,6 @@ EnginePlayer::EnginePlayer(std::unique_ptr<ChessEngineBase> engineImpl,
                          std::chrono::milliseconds maxTimePerMove)
     : engine(std::move(engineImpl))
     , acceptDraws(acceptDrawOffers)
-    , minTime(minTimePerMove)
-    , maxTime(maxTimePerMove)
     , initialized(false)
     , thinking(false)
     , shouldQuit(false) {
@@ -32,10 +29,9 @@ EnginePlayer::~EnginePlayer() {
 }
 
 DenseMove EnginePlayer::getMove(ChessBoard& board, 
-                                const ChessClock& clock) {
-    int depth = calculateSearchDepth(clock);
+                                ChessClock& clock) {
     thinking = true;
-    bestMove = engine->findBestMove(board, depth);
+    DenseMove bestMove = engine->findBestMove(board, clock);
     thinking = false;
     return bestMove;
 }
@@ -119,33 +115,6 @@ void EnginePlayer::quit() {
 bool EnginePlayer::isInitialized() const {
     std::lock_guard<std::mutex> lock(mutex);
     return initialized;
-}
-
-int EnginePlayer::calculateSearchDepth(const ChessClock& clock) const {
-    // If clock is set to infinite, we can return the set search depth
-    if (clock.isInfinite()) return engine->getSearchDepth();
-    // Get remaining time for current player
-    auto remainingTime = (clock.getActiveColor() == WHITE) ? 
-                        clock.getWhiteTime() : 
-                        clock.getBlackTime();
-    
-    // Calculate maximum time we can spend on this move (20th of remaining time)
-    auto timePerMove = remainingTime / 20;
-    
-    auto maxMoveTime = std::min(maxTime, timePerMove);    
-    auto actualMoveTime = std::max(maxMoveTime, minTime);
-    
-    // Convert time to depth using a simple heuristic
-    int depth = 1;
-    auto timeForDepth = std::chrono::milliseconds(20);
-    
-    while (timeForDepth * 3 < actualMoveTime) {
-        depth++;
-        timeForDepth *= 3;
-    }
-    
-    int finalDepth = std::clamp(depth, 1, engine->getSearchDepth());
-    return finalDepth;
 }
 
 /// @brief 
@@ -257,7 +226,7 @@ void EnginePlayer::processCommand(const std::string& cmd) {
             
             // Use current board position
             std::lock_guard<std::mutex> lock(boardMutex);
-            bestMove = getMove(currentBoard, currentClock);
+            DenseMove bestMove = getMove(currentBoard, currentClock);
             
             // thinking = false;
             sendResponse("bestmove " + moveToUCI(bestMove));

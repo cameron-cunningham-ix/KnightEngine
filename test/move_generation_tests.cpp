@@ -1,4 +1,3 @@
-// test/move_generation_tests.cpp
 #include "../src/moves.hpp"
 #include "../src/pext_bitboard.hpp"
 #include <gtest/gtest.h>

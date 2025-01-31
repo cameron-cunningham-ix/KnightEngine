@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../src/engine_player.hpp"
+#include "../../engine_player.hpp"
 #include <memory>
 
 // Main UCI loop function

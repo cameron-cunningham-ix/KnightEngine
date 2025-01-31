@@ -1,6 +1,5 @@
-// test/engine_player_tests.cpp
-#include "../engine/random_engine.hpp"
-#include "../engine/material_engine.hpp"
+#include "../src/engine/random_engine.hpp"
+#include "../src/engine/material_engine.hpp"
 #include "../src/engine_player.hpp"
 #include "../src/pext_bitboard.hpp"
 #include <gtest/gtest.h>
@@ -13,7 +12,9 @@ class MockEngine : public ChessEngineBase {
 public:
     MockEngine() : ChessEngineBase("MockEngine", "1.0", "Test Author"), moveToReturn() {}
     
-    DenseMove findBestMove(ChessBoard& board, int maxDepth = -1) override {
+    DenseMove findBestMove(ChessBoard& board,
+                           ChessClock& clock,
+                           int maxDepth) override {
         isSearching = true;
         std::this_thread::sleep_for(std::chrono::milliseconds(50*maxDepth));  // Simulate thinking
         isSearching = false;

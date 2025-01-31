@@ -9,7 +9,6 @@ int main() {
 
     // Set EnginePlayer settings
     player->setSearchDepth(8);
-    player->setTimeControls(std::chrono::milliseconds(200), std::chrono::milliseconds(20000));
     
     // Start UCI loop
     uciLoop(player);

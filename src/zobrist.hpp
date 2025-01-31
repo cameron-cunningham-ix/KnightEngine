@@ -1,6 +1,8 @@
 // Thanks to Bruce Moreland via
 // http://www.brucemo.com/compchess/programming/zobrist.htm
 
+#pragma once
+
 #include "types.hpp"
 #include <random>
 
@@ -23,7 +25,6 @@ public:
     static bool initialized;
     static std::array<U64, 768> zobristPieces;
     static U64 zobristWhiteToMove;
-    // When it's Black's turn, we also XOR this into the key
     static U64 zobristSideToMove;
     // 16 possibilities for castling rights of both players
     // Index corresponds to binary for rights: 0 - no rights

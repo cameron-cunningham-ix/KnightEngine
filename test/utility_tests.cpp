@@ -1,4 +1,3 @@
-// test/utility_tests.cpp
 #include "../src/utility.hpp"
 #include "../src/pext_bitboard.hpp"
 #include <gtest/gtest.h>

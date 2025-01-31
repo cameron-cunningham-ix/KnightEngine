@@ -1,5 +1,6 @@
 #include <benchmark/benchmark.h>
-#include "../engine/material_engine.hpp"
+#include "../src/engine/material_engine.hpp"
+#include "../src/chess_clock.hpp"
 #include "../src/utility.hpp"
 #include "../src/pext_bitboard.hpp"
 #include <chrono>
@@ -11,11 +12,15 @@ class BM_MatEng : public benchmark::Fixture {
 protected:
     std::unique_ptr<MaterialEngine> engine;
     ChessBoard board;
+    ChessClock currClock;
     
     void SetUp(const ::benchmark::State& state) {
         PEXT::initialize();
         engine = std::make_unique<MaterialEngine>();
         board = ChessBoard();
+        // Set up infinite time control for most tests
+        TimeControl tc(std::chrono::hours(1), std::chrono::seconds(0), std::chrono::seconds(0), -1, true);
+        currClock = ChessClock(tc);
     }
     
     void TearDown(const ::benchmark::State& state) {
@@ -62,10 +67,13 @@ void BM_SearchAtDepth(benchmark::State& state) {
     PEXT::initialize();
     MaterialEngine engine;
     ChessBoard board;
-    
+    ChessClock currClock;
+    // Set up infinite time control for most tests
+    TimeControl tc(std::chrono::hours(1), std::chrono::seconds(0), std::chrono::seconds(0), -1, true);
+    currClock = ChessClock(tc);
     engine.setSearchDepth(Depth);
     for (auto _ : state) {
-        benchmark::DoNotOptimize(engine.findBestMove(board));
+        benchmark::DoNotOptimize(engine.findBestMove(board, currClock));
     }
 }
 
@@ -81,7 +89,7 @@ BENCHMARK_F(BM_MatEng, AlphaBetaSearch)(benchmark::State& state) {
     board.setupPositionFromFEN("r1bq1rk1/ppp2ppp/2n2n2/2bpp3/4P3/2PP1N2/PP1N1PPP/R1BQKB1R w KQ - 0 1");
     engine->setSearchDepth(6);  // Moderate depth for benchmarking
     for (auto _ : state) {
-        benchmark::DoNotOptimize(engine->findBestMove(board));
+        benchmark::DoNotOptimize(engine->findBestMove(board, currClock));
     }
 }
 
@@ -90,7 +98,7 @@ BENCHMARK_F(BM_MatEng, MateInOneSearch)(benchmark::State& state) {
     // Scholar's mate position
     board.setupPositionFromFEN("r1bqkbnr/pppp1ppp/2n5/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 0 1");
     for (auto _ : state) {
-        benchmark::DoNotOptimize(engine->findBestMove(board));
+        benchmark::DoNotOptimize(engine->findBestMove(board, currClock));
     }
 }
 

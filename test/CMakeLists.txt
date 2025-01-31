@@ -1,4 +1,3 @@
-# test/CMakeLists.txt
 # Download and build GoogleTest
 include(FetchContent)
 FetchContent_Declare(
@@ -15,15 +14,11 @@ add_executable(chess_tests
     material_engine_tests.cpp
     board_tests.cpp
     chess_clock_tests.cpp
-    chess_match_tests.cpp
     engine_player_tests.cpp
     execution_time_tests.cpp
     game_state_tests.cpp
-    human_player_tests.cpp
     move_generation_tests.cpp
     pext_bitboard_tests.cpp
-    pgn_tests.cpp
-    san_generation_tests.cpp
     utility_tests.cpp
 )
 

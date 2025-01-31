@@ -15,14 +15,10 @@ class EnginePlayer : public IPlayer, public IChessEngine {
 private:
     std::unique_ptr<ChessEngineBase> engine;  // The actual engine implementation
     bool acceptDraws;                         // Whether engine accepts draw offers
-    std::chrono::milliseconds minTime;        // Minimum time to spend on a move
-    std::chrono::milliseconds maxTime;        // Maximum time to spend on a move
     
     // UCI-specific members
     bool initialized;                         // Whether UCI mode is initialized
     bool thinking;                            // Whether engine is calculating
-    DenseMove bestMove;                       // Best move from last search
-    DenseMove ponderMove;                     // Ponder move from last search
     
     // Thread management for UCI
     std::thread uciThread;                   // Thread for UCI communication
@@ -36,8 +32,7 @@ private:
     std::unique_ptr<std::thread> searchThread;
     std::mutex boardMutex;
 
-    // Calculate appropriate search depth based on remaining time
-    int calculateSearchDepth(const ChessClock& clock) const;
+    
     
     // UCI helper methods
     void uciLoop();
@@ -57,7 +52,7 @@ public:
 
     // IPlayer interface implementation
     DenseMove getMove(ChessBoard& board, 
-                      const ChessClock& clock) override;
+                      ChessClock& clock) override;
     void notifyOpponentMove(const DenseMove& move) override;
     std::string getName() const override { return engine->getName(); }
     PlayerType getType() const override { return PlayerType::Engine; }
@@ -88,14 +83,10 @@ public:
     }
     
     std::string getAuthor() const override { return engine->getAuthor(); }
-    DenseMove getBestMove() const override { return bestMove; }
-    DenseMove getPonderMove() const override { return ponderMove; }
+    DenseMove getBestMove() const override { return engine->getBestMove(); }
+    DenseMove getPonderMove() const override { return engine->getPonderMove(); }
     ChessEngineBase* getEngineForTesting() { return engine.get(); }
     
     // Engine-specific methods
     void setSearchDepth(int depth) { engine->setSearchDepth(depth); }
-    void setTimeControls(std::chrono::milliseconds min, std::chrono::milliseconds max) {
-        minTime = min;
-        maxTime = max;
-    }
 };

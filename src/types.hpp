@@ -42,7 +42,7 @@ enum Color : bool {
     WHITE,      // 0
     BLACK       // 1
 };
-/// @brief Enum for use with board bitboards and DenseMove - compare 3 LSB with DenseMove 3 LSB
+/// @brief Enum for use with board bitboards and Move struct - compare 3 LSB with Move 3 LSB
 enum DenseType : int {
     D_EMPTY = 0,      // 0 - 000
     D_PAWN = 1,       // 1 - 001
@@ -62,8 +62,8 @@ std::string pieceTypeToString(PieceType type);
 // Masks for extracting fields from dense move representation
 
 const U32 moveMask_CaptType =       0b11100000000000000000000000000000;
-const U32 moveMask_DType =          0b00001110000000000000000000000000;
 const U32 moveMask_Color =          0b00010000000000000000000000000000;
+const U32 moveMask_DType =          0b00001110000000000000000000000000;
 const U32 moveMask_Piece =          0b00011110000000000000000000000000;
 const U32 moveMask_PromoTo =        0b00000001110000000000000000000000;
 const U32 moveMask_From =           0b00000000001111110000000000000000;
@@ -76,8 +76,6 @@ struct DenseMove {
     // U32 structure [24 relevant bits]:
     // [3 bits]    [3 bits] [1 bit] [3 bits]  [6 bits] [6 bits] [1 bit]    [1 bit]    [8 bits]
     // [Capt Type] [DType]  [Color] [PromoTo] [From]   [To]     [IsCastle] [isEnPass] [Unused]
-    // This way important moves (checks, captures and high value pieces) can be
-    // more easily sorted by highest to lowest value
     U32 data;
 
     /// @brief Default constructor - 0, will correspond with EMPTY PieceType
