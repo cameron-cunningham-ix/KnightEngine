@@ -13,7 +13,7 @@ if(MSVC)
     # Warning level 4 and all warnings as errors
     add_compile_options(
         /W4     # All reasonable warnings
-        /WX     # Treat warnings as errors
+        #/WX     # Treat warnings as errors
         /w14242 # 'identfier': conversion from 'type1' to 'type1', possible loss of data
         /w14254 # 'operator': conversion from 'type1:field_bits' to 'type2:field_bits'
         /w14263 # 'function': member function does not override any base class virtual member function

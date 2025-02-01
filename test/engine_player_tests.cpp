@@ -100,9 +100,7 @@ TEST_F(EnginePlayerTest, TimeManagement) {
     auto newMockEngine = std::make_unique<MockEngine>();
     EnginePlayer timeControlledPlayer(
         std::move(newMockEngine),
-        false,
-        std::chrono::milliseconds(100),   // Min time
-        std::chrono::milliseconds(1000)   // Max time
+        false
     );
     
     // Verify player respects minimum time

@@ -305,8 +305,8 @@ bool verifyAttackPattern(const ChessBoard& board, int square,
     
     // Convert expected attacks to bitboard
     U64 expectedBB = 0ULL;
-    for (const std::string& square : expectedAttacks) {
-        int index = algebraicToIndex(square);
+    for (const std::string& att : expectedAttacks) {
+        int index = algebraicToIndex(att);
         if (index != -1) {
             expectedBB |= (1ULL << index);
         }

@@ -556,67 +556,28 @@ std::array<DenseMove, MAX_MOVES> MoveGenerator::generatePsuedoMoves(const ChessB
 }
 
 std::array<DenseMove, MAX_MOVES> MoveGenerator::generateLegalMoves(ChessBoard& board, int& moveNum) {
-    if (board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 w - - 0 1" ||
-        board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 b - - 1 1") {
-        std::cout << std::format("2nd Test board FEN inside genLegal1: {}\n", board.getFEN());
-    }
-    
-    // std::cout << "MoveGenerator.generateLegalMoves start\n";
     // Reset moveNum to 0, since moveNum should always indicate number of moves in array
     moveNum = 0;
     // generatePsuedoMoves will set moveNum to correct number of moves to check
     std::array<DenseMove, MAX_MOVES> legal = generatePsuedoMoves(board, moveNum);
 
-    // if (board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 w - - 0 1" ||
-    //     board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 b - - 1 1") {
-    //     std::cout << std::format("2nd Test board FEN inside genLegal2: {}\n", board.getFEN());
-    // }
-
     Color sideToMove = board.getSideToMove();
-    // if (board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 w - - 0 1" ||
-    //     board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 b - - 1 1") {
-    //     std::cout << std::format("2nd Test board FEN inside genLegal3: {}\nstart PLYINDEX {}\n", board.getFEN(), board.plyIndex);
-    // }
-
-    std::string prevFEN = board.getFEN();
-    std::string newFEN;
-    // std::vector<DenseMove> legal;
     // For each psuedo legal move generated
-    for (int i = 0; i < moveNum; i) {
-        // std::cout << "psuedo move: " << legal[i].toString(false) << "\n";
+    for (int i = 0; i < moveNum;) {
         // Make the move on the board
         board.makeMove(legal[i], true);
-        // std::cout << std::format("    made move\nmakeMove PLYINDEX {}", board.plyIndex);
         // If the move did not leave its own side in check,
         // its a legal move, add to list
         if (board.isSideInCheck(sideToMove)) {
             // Unmake the move to return board to prev state
             board.unmakeMove(legal[i], true);
             legal[i] = legal[--moveNum];
-            // newFEN = board.getFEN();
-            // if (newFEN != prevFEN) {
-            //     std::cout << std::format("i {} move 'illegal' {}\nPrevFEN {} NewFen {} unmake PLYINDEX {}\n",
-            //         i, legal[i].toAlgebraic(), prevFEN, newFEN, board.plyIndex);
-            // }
-            // moveNum--;
             continue;
         }
         board.unmakeMove(legal[i], true);
         i++;
-        // newFEN = board.getFEN();
-        // if (newFEN != prevFEN) {
-        //     std::cout << std::format("i {} move 'legal' {}\nPrevFEN {} NewFen {}\n", i, legal[i].toAlgebraic(), prevFEN, newFEN);
-        // }
     }
-
-    // if (board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 w - - 0 1" ||
-    //     board.getFEN() == "k7/7Q/2K5/8/8/8/8/8 b - - 1 1") {
-    //     std::cout << std::format("2nd Test board FEN inside genLegal4: {}\nstateHistory:", board.getFEN());
-    //     board.printStateHistory();
-    // }
-
     // No legal moves, ensure indices are empty move
     if (moveNum == 0) legal.fill(DenseMove());
-    // std::cout << "    generateLegalMoves returning, size " << moveNum << "\n";
     return legal;
 }
