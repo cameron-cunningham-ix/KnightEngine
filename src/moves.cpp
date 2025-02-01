@@ -12,11 +12,8 @@
 /// @param board 
 /// @param moves 
 void MoveGenerator::generatePawnMoves(const ChessBoard& board, std::array<DenseMove, MAX_MOVES>& moves, int& moveNum) {
-    // Get occupancy and empty squares on board
-    U64 occupancy = board.getAllPieces();
     U64 emptySquares = board.getEmptySquares();
     Color sideToMove = board.getSideToMove();
-    int currCastleRights = board.currentGameState.getCastleRights();
 
     if (sideToMove == WHITE) {
         U64 whitePawns = board.getWhitePawns();
@@ -214,9 +211,6 @@ void MoveGenerator::generateCastlingMoves(const ChessBoard& board, std::array<De
     // Kings cannot castle out of check
     if (enemyAttacks) return;
 
-    // Castling right info in moves is for rebuilding state in unmakeMove;
-    // therefore moves take current castling rights unchanged
-    int currCastleRights = board.currentGameState.getCastleRights();
     // Get board occupancy
     U64 occupancy = board.getAllPieces();
 
@@ -263,7 +257,6 @@ void MoveGenerator::generatePieceMoves(const ChessBoard &board, std::array<Dense
     Color sideToMove = board.getSideToMove();
     U64 occupancy = board.getAllPieces();
     U64 emptySquares = board.getEmptySquares();
-    int currCastleRights = board.currentGameState.getCastleRights();
 
     if (sideToMove == WHITE) {
         U64 opposition = board.getBlackPieces();

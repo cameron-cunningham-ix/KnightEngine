@@ -7,9 +7,6 @@ int main() {
     auto engine = std::make_unique<MaterialEngine>();
     auto player = std::make_unique<EnginePlayer>(std::move(engine));
 
-    // Set EnginePlayer settings
-    player->setSearchDepth(8);
-    
     // Start UCI loop
     uciLoop(player);
     

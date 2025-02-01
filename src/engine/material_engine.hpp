@@ -186,6 +186,7 @@ private:
         int kingPositionBonus = 50;
 
         int mateScore = 100000;
+        int restrictKing = 20;
         int supportedPawnBonus = 70;
         int supportingPawnBonus = 35;
         int supportingPieceBonus = 25;
@@ -203,7 +204,7 @@ public:
         : ChessEngineBase("MaterialEngine",
                           "0.815",
                           "Cameron Cunningham",
-                          8,
+                          7,
                           std::chrono::milliseconds(200),
                           std::chrono::milliseconds(20000)) {
             // Register all engine options
@@ -222,6 +223,7 @@ public:
             registerOption(EngineOption::createSpin("KingPositionBonus", 50, 0, 200));
 
             registerOption(EngineOption::createSpin("MateScore", 100000, 50000, 200000));
+            registerOption(EngineOption::createSpin("RestrictKing", 20, 0, 500));
             registerOption(EngineOption::createSpin("SupportedPawnBonus", 70, 0, 200));
             registerOption(EngineOption::createSpin("SupportingPawnBonus", 35, 0, 200));
             registerOption(EngineOption::createSpin("SupportingPieceBonus", 25, 0, 200));
@@ -250,6 +252,7 @@ public:
         else if (option.name == "QueenPositionBonus") params.queenPositionBonus = value;
         else if (option.name == "KingPositionBonus") params.kingPositionBonus = value;
         else if (option.name == "MateScore") params.mateScore = value;
+        else if (option.name == "RestrictKing") params.restrictKing = value;
         else if (option.name == "SupportedPawnBonus") params.supportedPawnBonus = value;
         else if (option.name == "SupportingPawnBonus") params.supportingPawnBonus = value;
         else if (option.name == "SupportingPieceBonus") params.supportingPieceBonus = value;
@@ -373,7 +376,7 @@ public:
         
         // Estimate time for next depth based on previous depth
         // Each depth typically takes ~4-5x longer than the previous
-        auto estimatedNextDepthTime = prevDepthTime * 4;
+        auto estimatedNextDepthTime = prevDepthTime * 5;
 
         // Leave some buffer time for move selection and communication
         auto bufferTime = std::chrono::milliseconds(100);
@@ -410,7 +413,7 @@ public:
 
             // If we're using too much time, stop iterating
             if (currDepth > MIN_DEPTH && !keepSearching(clock)) {
-                break;  
+                break;
             }
 
             // Get move from transposition table if available
@@ -485,6 +488,15 @@ public:
             sendInfo(iterStr);
             // Update how long this depth took
             prevDepthTime = totalTime;
+
+            // If the best score found is within M10, we can stop searching early
+            // so that we don't waste time searching moves while there's an
+            // inevitable mate
+            if ((bestScoreOverall > params.mateScore - 10 && sideToMove == WHITE) ||
+                (bestScoreOverall < -params.mateScore + 10 && sideToMove == BLACK)) {
+                    std::cout << "mate found, break early\n";
+                    break;
+            }
         }
 
         this->bestMove = bestMoveOverall;
@@ -645,12 +657,11 @@ private:
     }
 
     // Constants for quiescence search
-    static constexpr int MAX_QSEARCH_DEPTH = 6;     // Maximum depth for qsearch
+    static constexpr int MAX_QSEARCH_DEPTH = 5;     // Maximum depth for qsearch
     static constexpr int DELTA_MARGIN = 200;        // Margin for delta pruning (in centipawns)
 
     // Enhanced quiescence search with SEE and delta pruning
     int quiescence(ChessBoard& board, int alpha, int beta, int ply, int qDepth = 0) {
-        nodeCount++;
 
         // Check qsearch depth limit
         if (qDepth >= MAX_QSEARCH_DEPTH) {
@@ -701,15 +712,11 @@ private:
 
         // Search captures
         for (const auto& scored : captureMoves) {
-            ChessBoard tempBoard = board;
-            tempBoard.makeMove(scored.move, true);
+            board.makeMove(scored.move, true);
 
-            // Skip if illegal (leaves us in check)
-            if (tempBoard.isSideInCheck(board.getSideToMove())) {
-                continue;
-            }
+            int score = -quiescence(board, -beta, -alpha, ply + 1, qDepth + 1);
 
-            int score = -quiescence(tempBoard, -beta, -alpha, ply + 1, qDepth + 1);
+            board.unmakeMove(scored.move, true);
             
             if (score >= beta) {
                 return beta;
@@ -777,6 +784,9 @@ private:
         // current number of major and minor pieces and initial number of those pieces
         float earlygameLerp = (float)totalPiecesWithoutPawns/INIT_MAJ_MIN_PIECES;
         float endgameLerp = (float)(std::clamp(8 - totalPiecesWithoutPawns, 0, 8))/INIT_MAJ_MIN_PIECES;
+        U64 whiteAttacks = board.calculateAttacksForSide(WHITE);
+        U64 blackAttacks = board.calculateAttacksForSide(BLACK);
+
         if (color == WHITE) {
             // Evaluate pawn structure
             U64 pawns = board.getWhitePawns();
@@ -871,11 +881,18 @@ private:
 
             // Evaluate attacks to opposite king
             /// @todo apparently this does fuck all to encourage checks
-            U64 attackingOppKing = board.OppAttacksToSquare(board.getBlackKingSquare(), BLACK);
+            int oppKingIndex = board.getBlackKingSquare();
+            U64 attackingOppKing = board.OppAttacksToSquare(oppKingIndex, BLACK);
             if (attackingOppKing) {
                 // Using popcount means double checks should be worth more
                 score += params.checkingBonus * popcount(attackingOppKing);
             }
+            // Controlling squares around opposite king
+            U64 oppKingSquares = ATKMASK_KING[oppKingIndex] & whiteAttacks;
+            if (oppKingSquares) {
+                score += params.restrictKing * popcount(oppKingSquares);
+            }
+
 
             // Evaluate attacks to own king
             // Discourage getting checked
@@ -883,6 +900,8 @@ private:
             if (attacksToKing) {
                 score += params.checkedPenalty * popcount(attacksToKing);
             }
+
+            // Discourage any pieces left standing on enemy attacked s
         } else {
             // Evaluate pawn structure
             U64 pawns = board.getBlackPawns();
@@ -1045,18 +1064,4 @@ private:
         }
         return false;
     }
-
-
-
-    // /// @brief Alpha-Beta search algorithm.
-    // /// This is a recursively called function used to score a chess position.
-    // /// Positive means the position is better for White, negative better for Black
-    // /// @param board Current board to search
-    // /// @param depth Depth to search to. Position is evaluated at depth 0
-    // /// @param alpha The minimum score the maximizing player (W) is guranteed
-    // /// in the position
-    // /// @param beta The maximum score the minimizing player (B) is guranteed
-    // /// in the position
-    // /// @param maximizing 
-    // /// @return 
 };

@@ -54,7 +54,6 @@ public:
     /// @param side 
     /// @return 
     U64 getAttacksToKing(Color side) const;
-    U64 getAttacksForSide(Color side) const;
     U64 getOrthogonalOpp(Color side) const;
     U64 getDiagonalOpp(Color side) const;
     // King square getters
@@ -79,6 +78,7 @@ public:
 
     // Attack calculation methods
     U64 OppAttacksToSquare(int indexOfSquare, Color colorOfKing) const;
+    U64 calculateAttacksForSide(Color side) const;
 
     // Public board alteration methods
     void makeMove(DenseMove move, bool searching);
@@ -121,5 +121,4 @@ private:
     void addPiece(int square, PieceType piece);
 
     bool calculateIsInCheck();
-    void calculateAttacksForSide(Color side);
 };

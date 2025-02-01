@@ -3,9 +3,7 @@
 #include <string>
 
 EnginePlayer::EnginePlayer(std::unique_ptr<ChessEngineBase> engineImpl, 
-                         bool acceptDrawOffers,
-                         std::chrono::milliseconds minTimePerMove,
-                         std::chrono::milliseconds maxTimePerMove)
+                         bool acceptDrawOffers)
     : engine(std::move(engineImpl))
     , acceptDraws(acceptDrawOffers)
     , initialized(false)

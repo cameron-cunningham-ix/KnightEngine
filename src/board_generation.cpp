@@ -118,10 +118,9 @@ void ChessBoard::setupPositionFromFEN(const std::string& fen) {
 std::string ChessBoard::getFEN() {
     std::string fen;
     
-    int square = 56;        // Start at a8
     int emptyCount = 0;
     // Loop through all squares for position portion of FEN
-    for (square; square >= 0; square++) {
+    for (int square = 56; square >= 0; square++) {
         PieceType current = getPieceAt(square);
         // Empty square
         if (current == PieceType::EMPTY) {
@@ -337,9 +336,9 @@ bool ChessBoard::calculateIsInCheck() {
     return checkingCount > 0;
 }
 
-void ChessBoard::calculateAttacksForSide(Color side) {
+U64 ChessBoard::calculateAttacksForSide(Color side) const {
     U64 occupancy = getAllPieces();
-    attacksBB[side] = 0ULL;
+    U64 attacks = 0ULL;
     // Get sliding piece bitboards
     U64 oppOrthoSliders = side == BLACK ? 
         (getBlackRooks() | getBlackQueens()) : (getWhiteRooks() | getWhiteQueens());
@@ -348,20 +347,20 @@ void ChessBoard::calculateAttacksForSide(Color side) {
     // If there's any enemy orthogonal sliding pieces, see if they're checking king
     while (oppOrthoSliders != 0) {
         int index = std::countr_zero(oppOrthoSliders);
-        attacksBB[side] |= PEXT::getRookAttacks(index, occupancy);
+        attacks |= PEXT::getRookAttacks(index, occupancy);
         oppOrthoSliders &= (oppOrthoSliders - 1);
     }
     // Any enemy diagonal sliding pieces
     while (oppDiagSliders != 0) {
         int index = std::countr_zero(oppDiagSliders);
-        attacksBB[side] |= PEXT::getBishopAttacks(index, occupancy);
+        attacks |= PEXT::getBishopAttacks(index, occupancy);
         oppDiagSliders &= (oppDiagSliders - 1);
     }
     // Any knights
     U64 oppKnights = side == BLACK ? getBlackKnights() : getWhiteKnights();
     while (oppKnights != 0) {
         int index = std::countr_zero(oppKnights);
-        attacksBB[side] |= ATKMASK_KNIGHT[index];
+        attacks |= ATKMASK_KNIGHT[index];
         oppKnights &= (oppKnights - 1);
     }
     // Any pawns
@@ -369,16 +368,17 @@ void ChessBoard::calculateAttacksForSide(Color side) {
     while (oppPawns != 0) {
         int index = std::countr_zero(oppPawns);
         U64 pawnAttackMask = side == BLACK ? ATKMASK_WPAWN[index] : ATKMASK_BPAWN[index];
-        attacksBB[side] |= pawnAttackMask;
+        attacks |= pawnAttackMask;
         oppPawns &= (oppPawns - 1);
     }
     // Kings
     U64 oppKings = side == BLACK ? getBlackKings() : getWhiteKings();
     while (oppKings != 0) {
         int index = std::countr_zero(oppKings);
-        attacksBB[side] |= ATKMASK_KING[index];
+        attacks |= ATKMASK_KING[index];
         oppKings &= (oppKings - 1);
     }
+    return attacks;
 }
 
 // Note: I could use getPieceSet for these getters, but A. these should
@@ -452,9 +452,6 @@ U64 ChessBoard::getEmptySquares() const {
 /// @return Bitboard of pieces attacking side's king
 U64 ChessBoard::getAttacksToKing(Color side) const {
     return attacksToKings[side];
-}
-U64 ChessBoard::getAttacksForSide(Color side) const {
-    return attacksBB[side];
 }
 /// @param side
 /// @return Bitboard of orthogonal attackers of opposing side
@@ -838,7 +835,6 @@ void ChessBoard::unmakeMove(DenseMove move, bool searching) {
     // stateHistory[plyIndex] = GameState();
     int prevCastleRights = currentGameState.getCastleRights();
     int prevEnPass = currentGameState.enPassantSquare;
-    Color prevSide = currentGameState.sideToMove;
     // Get previous state
     plyIndex--;
     currentGameState = stateHistory[plyIndex];
@@ -906,55 +902,48 @@ void ChessBoard::unmakeMove(DenseMove move, bool searching) {
             movePiece(rookFrom, rookTo, (movedPiece == W_KING) ? W_ROOK : B_ROOK);
         }
     }
-    
 
-    // if (getFEN() == "k7/7Q/2K5/8/8/8/8/8 w - - 0 1" ||
-    //     getFEN() == "k7/7Q/2K5/8/8/8/8/8 b - - 1 1") {
-    //     std::cout << std::format("unmakeMove grab prev state: {}, sidetoMove {} plyIndex {}\n", getFEN(), (int)currentGameState.sideToMove, plyIndex);
-    // }
-    // if (currentGameState.sideToMove == WHITE) {
-    // }
 }
 
 /// @brief 
 /// @param board 
 /// @return 
 U64 ChessBoard::GenerateZobristKey() {
-    U64 zobristKey = 0ULL;
+    U64 zKey = 0ULL;
 
     for (int sq = 0; sq < 64; sq++) {
         PieceType piece = getPieceAt(sq);
         if (piece == PieceType::EMPTY) continue;
 
-        // std::cout << std::format("ZobristKey initial: {}\nZobristKey (sq: {}): {}\n",
-        //     zobristKey, sq, Zobrist::getPieceSqKey(sq, piece));
-        zobristKey ^= Zobrist::getPieceSqKey(sq, piece);
-        // std::cout << std::format("ZobristKey after: {}\n", zobristKey);
+        // std::cout << std::format("zKey initial: {}\nzKey (sq: {}): {}\n",
+        //     zKey, sq, Zobrist::getPieceSqKey(sq, piece));
+        zKey ^= Zobrist::getPieceSqKey(sq, piece);
+        // std::cout << std::format("zKey after: {}\n", zKey);
     }
 
     if (getSideToMove() == BLACK) {
-        // std::cout << std::format("ZobristKey before blacks turn: {}\n", zobristKey);
-        // std::cout << std::format("ZobristKey (BlackToMove): {}\n", Zobrist::zobristSideToMove);
+        // std::cout << std::format("zKey before blacks turn: {}\n", zKey);
+        // std::cout << std::format("zKey (BlackToMove): {}\n", Zobrist::zobristSideToMove);
         
-        zobristKey ^= Zobrist::zobristSideToMove;
-        // std::cout << std::format("ZobristKey after BlackToMove: {}\n", zobristKey);
+        zKey ^= Zobrist::zobristSideToMove;
+        // std::cout << std::format("zKey after BlackToMove: {}\n", zKey);
 
     }
 
-    // std::cout << std::format("ZobristKey before castle: {}\n", zobristKey);
-    // std::cout << std::format("ZobristKey (Castle): {}\n", Zobrist::zobristCastle[currentGameState.getCastleRights()]);
-    zobristKey ^= Zobrist::zobristCastle[currentGameState.getCastleRights()];
-    // std::cout << std::format("ZobristKey after castle: {}\n", zobristKey);
+    // std::cout << std::format("zKey before castle: {}\n", zKey);
+    // std::cout << std::format("zKey (Castle): {}\n", Zobrist::zobristCastle[currentGameState.getCastleRights()]);
+    zKey ^= Zobrist::zobristCastle[currentGameState.getCastleRights()];
+    // std::cout << std::format("zKey after castle: {}\n", zKey);
 
     if (currentGameState.enPassantSquare != -1) {
-        // std::cout << std::format("ZobristKey before enpass: {}\n", zobristKey);
-        // std::cout << std::format("ZobristKey (enpass): {}\n", Zobrist::zobristEnPass[currentGameState.getEnPassantFileIndex()]);
-        zobristKey ^= Zobrist::zobristEnPass[currentGameState.getEnPassantFileIndex()];
-        // std::cout << std::format("ZobristKey after enpass: {}\n", zobristKey);
+        // std::cout << std::format("zKey before enpass: {}\n", zKey);
+        // std::cout << std::format("zKey (enpass): {}\n", Zobrist::zobristEnPass[currentGameState.getEnPassantFileIndex()]);
+        zKey ^= Zobrist::zobristEnPass[currentGameState.getEnPassantFileIndex()];
+        // std::cout << std::format("zKey after enpass: {}\n", zKey);
     }
 
-    // std::cout << std::format("ZobristKey final init: {}\n", zobristKey);
-    return zobristKey;
+    // std::cout << std::format("zKey final init: {}\n", zKey);
+    return zKey;
 }
 
 /// @brief Prints a piece bitboard to the console

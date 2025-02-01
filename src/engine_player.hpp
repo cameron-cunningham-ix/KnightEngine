@@ -44,9 +44,7 @@ private:
 public:
     // Constructor takes ownership of an engine implementation
     explicit EnginePlayer(std::unique_ptr<ChessEngineBase> engineImpl, 
-                         bool acceptDrawOffers = false,
-                         std::chrono::milliseconds minTimePerMove = std::chrono::milliseconds(100),
-                         std::chrono::milliseconds maxTimePerMove = std::chrono::milliseconds(30000));
+                         bool acceptDrawOffers = false);
     
     ~EnginePlayer();
 

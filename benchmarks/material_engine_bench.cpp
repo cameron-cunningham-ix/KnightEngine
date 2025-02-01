@@ -87,7 +87,6 @@ BENCHMARK(BM_SearchAtDepth<4>)->Unit(benchmark::kMillisecond);
 BENCHMARK_F(BM_MatEng, AlphaBetaSearch)(benchmark::State& state) {
     // Set up a middlegame position
     board.setupPositionFromFEN("r1bq1rk1/ppp2ppp/2n2n2/2bpp3/4P3/2PP1N2/PP1N1PPP/R1BQKB1R w KQ - 0 1");
-    engine->setSearchDepth(6);  // Moderate depth for benchmarking
     for (auto _ : state) {
         benchmark::DoNotOptimize(engine->findBestMove(board, currClock));
     }
