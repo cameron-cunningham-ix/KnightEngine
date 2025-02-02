@@ -596,16 +596,19 @@ TEST_F(MaterialEngineTest, MateIn2Positions) {
         
         // Print initial position
         printBoard(board);
-        
-        // Find best move
-        DenseMove bestMove = engine->findBestMove(board, clock);
-        std::cout << "Best move found: " << bestMove.toString(false) << "\n";
-        
-        // Make the move
-        board.makeMove(bestMove, false);
-        printBoard(board);
-        
-        // Verify it's mate in 1 for opponent
+        DenseMove bestMove;
+        // 3 iterations for M2
+        for (int i = 0; i < 3; i++) {
+            // Find best move
+            bestMove = engine->findBestMove(board, clock);
+            std::cout << "M2 Best move found: " << bestMove.toString(false) << "\n";
+            
+            // Make the move
+            board.makeMove(bestMove, false);
+            printBoard(board);
+        }
+
+        // Verify it's mate
         EXPECT_TRUE(isCheckmate(board)) 
             << "Position " << positionNumber << " is not mate after move " 
             << bestMove.toString(false);

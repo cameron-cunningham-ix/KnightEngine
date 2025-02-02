@@ -29,8 +29,10 @@ EnginePlayer::~EnginePlayer() {
 DenseMove EnginePlayer::getMove(ChessBoard& board, 
                                 ChessClock& clock) {
     thinking = true;
+    clock.start();
     DenseMove bestMove = engine->findBestMove(board, clock);
     thinking = false;
+    clock.stop();
     return bestMove;
 }
 

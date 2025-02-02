@@ -46,7 +46,6 @@ private:
     mutable std::mutex clockMutex;
     
     // Private helper methods
-    void updateTime();
     bool isInDelay() const;
     void applyIncrement(Color color);
 
@@ -108,6 +107,7 @@ public:
     
     // Clock control methods
     void start();
+    void updateTime();
     void stop();
     void pause();
     void resume();
