@@ -222,7 +222,10 @@ void EnginePlayer::processCommand(const std::string& cmd) {
             if (it != searchParams.end()) {
                 currentClock.setTime(BLACK, std::chrono::milliseconds(std::stoi(it->second)));
                 currentClock.setInfinite(false);
-            } 
+            }
+            if (currentBoard.getSideToMove() != currentClock.getActiveColor()) {
+                currentClock.switchPlayer();
+            }
             
             // Use current board position
             std::lock_guard<std::mutex> lock(boardMutex);

@@ -93,7 +93,7 @@ private:
         -20,-30,-30,-40,-40,-30,-30,-20,
         -10,-20,-20,-20,-20,-20,-20,-10,
           5,  5,  0,  0,  0,  0,  5,  5,
-         20, 25, 20,  0,  0, 10, 40, 20
+         20, 25, 10,  0,  0, 10, 40, 20
     };
     // Piece-Square tables for endgame
     // Pawns - Endgame
@@ -180,6 +180,7 @@ private:
 
         int mateScore = 100000;
         int restrictKing = 10;
+        int kingShield = 50;
         int supportedPawnBonus = 90;
         int supportingPawnBonus = 15;
         int supportingPieceBonus = 15;
@@ -195,7 +196,7 @@ public:
 
     MaterialEngine() 
         : ChessEngineBase("MaterialEngine",
-                          "0.822",
+                          "1.0.0",
                           "Cameron Cunningham",
                           6,
                           std::chrono::milliseconds(200),
@@ -210,6 +211,7 @@ public:
 
             registerOption(EngineOption::createSpin("MateScore", 100000, 50000, 200000));
             registerOption(EngineOption::createSpin("RestrictKing", 10, 0, 500));
+            registerOption(EngineOption::createSpin("KingShield", 50, 0, 300));
             registerOption(EngineOption::createSpin("SupportedPawnBonus", 90, 0, 200));
             registerOption(EngineOption::createSpin("SupportingPawnBonus", 15, 0, 200));
             registerOption(EngineOption::createSpin("SupportingPieceBonus", 15, 0, 200));
@@ -233,6 +235,7 @@ public:
         else if (option.name == "KingValue") params.kingValue = value;
         else if (option.name == "MateScore") params.mateScore = value;
         else if (option.name == "RestrictKing") params.restrictKing = value;
+        else if (option.name == "KingShield") params.kingShield = value;
         else if (option.name == "SupportedPawnBonus") params.supportedPawnBonus = value;
         else if (option.name == "SupportingPawnBonus") params.supportingPawnBonus = value;
         else if (option.name == "SupportingPieceBonus") params.supportingPieceBonus = value;
@@ -245,9 +248,8 @@ public:
     }
 
     int alphaBeta(ChessBoard& board, int depth, int alpha, int beta, int ply) {
-
         if (depth <= 0 || !isSearching) {
-            return evaluatePosition(board);
+            return (board.getSideToMove() == WHITE ? evaluatePosition(board) : -evaluatePosition(board));
         }
 
         Color sideToMove = board.getSideToMove();
@@ -259,14 +261,6 @@ public:
                 board.keySet.find(board.zobristKey) != board.keySet.end()) {
                 return 0;
             }
-
-            // // We can skip looking through this position if there is already a mate found earlier in the search
-            // // that is shorter than any mate from this position.
-            // alpha = std::max(alpha, -params.mateScore + ply);
-            // beta = std::min(beta, params.mateScore - ply);
-            // if (alpha >= beta) {
-            //     return alpha;
-            // }
         }
 
         // Check transposition table
@@ -274,11 +268,6 @@ public:
         int score;
         DenseMove hashMove;
         checkTT(board, depth, alpha, beta, score, hashMove);
-
-        // // Get hash move from transposition table
-        // if (entry->key == board.zobristKey) {
-        //     hashMove = entry->bestMove;
-        // }
 
         // Generate and order moves
         int moveNum = 0;
@@ -321,7 +310,7 @@ public:
         if (noLegalMoves) {
             if (board.isSideInCheck(sideToMove)) {
                 // If the current side to move is in checkmate, 
-                return sideToMove == WHITE ? params.mateScore - ply : -params.mateScore + ply;
+                return -params.mateScore + ply;
             }
             return 0;  // Stalemate
         }
@@ -394,7 +383,7 @@ public:
             int alpha = INF_NEG;
             int beta = INF_POS;
             DenseMove bestMove;
-            int bestScore = sideToMove == WHITE ? INF_NEG : INF_POS;
+            int bestScore = INF_NEG;
 
             orderMoves(moves, moveNum, 0, hashMove);
 
@@ -411,16 +400,11 @@ public:
                 board.unmakeMove(moves[i], true);
 
                 // Update best move if better score found
-                if ((sideToMove == WHITE && score > bestScore) ||
-                    (sideToMove == BLACK && score < bestScore)) {
+                if (score > bestScore) {
                     bestScore = score;
                     bestMove = moves[i];
 
-                    if (sideToMove == WHITE) {
-                        if (score > alpha) alpha = score;
-                    } else {
-                        if (score < beta) beta = score;
-                    }
+                    if (score > alpha) alpha = score;
 
                     auto moveTime = std::chrono::duration_cast<std::chrono::milliseconds>(
                         std::chrono::steady_clock::now() - searchStartTime).count();
@@ -455,15 +439,6 @@ public:
             sendInfo(iterStr);
             // Update how long this depth took
             prevDepthTime = totalTime;
-
-            // // If the best score found is within M10, we can stop searching early
-            // // so that we don't waste time searching moves while there's an
-            // // inevitable mate
-            // if ((bestScoreOverall > params.mateScore - 10 && sideToMove == WHITE) ||
-            //     (bestScoreOverall < -params.mateScore + 10 && sideToMove == BLACK)) {
-            //         std::cout << "mate found, break early\n";
-            //         break;
-            // }
         }
 
         this->bestMove = bestMoveOverall;
@@ -727,6 +702,12 @@ private:
         // King
         score += kingSqTbEarly[kingSquare]*(earlygameLerp) +
             kingSqTbEnd[kingSquare]*(endgameLerp);
+        kingSquare ^= flip;
+        // Give bonus for king behind pawns
+        U64 kingShield = ATKMASK_KING[kingSquare] & pawnRef;
+        if (popcount(kingShield) >= 2 && (kingSquare < 8 || kingSquare >= 56)) {
+            score += params.kingShield;
+        }
 
         // Evaluate attacks to opposite king
         /// @todo apparently this does fuck all to encourage checks

@@ -56,9 +56,6 @@ void ChessClock::switchPlayer() {
     std::lock_guard<std::mutex> lock(clockMutex);
     updateTime();
     
-    // Apply increment to the player who just completed their move
-    applyIncrement(activeColor);
-    
     // Switch active player
     activeColor = (activeColor == WHITE) ? BLACK : WHITE;
     lastUpdateTime = std::chrono::steady_clock::now();
