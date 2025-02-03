@@ -13,11 +13,13 @@ static constexpr int INF_NEG = -999999999;
 static constexpr int TT_SIZE = 44739243;
 
 /// @brief 
-class MaterialEngine : public ChessEngineBase {
+class Syrinx : public ChessEngineBase {
 private:
     // Search statistics
-    U64 nodeCount;      // Number of nodes searched
-    // Start time of curr search
+
+    // Number of nodes searched
+    U64 nodeCount;
+    // Start time of current search
     std::chrono::steady_clock::time_point searchStartTime;
     // Amount of time previous depth took to search
     std::chrono::milliseconds prevDepthTime;
@@ -25,7 +27,7 @@ private:
     int currentMoveNumber;
     int totalPiecesWithoutPawns;
     // Transposition table
-    // 44 million 24-byte entries = 1 GB
+    // 44 million 24-byte entries = ~1 GB
     std::array<TTEntry, TT_SIZE> transpositionTable;
 
     // Piece-Square tables
@@ -169,7 +171,7 @@ private:
     // Initial count of major pieces
     static constexpr int INIT_MAJ_MIN_PIECES = 14;
 
-     // Parameters struct without any option-related code
+     // Parameter values for evaluation
     struct Parameters {
         int pawnValue = 100;
         int knightValue = 320;
@@ -179,8 +181,9 @@ private:
         int kingValue = 2000;
 
         int mateScore = 100000;
-        int restrictKing = 10;
-        int kingShield = 50;
+        int restrictKingBonus = 10;
+        int kingShieldBonus = 50;
+        int airyKingPenalty = -10;
         int supportedPawnBonus = 90;
         int supportingPawnBonus = 15;
         int supportingPieceBonus = 15;
@@ -194,9 +197,9 @@ private:
 
 public:
 
-    MaterialEngine() 
-        : ChessEngineBase("MaterialEngine",
-                          "1.0.0",
+    Syrinx() 
+        : ChessEngineBase("Syrinx",
+                          "1.00",
                           "Cameron Cunningham",
                           6,
                           std::chrono::milliseconds(200),
@@ -210,8 +213,9 @@ public:
             registerOption(EngineOption::createSpin("KingValue", 2000, 100, 5000));
 
             registerOption(EngineOption::createSpin("MateScore", 100000, 50000, 200000));
-            registerOption(EngineOption::createSpin("RestrictKing", 10, 0, 500));
-            registerOption(EngineOption::createSpin("KingShield", 50, 0, 300));
+            registerOption(EngineOption::createSpin("RestrictKingBonus", 10, 0, 500));
+            registerOption(EngineOption::createSpin("KingShieldBonus", 50, 0, 300));
+            registerOption(EngineOption::createSpin("AiryKingPenalty", -10, -100, 0));
             registerOption(EngineOption::createSpin("SupportedPawnBonus", 90, 0, 200));
             registerOption(EngineOption::createSpin("SupportingPawnBonus", 15, 0, 200));
             registerOption(EngineOption::createSpin("SupportingPieceBonus", 15, 0, 200));
@@ -234,8 +238,9 @@ public:
         else if (option.name == "QueenValue") params.queenValue = value;
         else if (option.name == "KingValue") params.kingValue = value;
         else if (option.name == "MateScore") params.mateScore = value;
-        else if (option.name == "RestrictKing") params.restrictKing = value;
-        else if (option.name == "KingShield") params.kingShield = value;
+        else if (option.name == "RestrictKingBonus") params.restrictKingBonus = value;
+        else if (option.name == "KingShieldBonus") params.kingShieldBonus = value;
+        else if (option.name == "AiryKingPenalty") params.airyKingPenalty = value;
         else if (option.name == "SupportedPawnBonus") params.supportedPawnBonus = value;
         else if (option.name == "SupportingPawnBonus") params.supportingPawnBonus = value;
         else if (option.name == "SupportingPieceBonus") params.supportingPieceBonus = value;
@@ -247,12 +252,19 @@ public:
         else if (option.name == "RookOpenFileBonus") params.rookOpenFileBonus = value;
     }
 
+    /// @brief Alpha Beta pruning function
+    /// @param board 
+    /// @param depth 
+    /// @param alpha 
+    /// @param beta 
+    /// @param ply 
+    /// @return Evaluation score relative to current depth's side (positive better, negative worse)
     int alphaBeta(ChessBoard& board, int depth, int alpha, int beta, int ply) {
-        if (depth <= 0 || !isSearching) {
-            return (board.getSideToMove() == WHITE ? evaluatePosition(board) : -evaluatePosition(board));
-        }
-
+        
         Color sideToMove = board.getSideToMove();
+        if (depth <= 0 || !isSearching) {
+            return (sideToMove == WHITE ? evaluatePosition(board) : -evaluatePosition(board));
+        }
 
         // Check for repetition and 50-move rule
         if (ply > 0) {
@@ -264,7 +276,7 @@ public:
         }
 
         // Check transposition table
-        /// @todo probably have to check what to do with score based on hash flag
+        /// @todo Check what to do with score based on hash flag
         int score;
         DenseMove hashMove;
         checkTT(board, depth, alpha, beta, score, hashMove);
@@ -322,25 +334,21 @@ public:
 
     bool keepSearching(ChessClock& clock) const {
         // If clock is set to infinite, always keep searching
-        std::cout << std::format("keepsearching\n");
         if (clock.isInfinite()) return true;
         // Get remaining time for current player
         auto remainingTime = (clock.getActiveColor() == WHITE) ? 
                             clock.getWhiteTime() : 
                             clock.getBlackTime();
-        std::cout << std::format("remaining time {}\n", remainingTime.count());
         
         // Estimate time for next depth based on previous depth
         // Each depth typically takes ~4-5x longer than the previous
         auto estimatedNextDepthTime = prevDepthTime * 5;
-        std::cout << std::format("estimated next depth time {}\n", estimatedNextDepthTime.count());
 
         // Leave some buffer time for move selection and communication
         auto bufferTime = std::chrono::milliseconds(20);
 
         // Don't use more than 20% of remaining time on one move
         auto maxTimeForMove = remainingTime / 5;
-        std::cout << std::format("maxtime {}\n", maxTimeForMove.count());
 
         return estimatedNextDepthTime + bufferTime < maxTimeForMove;
     }
@@ -492,7 +500,6 @@ private:
     };
 
     // Score values for different move types
-    static constexpr int PV_MOVE_SCORE = 2000000;
     static constexpr int HASH_MOVE_SCORE = 1000000;
     static constexpr int CAPTURE_BASE_SCORE = 100000;
         
@@ -706,11 +713,15 @@ private:
         // Give bonus for king behind pawns
         U64 kingShield = ATKMASK_KING[kingSquare] & pawnRef;
         if (popcount(kingShield) >= 2 && (kingSquare < 8 || kingSquare >= 56)) {
-            score += params.kingShield;
+            score += params.kingShieldBonus;
         }
+        // // Give penalty for 'airy' king (empty squares to king)
+        // U64 kingAir = ATKMASK_QUEEN[kingSquare] & board.getEmptySquares();
+        // if (popcount(kingAir) > 5) {
+        //     score += params.airyKingPenalty;
+        // }
 
         // Evaluate attacks to opposite king
-        /// @todo apparently this does fuck all to encourage checks
         if (attackingOppKing) {
             // Using popcount means double checks should be worth more
             score += params.checkingBonus * popcount(attackingOppKing);

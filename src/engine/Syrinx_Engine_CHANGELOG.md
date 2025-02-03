@@ -1,37 +1,35 @@
-# Material Engine Changelog
+# Syrinx Engine Changelog
 
-## Material Engine V0.431
+
+
+## Syrinx Engine V0.431
 - Changed bishop pair score to only score for actual pair (light and dark)
 
-## Material Engine V0.42 (2025-01-13)
+## Syrinx Engine V0.42 (2025-01-13)
 - Some evaluation constants changed
 
-## Material Engine V0.41 (2025-01-12)
+## Syrinx Engine V0.41 (2025-01-12)
 - Added piece-square tables for early game and endgame, and 
 ENDGAME_LERP for interpolating between early and endgame
 
-## Material Engine V0.4 (2025-01-12)
+## Syrinx Engine V0.4 (2025-01-12)
 - Changed alpha beta function again, it seems to be working better
 Issues:
 - Doesn't account for three-fold repetition, so it makes those draws
 a lot. Seems like Zobrist hash keys could help to solve this as well
 as evaluating the same position multiple times
 
-## Material Engine V0.321 (2025-01-12)
+## Syrinx Engine V0.321 (2025-01-12)
 - Changed supported pawn bonus to 90
 
-## Material Engine V0.32 (2025-01-12)
-- Finally realized the reason the engine was so slow was
-because I was not turning on compiler optimizations and 
-compiling for Release. Perft depth 6 is around 4.3 seconds with
-optimizations instead of 30 without. Success!
+## Syrinx Engine V0.32 (2025-01-12)
 - Added SupportedPawnBonus
 - Flipped return value for side in check back to what it should be for 
 alpha beta (INF_NEG for white, INF_POS for black)
 Note: This makes it worse for some reason :( might have to refactor
 alphaBeta and findBestMove functions
 
-## Material Engine V0.315 (2025-01-11)
+## Syrinx Engine V0.315 (2025-01-11)
 - Added sendInfo functionality; engine now sends info back to UCI
 about currmove, currmovenumber, depth, score (centipawns), time (to
 get move), and nodes searched along with nodes/second
@@ -41,18 +39,18 @@ get move), and nodes searched along with nodes/second
     it's own side in checkmate (as far as I can tell).
 - Won 88 / 100 games against RandomEngine V1.0 in first test
 
-## Material Engine V0.31 (2025-01-11) 
+## Syrinx Engine V0.31 (2025-01-11) 
 - Changed attacks to opposite king bonus to 3000
 - It seems like the engine is trying to maximize score WITHOUT
 checkmating the king
 
-## Material Engine V0.3 (2025-01-10)
+## Syrinx Engine V0.3 (2025-01-10)
 - Changed alphaBeta function {
     if maximizing, eval >= beta break
     if minimizing, eval <= alpha break
 }
 
-## Material Engine V0.2 (2025-01-10)
+## Syrinx Engine V0.2 (2025-01-10)
 Features:
 - Basic UCI implementation, successful communication with 
 CuteChess 

@@ -111,7 +111,7 @@ add_library(KnightEngine
     src/zobrist.cpp
     src/zobrist.hpp
     src/engine/random_engine.hpp
-    src/engine/material_engine.hpp
+    src/engine/syrinx_engine.hpp
 )
 
 # Include directories
@@ -138,8 +138,8 @@ add_executable(random_engine
     src/engine/uci/random_engine_main.cpp
 )
 
-add_executable(material_engine
-    src/engine/uci/material_engine_main.cpp
+add_executable(syrinx_engine
+    src/engine/uci/syrinx_engine_main.cpp
 )
 
 # Link against the chess engine library and UCI handler
@@ -148,7 +148,7 @@ target_link_libraries(random_engine PRIVATE
     uci_handler
 )
 
-target_link_libraries(material_engine PRIVATE 
+target_link_libraries(syrinx_engine PRIVATE 
     KnightEngine
     uci_handler
 )
@@ -158,7 +158,7 @@ set_target_properties(random_engine PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/engines
 )
 
-set_target_properties(material_engine PROPERTIES
+set_target_properties(syrinx_engine PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/engines
 )
 

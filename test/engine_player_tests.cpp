@@ -1,5 +1,5 @@
 #include "../src/engine/random_engine.hpp"
-#include "../src/engine/material_engine.hpp"
+#include "../src/engine/syrinx_engine.hpp"
 #include "../src/engine_player.hpp"
 #include "../src/pext_bitboard.hpp"
 #include <gtest/gtest.h>
@@ -136,10 +136,10 @@ TEST_F(EnginePlayerTest, UCICommands) {
 }
 
 // Test engine with real search engine
-TEST_F(EnginePlayerTest, MaterialEngineIntegration) {
-    // Create player with MaterialEngine
-    auto materialEngine = std::make_unique<MaterialEngine>();
-    auto materialPlayer = std::make_unique<EnginePlayer>(std::move(materialEngine));
+TEST_F(EnginePlayerTest, SyrinxIntegration) {
+    // Create player with Syrinx
+    auto syrinxEngine = std::make_unique<Syrinx>();
+    auto materialPlayer = std::make_unique<EnginePlayer>(std::move(syrinxEngine));
     
     // Test getting a move
     DenseMove move = materialPlayer->getMove(board, clock);
@@ -230,11 +230,11 @@ TEST_F(EnginePlayerTest, ErrorHandling1) {
     player->position("", invalidMoves);  // Should handle gracefully
 }
 
-// Test that MatEng doesn't lose one time
-TEST_F(EnginePlayerTest, MatEngTime) {
-    // Create player with MaterialEngine
-    auto materialEngine = std::make_unique<MaterialEngine>();
-    auto materialPlayer = std::make_unique<EnginePlayer>(std::move(materialEngine));
+// Test that Syrinx doesn't lose one time
+TEST_F(EnginePlayerTest, SyrinxTime) {
+    // Create player with Syrinx
+    auto syrinxEngine = std::make_unique<Syrinx>();
+    auto materialPlayer = std::make_unique<EnginePlayer>(std::move(syrinxEngine));
     
     // Test getting a move
     DenseMove move = materialPlayer->getMove(board, clock);

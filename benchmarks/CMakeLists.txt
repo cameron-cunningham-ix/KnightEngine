@@ -1,5 +1,5 @@
 add_executable(chess_benchmarks
-    material_engine_bench.cpp
+    syrinx_engine_bench.cpp
     board_operations_bench.cpp
     move_generation_bench.cpp
     perft_bench.cpp

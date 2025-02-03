@@ -1,19 +1,19 @@
-#include "../src/engine/material_engine.hpp"
+#include "../src/engine/syrinx_engine.hpp"
 #include "../src/pext_bitboard.hpp"
 #include <gtest/gtest.h>
 #include <iostream>
 #include <fstream>
 
-class MaterialEngineTest : public ::testing::Test {
+class SyrinxTest : public ::testing::Test {
 protected:
-    std::unique_ptr<MaterialEngine> engine;
+    std::unique_ptr<Syrinx> engine;
     ChessBoard board;
     ChessClock clock;
 
     void SetUp() override {
         // Initialize PEXT
         PEXT::initialize();
-        engine = std::make_unique<MaterialEngine>();
+        engine = std::make_unique<Syrinx>();
         board = ChessBoard();
         // Set up infinite time control for most tests
         TimeControl tc(std::chrono::hours(1), std::chrono::seconds(0), std::chrono::seconds(0), -1, true);
@@ -26,13 +26,13 @@ protected:
 };
 
 // Test basic engine initialization
-TEST_F(MaterialEngineTest, Initialization) {
-    EXPECT_EQ(engine->getName(), "MaterialEngine");
+TEST_F(SyrinxTest, Initialization) {
+    EXPECT_EQ(engine->getName(), "Syrinx");
     EXPECT_FALSE(engine->isThinking());
 }
 
 // Test multiple position evaluations
-TEST_F(MaterialEngineTest, MultPositionEval) {
+TEST_F(SyrinxTest, MultPositionEval) {
     int eval = engine->evaluatePosition(board);
     EXPECT_EQ(eval, 0); // Starting position should be equal
 
@@ -47,7 +47,7 @@ TEST_F(MaterialEngineTest, MultPositionEval) {
 }
 
 // Test material evaluation with white advantage
-TEST_F(MaterialEngineTest, WhiteAdvantageEvaluation) {
+TEST_F(SyrinxTest, WhiteAdvantageEvaluation) {
     // Setup position where white is up a queen
     board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     DenseMove queenCapture(W_QUEEN, 3, 59, D_QUEEN);
@@ -58,12 +58,12 @@ TEST_F(MaterialEngineTest, WhiteAdvantageEvaluation) {
 }
 
 // Test mate in one detection - Scholar's mate position
-TEST_F(MaterialEngineTest, MateInOneDetection) {
+TEST_F(SyrinxTest, MateInOneDetection) {
     testing::internal::CaptureStdout();
-    std::ofstream outfile("TestOutput/MatEngTest_MateInOne.txt");
+    std::ofstream outfile("TestOutput/SyrinxTest_MateInOne.txt");
     std::streambuf* coutBuf = std::cout.rdbuf();
     if (outfile.is_open()) {
-        outfile << "MatEngTest_MateInOne.txt\n";
+        outfile << "SyrinxTest_MateInOne.txt\n";
         std::cout.rdbuf(outfile.rdbuf());
     }
 
@@ -95,7 +95,7 @@ TEST_F(MaterialEngineTest, MateInOneDetection) {
 }
 
 // Test bishop pair bonus
-TEST_F(MaterialEngineTest, BishopPairBonus) {
+TEST_F(SyrinxTest, BishopPairBonus) {
     // Position with bishop pair vs. no bishop pair
     board.setupPositionFromFEN("rn1qk1nr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     
@@ -106,7 +106,7 @@ TEST_F(MaterialEngineTest, BishopPairBonus) {
 }
 
 // Test pawn structure evaluation
-TEST_F(MaterialEngineTest, PawnStructureEvaluation) {
+TEST_F(SyrinxTest, PawnStructureEvaluation) {
     // Position with doubled pawns for white
     board.setupPositionFromFEN("rnbqkbnr/pppppppp/8/8/8/4P3/PPP1PPPP/RNBQKBNR w KQkq - 0 1");
     
@@ -122,7 +122,7 @@ TEST_F(MaterialEngineTest, PawnStructureEvaluation) {
 }
 
 // Test search depth adherence
-TEST_F(MaterialEngineTest, SearchDepthAdherence) {
+TEST_F(SyrinxTest, SearchDepthAdherence) {
     engine->setSearchDepth(2); // Set shallow depth for testing
     
     auto startTime = std::chrono::steady_clock::now();
@@ -135,7 +135,7 @@ TEST_F(MaterialEngineTest, SearchDepthAdherence) {
 }
 
 // Test king safety evaluation
-TEST_F(MaterialEngineTest, KingSafetyEvaluation) {
+TEST_F(SyrinxTest, KingSafetyEvaluation) {
     // Position with exposed king
     board.setupPositionFromFEN("rnbqkbnr/pppp2pp/8/4pp2/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     
@@ -151,12 +151,12 @@ TEST_F(MaterialEngineTest, KingSafetyEvaluation) {
 }
 
 // Test that the engine finds mate in one from multiple positions
-TEST_F(MaterialEngineTest, MultMate1PosTest) {
+TEST_F(SyrinxTest, MultMate1PosTest) {
     testing::internal::CaptureStdout();
-    std::ofstream outfile("TestOutput/MatEngTest_MultMate1PosTest.txt");
+    std::ofstream outfile("TestOutput/SyrinxTest_MultMate1PosTest.txt");
     std::streambuf* coutBuf = std::cout.rdbuf();
     if (outfile.is_open()) {
-        outfile << "MatEngTest_MateInOne.txt\n";
+        outfile << "SyrinxTest_MateInOne.txt\n";
         std::cout.rdbuf(outfile.rdbuf());
     }
     // King Queen mates
@@ -235,7 +235,7 @@ TEST_F(MaterialEngineTest, MultMate1PosTest) {
 
 
 // Test search depth time
-TEST_F(MaterialEngineTest, SearchDepth2) {
+TEST_F(SyrinxTest, SearchDepth2) {
     engine->setSearchDepth(2); // Set shallow depth for testing
     
     auto startTime = std::chrono::steady_clock::now();
@@ -248,7 +248,7 @@ TEST_F(MaterialEngineTest, SearchDepth2) {
 }
 
 // Test search depth time
-TEST_F(MaterialEngineTest, SearchDepth3) {
+TEST_F(SyrinxTest, SearchDepth3) {
     engine->setSearchDepth(3);
 
     auto startTime = std::chrono::steady_clock::now();
@@ -260,7 +260,7 @@ TEST_F(MaterialEngineTest, SearchDepth3) {
 }
 
 // Test search depth time
-TEST_F(MaterialEngineTest, SearchDepth4) {
+TEST_F(SyrinxTest, SearchDepth4) {
     engine->setSearchDepth(4);
 
     auto startTime = std::chrono::steady_clock::now();
@@ -272,7 +272,7 @@ TEST_F(MaterialEngineTest, SearchDepth4) {
 }
 
 // Test search depth time
-TEST_F(MaterialEngineTest, SearchDepth5) {
+TEST_F(SyrinxTest, SearchDepth5) {
     engine->setSearchDepth(5);
 
     auto startTime = std::chrono::steady_clock::now();
@@ -284,7 +284,7 @@ TEST_F(MaterialEngineTest, SearchDepth5) {
 }
 
 // Test search depth time
-TEST_F(MaterialEngineTest, SearchDepth6) {
+TEST_F(SyrinxTest, SearchDepth6) {
     engine->setSearchDepth(6);
 
     auto startTime = std::chrono::steady_clock::now();
@@ -296,7 +296,7 @@ TEST_F(MaterialEngineTest, SearchDepth6) {
 }
 
 // Test search depth time
-TEST_F(MaterialEngineTest, SearchDepth7) {
+TEST_F(SyrinxTest, SearchDepth7) {
     engine->setSearchDepth(7);
 
     auto startTime = std::chrono::steady_clock::now();
@@ -308,7 +308,7 @@ TEST_F(MaterialEngineTest, SearchDepth7) {
 }
 
 // Test search depth time
-TEST_F(MaterialEngineTest, SearchDepth8) {
+TEST_F(SyrinxTest, SearchDepth8) {
     engine->setSearchDepth(8);
 
     auto startTime = std::chrono::steady_clock::now();
@@ -320,7 +320,7 @@ TEST_F(MaterialEngineTest, SearchDepth8) {
 }
 
 // // Test search depth time
-// TEST_F(MaterialEngineTest, SearchDepth9) {
+// TEST_F(SyrinxTest, SearchDepth9) {
 //     engine->setSearchDepth(9);
 
 //     auto startTime = std::chrono::steady_clock::now();
@@ -332,7 +332,7 @@ TEST_F(MaterialEngineTest, SearchDepth8) {
 // }
 
 // // Test search depth time
-// TEST_F(MaterialEngineTest, SearchDepth10) {
+// TEST_F(SyrinxTest, SearchDepth10) {
 //     engine->setSearchDepth(10);
 
 //     auto startTime = std::chrono::steady_clock::now();
@@ -344,12 +344,12 @@ TEST_F(MaterialEngineTest, SearchDepth8) {
 // }
 
 // Test move picking
-TEST_F(MaterialEngineTest, GoodMovePicking1) {
+TEST_F(SyrinxTest, GoodMovePicking1) {
     testing::internal::CaptureStdout();
-    std::ofstream outfile("TestOutput/MatEngTest_GMP1.txt");
+    std::ofstream outfile("TestOutput/SyrinxTest_GMP1.txt");
     std::streambuf* coutBuf = std::cout.rdbuf();
     if (outfile.is_open()) {
-        outfile << "MatEngTest_GMP1.txt\n";
+        outfile << "SyrinxTest_GMP1.txt\n";
         std::cout.rdbuf(outfile.rdbuf());
     }
 
@@ -381,12 +381,12 @@ TEST_F(MaterialEngineTest, GoodMovePicking1) {
 }
 
 // Test move picking
-TEST_F(MaterialEngineTest, GoodMovePicking2) {
+TEST_F(SyrinxTest, GoodMovePicking2) {
     testing::internal::CaptureStdout();
-    std::ofstream outfile("TestOutput/MatEngTest_GMP2.txt");
+    std::ofstream outfile("TestOutput/SyrinxTest_GMP2.txt");
     std::streambuf* coutBuf = std::cout.rdbuf();
     if (outfile.is_open()) {
-        outfile << "MatEngTest_GMP2.txt\n";
+        outfile << "SyrinxTest_GMP2.txt\n";
         std::cout.rdbuf(outfile.rdbuf());
     }
 
@@ -418,12 +418,12 @@ TEST_F(MaterialEngineTest, GoodMovePicking2) {
 }
 
 // Test move picking
-TEST_F(MaterialEngineTest, GoodMovePicking3) {
+TEST_F(SyrinxTest, GoodMovePicking3) {
     testing::internal::CaptureStdout();
-    std::ofstream outfile("TestOutput/MatEngTest_GMP3.txt");
+    std::ofstream outfile("TestOutput/SyrinxTest_GMP3.txt");
     std::streambuf* coutBuf = std::cout.rdbuf();
     if (outfile.is_open()) {
-        outfile << "MatEngTest_GMP3.txt\n";
+        outfile << "SyrinxTest_GMP3.txt\n";
         std::cout.rdbuf(outfile.rdbuf());
     }
 
@@ -455,12 +455,12 @@ TEST_F(MaterialEngineTest, GoodMovePicking3) {
 }
 
 // Test move picking
-TEST_F(MaterialEngineTest, GoodMovePicking4) {
+TEST_F(SyrinxTest, GoodMovePicking4) {
     testing::internal::CaptureStdout();
-    std::ofstream outfile("TestOutput/MatEngTest_GMP4.txt");
+    std::ofstream outfile("TestOutput/SyrinxTest_GMP4.txt");
     std::streambuf* coutBuf = std::cout.rdbuf();
     if (outfile.is_open()) {
-        outfile << "MatEngTest_GMP4.txt\n";
+        outfile << "SyrinxTest_GMP4.txt\n";
         std::cout.rdbuf(outfile.rdbuf());
     }
 
@@ -492,12 +492,12 @@ TEST_F(MaterialEngineTest, GoodMovePicking4) {
 }
 
 // Test move picking
-TEST_F(MaterialEngineTest, GoodMovePicking5) {
+TEST_F(SyrinxTest, GoodMovePicking5) {
     testing::internal::CaptureStdout();
-    std::ofstream outfile("TestOutput/MatEngTest_GMP5.txt");
+    std::ofstream outfile("TestOutput/SyrinxTest_GMP5.txt");
     std::streambuf* coutBuf = std::cout.rdbuf();
     if (outfile.is_open()) {
-        outfile << "MatEngTest_GMP5.txt\n";
+        outfile << "SyrinxTest_GMP5.txt\n";
         std::cout.rdbuf(outfile.rdbuf());
     }
 
@@ -529,12 +529,12 @@ TEST_F(MaterialEngineTest, GoodMovePicking5) {
 }
 
 // Test move picking
-TEST_F(MaterialEngineTest, GoodMovePicking6) {
+TEST_F(SyrinxTest, GoodMovePicking6) {
     testing::internal::CaptureStdout();
-    std::ofstream outfile("TestOutput/MatEngTest_GMP6.txt");
+    std::ofstream outfile("TestOutput/SyrinxTest_GMP6.txt");
     std::streambuf* coutBuf = std::cout.rdbuf();
     if (outfile.is_open()) {
-        outfile << "MatEngTest_GMP6.txt\n";
+        outfile << "SyrinxTest_GMP6.txt\n";
         std::cout.rdbuf(outfile.rdbuf());
     }
 
@@ -566,12 +566,12 @@ TEST_F(MaterialEngineTest, GoodMovePicking6) {
 }
 
 // Test positions from matein2.txt file
-TEST_F(MaterialEngineTest, MateIn2Positions) {
+TEST_F(SyrinxTest, MateIn2Positions) {
     testing::internal::CaptureStdout();
-    std::ofstream outfile("TestOutput/MatEngTest_MateIn2.txt");
+    std::ofstream outfile("TestOutput/SyrinxTest_MateIn2.txt");
     std::streambuf* coutBuf = std::cout.rdbuf();
     if (outfile.is_open()) {
-        outfile << "MatEngTest_MateIn2.txt\n";
+        outfile << "SyrinxTest_MateIn2.txt\n";
         std::cout.rdbuf(outfile.rdbuf());
     }
 

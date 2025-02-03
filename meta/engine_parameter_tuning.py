@@ -185,7 +185,7 @@ def main():
     pbil = PBIL(parameters)
     evaluator = EngineEvaluator(
         "D:/dev/SoftDevProjects/GitHub/KnightEngine/meta/CuteChess/cutechess-cli.exe",
-        "D:/dev/SoftDevProjects/GitHub/KnightEngine/stored_engines/MaterialEngine_v0_815_R.exe"
+        "D:/dev/SoftDevProjects/GitHub/KnightEngine/stored_engines/Syrinx_v0_815_R.exe"
     )
     
     # Open results file
