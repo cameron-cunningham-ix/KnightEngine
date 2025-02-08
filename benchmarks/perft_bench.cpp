@@ -1,6 +1,6 @@
 #include "utility.hpp"
 #include "pext_bitboard.hpp"
-#include "board_generation.hpp"
+#include "chess_board.hpp"
 #include <benchmark/benchmark.h>
 
 // Benchmark perft 1 on initial position

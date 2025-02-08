@@ -1,17 +1,16 @@
-#include "board_generation.hpp"
+#include "chess_board.hpp"
 #include "board_utility.hpp"
 #include "moves.hpp"
 #include "utility.hpp"
 #include "pext_bitboard.hpp"
 #include "zobrist.hpp"
-
 #include <iostream>
 #include <string>
 #include <stdlib.h>
 
-
+/// @brief Default constructor; initializes board to 
+/// default starting position.
 ChessBoard::ChessBoard() {
-    // Initializes all bitboards and game state
     initializeWhiteBB();
     initializeBlackBB();
     initializeEmptyBB();
@@ -23,7 +22,11 @@ ChessBoard::ChessBoard() {
     initializeKingsBB();
     initializeGameState();
 }
-
+/// @brief Sets up the board position according to a given FEN notation.
+/// If the notation is invalid, the board sets the default starting position;
+/// it is assumed that the program the engine is communicating with through UCI
+/// handles providing correct notation.
+/// @param fen 
 void ChessBoard::setupPositionFromFEN(const std::string& fen) {
     // Clear all board attributes
     for (int i = 0; i < 7; i++) {
@@ -43,7 +46,6 @@ void ChessBoard::setupPositionFromFEN(const std::string& fen) {
     currentGameState.canCastleWhiteKingside = false;
     currentGameState.canCastleWhiteQueenside = false;
     
-
     std::stringstream ss(fen);
     std::string position, playerToMove, castlingRights, enPassant, halfTurns, fullTurns;
     // Get parts of FEN notation
@@ -83,11 +85,8 @@ void ChessBoard::setupPositionFromFEN(const std::string& fen) {
     // Set empty bitboard 
     pieceBB[D_EMPTY] = (~colorBB[WHITE]) & (~colorBB[BLACK]);
 
-
     // Parse whose turn it is
     currentGameState.sideToMove = playerToMove == "w" ? WHITE : BLACK;
-    // currentGameState.oppColor = (Color)!currentGameState.sideToMove;
-
     // Parse castling rights
     for (char c : castlingRights) {
         if (c == 'K') currentGameState.canCastleWhiteKingside = true;
@@ -114,7 +113,7 @@ void ChessBoard::setupPositionFromFEN(const std::string& fen) {
     keySet.clear();
     keySet.insert(zobristKey);
 }
-
+/// @return FEN notation for the current board position and state.
 std::string ChessBoard::getFEN() {
     std::string fen;
     
@@ -178,24 +177,25 @@ std::string ChessBoard::getFEN() {
 
     return fen;
 }
-
+/// @brief Prints the current board's FEN notation, useful for debugging.
 void ChessBoard::printFEN() {
     std::cout << std::format("\n(ChessBoard printFEN) {}\n", getFEN());
 }
-/// @brief Get the bitboard of a specific piece type
+/// @brief Get the bitboard of a specific piece type.
 /// @param pt 
 /// @return If pt == EMPTY, returns Empty pieceBB. If pt == INVALID, returns 0.
-/// Else, return right piece set bitboard
+/// Else, return correct piece set bitboard
 U64 ChessBoard::getPieceSet(PieceType pt) const {
     if (pt == EMPTY) return pieceBB[D_EMPTY];
     if (pt == INVALID) return 0ULL;
     return pieceBB[pieceCode(pt)] & colorBB[colorCode(pt)];
 }
+/// @brief Get the bitboard of a specific dense type (pieces of both colors).
+/// @param dt 
 U64 ChessBoard::getDenseSet(DenseType dt) const {
     return pieceBB[dt];
 }
-/// @brief Private helper function to update bitboards for piece movement.
-/// Should only be used where move is valid
+/// @brief Private helper function to update bitboards and Zobrist key for piece movement.
 /// @param from
 /// @param to
 /// @param piece
@@ -218,25 +218,14 @@ void ChessBoard::movePiece(int from, int to, PieceType piece) {
     /// be an issue
     pieceBB[D_EMPTY] = ~(colorBB[WHITE] | colorBB[BLACK]);
     // Update Zobrist key
-    // std::cout << std::format("movePiece Initial key: {}\n", zobristKey);
-    // std::cout << std::format("movePiece Zobrist key (from {} color {} piece {}): {}\n",
-    //     from, pieceColor, pieceType, Zobrist::getPieceSqKey(from, piece));
-
     zobristKey ^= Zobrist::getPieceSqKey(from, piece);
-
-    // std::cout << std::format("movePiece XOR from key: {}\n", zobristKey);
-
-    // std::cout << std::format("movePiece Zobrist key (to {} color {} piece {}): {}\n",
-    //     to, pieceColor, pieceType, Zobrist::getPieceSqKey(to, piece));
-
     zobristKey ^= Zobrist::getPieceSqKey(to, piece);
 
-    // std::cout << std::format("movePiece XOR to key: {}\n", zobristKey);
     // If king moved, update king square
     if (piece == W_KING) kingSquares[WHITE] = to;
     else if (piece == B_KING) kingSquares[BLACK] = to;
 }
-/// @brief Helper function to remove a piece from the board
+/// @brief Private helper function to remove a piece from the board.
 /// @param square 
 /// @param piece 
 void ChessBoard::removePiece(int square, PieceType piece) {
@@ -255,12 +244,9 @@ void ChessBoard::removePiece(int square, PieceType piece) {
     // Set bit in empty squares bitboard
     pieceBB[D_EMPTY] |= (1ULL << square);
     // Update Zobrist key
-    // std::cout << std::format("removePiece Initial key: {}\n", zobristKey);
     zobristKey ^= Zobrist::getPieceSqKey(square, piece);
-    // std::cout << std::format("removePiece XOR square key: {}\n", zobristKey);
-
 }
-/// @brief  Helper function to add a piece to the board
+/// @brief  Private helper function to add a piece to the board.
 /// @param square 
 /// @param piece 
 void ChessBoard::addPiece(int square, PieceType piece) {
@@ -279,10 +265,7 @@ void ChessBoard::addPiece(int square, PieceType piece) {
     // Clear bit in empty squares bitboard
     pieceBB[D_EMPTY] &= ~squareBB;
     // Update Zobrist key
-    // std::cout << std::format("addPiece Initial key: {}\n", zobristKey);
     zobristKey ^= Zobrist::getPieceSqKey(square, piece);
-    // std::cout << std::format("addPiece XOR square key: {}\n", zobristKey);
-
 }
 /// @brief Calculates whether current side to move is in check
 /// @return True if current side to move is in check, false otherwise
@@ -335,7 +318,10 @@ bool ChessBoard::calculateIsInCheck() {
     checkingCount = popcount(attacksToKings[sideToMove]);
     return checkingCount > 0;
 }
-
+/// @brief Calculates the squares that 'side' is attacking. Does not take
+/// legality such as pins into account.
+/// @param side 
+/// @return 
 U64 ChessBoard::calculateAttacksForSide(Color side) const {
     U64 occupancy = getAllPieces();
     U64 attacks = 0ULL;
@@ -381,7 +367,7 @@ U64 ChessBoard::calculateAttacksForSide(Color side) const {
     return attacks;
 }
 
-// Note: I could use getPieceSet for these getters, but A. these should
+// Note: I could use getPieceSet for these, but A. these should
 // never change and B. doing it this way keeps from unnecessary steps in getPieceSet
 
 /// @return Bitboard of white pawns
@@ -477,7 +463,7 @@ int ChessBoard::getBlackKingSquare() const {
 Color ChessBoard::getSideToMove() const {
     return currentGameState.sideToMove;
 }
-/// @return The color of the color opposite of current player
+/// @return The color opposite of current player
 Color ChessBoard::getOppSide() const {
     return (Color)!currentGameState.sideToMove;
 }
@@ -563,7 +549,8 @@ DenseType ChessBoard::getDenseTypeAt(int index) const {
     std::cerr << "ChessBoard getPieceAt Error: Invalid piece at square " << index << " 2\n";
     return DenseType::D_EMPTY;
 }
-
+/// @brief 
+/// @return True if the current side to move is in check, false otherwise
 bool ChessBoard::isInCheck() const {
     return isSideInCheck(getSideToMove());
 }
@@ -669,9 +656,12 @@ U64 ChessBoard::OppAttacksToSquare(int index, Color colorOfKing) const {
 }
 /// @brief Make a move on the board.
 /// Note: This function does not check validity. It should only be used with known
-/// legal moves from MoveGeneration, or to check for legal moves within MoveGeneration
+/// legal moves from MoveGeneration, or to check for legal moves.
 /// @param move
 /// @param searching If searching, move is not added to moveHistory.
+/// @note This function along with unmakeMove are called millions of times
+/// per second while the engine is searching in findBestMove, so performance
+/// here is critical.
 void ChessBoard::makeMove(DenseMove move, bool searching) {
     // Get move info
     PieceType movedPiece = move.getPieceType();
@@ -749,7 +739,6 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
         currentGameState.canCastleBlackKingside = false;
     }
 
-
     // Update en passant
     if (currentGameState.enPassantSquare != -1) {
         // Undo current en pass in key if there is one
@@ -821,18 +810,18 @@ void ChessBoard::makeMove(DenseMove move, bool searching) {
 /// legal moves from MoveGeneration.
 /// @param move
 /// @param searching If not searching, latest move is removed from moveHistory
+/// @note Similar to makeMove, this function happens millions of times in search
+/// and is performance critical.
 void ChessBoard::unmakeMove(DenseMove move, bool searching) {
     // If not searching, clear last position in key history
     if (!searching) {
         keySet.erase(zobristKey);
     }
     
-    
     // Move plyIndex back to last state
     // We do not clear the state at plyIndex because it uses too much time
     // to do it for every unmake, and we shouldn't be accessing old
     // values anyway, they'll be overwritten by makeMove
-    // stateHistory[plyIndex] = GameState();
     int prevCastleRights = currentGameState.getCastleRights();
     int prevEnPass = currentGameState.enPassantSquare;
     // Get previous state
@@ -848,7 +837,6 @@ void ChessBoard::unmakeMove(DenseMove move, bool searching) {
     bool undoCastle = move.isCastle();
     bool undoEnPass = move.isEnPassant();
     PieceType undoPromoPiece = move.getPromotePiece();
-
 
     // Undo Zobrist key
     if (prevCastleRights != currentGameState.getCastleRights()) {
@@ -902,51 +890,36 @@ void ChessBoard::unmakeMove(DenseMove move, bool searching) {
             movePiece(rookFrom, rookTo, (movedPiece == W_KING) ? W_ROOK : B_ROOK);
         }
     }
-
 }
-
-/// @brief 
-/// @param board 
-/// @return 
+/// @brief Generates a Zobrist key for the current board position.
+/// (See zobrist.hpp for more details about Zobrist hashing)
+/// This function is much slower than the incremental updates to the key
+/// that happen during makeMove and unmakeMove; it should only be used
+/// when the board position is initialized.
+/// @return Zobrist key of board position
 U64 ChessBoard::GenerateZobristKey() {
     U64 zKey = 0ULL;
-
+    // Go through each square on the board and update the key
+    // based on piece positions
     for (int sq = 0; sq < 64; sq++) {
         PieceType piece = getPieceAt(sq);
         if (piece == PieceType::EMPTY) continue;
-
-        // std::cout << std::format("zKey initial: {}\nzKey (sq: {}): {}\n",
-        //     zKey, sq, Zobrist::getPieceSqKey(sq, piece));
         zKey ^= Zobrist::getPieceSqKey(sq, piece);
-        // std::cout << std::format("zKey after: {}\n", zKey);
     }
 
     if (getSideToMove() == BLACK) {
-        // std::cout << std::format("zKey before blacks turn: {}\n", zKey);
-        // std::cout << std::format("zKey (BlackToMove): {}\n", Zobrist::zobristSideToMove);
-        
         zKey ^= Zobrist::zobristSideToMove;
-        // std::cout << std::format("zKey after BlackToMove: {}\n", zKey);
-
     }
 
-    // std::cout << std::format("zKey before castle: {}\n", zKey);
-    // std::cout << std::format("zKey (Castle): {}\n", Zobrist::zobristCastle[currentGameState.getCastleRights()]);
     zKey ^= Zobrist::zobristCastle[currentGameState.getCastleRights()];
-    // std::cout << std::format("zKey after castle: {}\n", zKey);
 
     if (currentGameState.enPassantSquare != -1) {
-        // std::cout << std::format("zKey before enpass: {}\n", zKey);
-        // std::cout << std::format("zKey (enpass): {}\n", Zobrist::zobristEnPass[currentGameState.getEnPassantFileIndex()]);
         zKey ^= Zobrist::zobristEnPass[currentGameState.getEnPassantFileIndex()];
-        // std::cout << std::format("zKey after enpass: {}\n", zKey);
     }
 
-    // std::cout << std::format("zKey final init: {}\n", zKey);
     return zKey;
 }
-
-/// @brief Prints a piece bitboard to the console
+/// @brief Prints a piece bitboard to stdout
 /// @param i corresponds to DenseType enum
 void ChessBoard::printBB(int i) {
     std::bitset<64> bb (pieceBB[i]);
@@ -959,7 +932,7 @@ void ChessBoard::printBB(int i) {
     }
     std::cout << "\n";
 }
-/// @brief Prints bitb parameter to the console
+/// @brief Prints bitb parameter to stdout, useful for debugging.
 /// @param bitb 
 void ChessBoard::printBB(U64 bitb) {
     std::bitset<64> bb (bitb);
@@ -972,8 +945,12 @@ void ChessBoard::printBB(U64 bitb) {
     }
     std::cout << "\n";
 }
-
-void ChessBoard::printBoardInfo(bool fullInfo) {
+/// @brief Prints current board's piece bitboards to stdout, useful
+/// for debugging.
+/// @param fullInfo False prints out 4 bitboards (all pieces,
+/// each color, and empty squares), True also prints bitboards
+/// of each color-type combination
+void ChessBoard::printBitboards(bool fullInfo) {
     std::cout << "Initial\nAll pieces: ";
     printBitboard(getAllPieces());
     std::cout << "White pieces: ";
@@ -1009,7 +986,8 @@ void ChessBoard::printBoardInfo(bool fullInfo) {
         printBitboard(getBlackKings());
     }
 }
-
+/// @brief Prints out current board's saved
+/// GameState history. Used in debugging.
 void ChessBoard::printStateHistory() {
     std::cout << "\n\nBoard history\n\n";
     for (int i = 0; i < plyIndex+1; i++) {

@@ -3,6 +3,7 @@
 #include "chess_engine_base.hpp"
 #include "transposition_table.hpp"
 #include "board_utility.hpp"
+#include "pext_bitboard.hpp"
 #include <immintrin.h>
 #include <algorithm>
 #include <chrono>
@@ -73,7 +74,7 @@ private:
         -5,  0,  0,  0,  0,  0,  0, -5,
         -5,  0,  0,  0,  0,  0,  0, -5,
         -5,  0,  0,  0,  0,  0,  0, -5,
-         0,  0,  0,  5,  5,  0,  0,  0
+         0,  0,  0, 20,  5, 20,  0,  0
     };
     // Queens - Early game
     static constexpr std::array<int, 64> queenSqTbEarly = {
@@ -95,9 +96,8 @@ private:
         -20,-30,-30,-40,-40,-30,-30,-20,
         -10,-20,-20,-20,-20,-20,-20,-10,
           5,  5,  0,  0,  0,  0,  5,  5,
-         20, 25, 10,  0,  0, 10, 40, 20
+         20, 30, 20,  0,  0, 10, 40, 20
     };
-    // Piece-Square tables for endgame
     // Pawns - Endgame
     static constexpr std::array<int, 64> pawnSqTbEnd = {
         0,  0,  0,  0,  0,  0,  0,  0,
@@ -199,7 +199,7 @@ public:
 
     Syrinx() 
         : ChessEngineBase("Syrinx",
-                          "1.00",
+                          "1.01",
                           "Cameron Cunningham",
                           6,
                           std::chrono::milliseconds(200),
@@ -608,8 +608,10 @@ private:
         U64 pawns, pawnRef, knights, bishops, rooks, queens,
             attackingOppKing, attacksToKing;
         int kingSquare, oppKingIndex;
-        // 
+        // Flip is 0 for WHITE, and 56 (111000) for BLACK. This enables being able to flip the indicies for
+        // black by XORing to get the correct PST score and not have to store extra tables for black.
         int flip;
+        U64 occupancy = board.getAllPieces();
 
         if (color == WHITE) {
             flip = 0;
@@ -646,7 +648,7 @@ private:
             square ^= flip;
 
             // Check for doubled pawns (more than one pawn in a file)
-            int file = BUTIL::squareToFileIndex(square);
+            int file = BUTIL::indexToFile(square);
             U64 fileMask = BUTIL::FileMask << file;
             if (popcount(fileMask & pawnRef) > 1) {
                 score += params.doubledPawnPenalty;
@@ -715,11 +717,12 @@ private:
         if (popcount(kingShield) >= 2 && (kingSquare < 8 || kingSquare >= 56)) {
             score += params.kingShieldBonus;
         }
-        // // Give penalty for 'airy' king (empty squares to king)
-        // U64 kingAir = ATKMASK_QUEEN[kingSquare] & board.getEmptySquares();
-        // if (popcount(kingAir) > 5) {
-        //     score += params.airyKingPenalty;
-        // }
+        // Give penalty for 'airy' king (empty squares to king)
+        U64 kingAir = (PEXT::getRookAttacks(kingSquare, occupancy) |
+                       PEXT::getBishopAttacks(kingSquare, occupancy));
+        if (popcount(kingAir) > 12) {
+            score += params.airyKingPenalty;
+        }
 
         // Evaluate attacks to opposite king
         if (attackingOppKing) {

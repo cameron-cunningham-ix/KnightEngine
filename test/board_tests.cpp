@@ -1,4 +1,4 @@
-#include "../src/board_generation.hpp"
+#include "../src/chess_board.hpp"
 #include "../src/pext_bitboard.hpp"
 #include "../src/board_utility.hpp"
 #include "../src/utility.hpp"
@@ -217,97 +217,97 @@ TEST_F(ChessBoardTest, MakeMove1) {
     }
     // Test position, lots of possible moves
     board.setupPositionFromFEN("1qrnb2k/5ppp/8/8/8/8/PPP5/K2BNRQ1 w - - 0 1");
-    board.printBoardInfo(false);
+    board.printBitboards(false);
     
     board.makeMove(DenseMove(W_PAWN, BUTIL::A2, BUTIL::A3), false);
     outfile << "White pawn move\n";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     board.unmakeMove(DenseMove(W_PAWN, BUTIL::A2, BUTIL::A3), false);
     outfile << "White pawn move unmade\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     board.makeMove(DenseMove(B_PAWN, BUTIL::H7, BUTIL::H6), false);
     outfile << "Black pawn move\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     board.unmakeMove(DenseMove(B_PAWN, BUTIL::H7, BUTIL::H6), false);
     outfile << "Black pawn move unmade\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     board.makeMove(DenseMove(W_BISHOP, BUTIL::D1, BUTIL::E2), false);
     outfile << "White bishop move\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     board.unmakeMove(DenseMove(W_BISHOP, BUTIL::D1, BUTIL::E2), false);
     outfile << "White bishop move unmade\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     board.makeMove(DenseMove(B_BISHOP, BUTIL::E8, BUTIL::D7), false);
     outfile << "Black bishop move\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     board.unmakeMove(DenseMove(B_BISHOP, BUTIL::E8, BUTIL::D7), false);
     outfile << "Black bishop move unmade\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     board.makeMove(DenseMove(W_KNIGHT, BUTIL::E1, BUTIL::F3), false);
     outfile << "White knight move\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     board.unmakeMove(DenseMove(W_KNIGHT, BUTIL::E1, BUTIL::F3), false);
     outfile << "White knight move unmade\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     board.makeMove(DenseMove(B_KNIGHT, BUTIL::D8, BUTIL::E6), false);
     outfile << "Black knight move\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
     
     board.unmakeMove(DenseMove(B_KNIGHT, BUTIL::D8, BUTIL::E6), false);
     outfile << "Black knight move unmade\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     board.makeMove(DenseMove(W_ROOK, BUTIL::F1, BUTIL::F2), false);
     outfile << "White rook move\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     board.unmakeMove(DenseMove(W_ROOK, BUTIL::F1, BUTIL::F2), false);
     outfile << "White rook move unmade\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     board.makeMove(DenseMove(B_ROOK, BUTIL::C8, BUTIL::C7), false);
     outfile << "Black rook move\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     board.unmakeMove(DenseMove(B_ROOK, BUTIL::C8, BUTIL::C7), false);
     outfile << "Black rook move unmade\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     board.makeMove(DenseMove(W_QUEEN, BUTIL::G1, BUTIL::G3), false);
     outfile << "White queen move\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     board.unmakeMove(DenseMove(W_QUEEN, BUTIL::G1, BUTIL::G3), false);
     outfile << "White queen move unmade\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
 
     board.makeMove(DenseMove(B_QUEEN, BUTIL::B8, BUTIL::B5), false);
     outfile << "Black queen move\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     board.unmakeMove(DenseMove(B_QUEEN, BUTIL::B8, BUTIL::B5), false);
     outfile << "Black queen move unmade\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
 
     board.makeMove(DenseMove(W_KING, BUTIL::A1, BUTIL::B1), false);
     outfile << "White king move\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     board.unmakeMove(DenseMove(W_KING, BUTIL::A1, BUTIL::B1), false);
     outfile << "White king move unmade\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
 
     DenseMove b_king(B_KING, BUTIL::H8, BUTIL::G8);
@@ -323,11 +323,11 @@ TEST_F(ChessBoardTest, MakeMove1) {
          " getPromoteDense " << b_king.getPromoteDense() <<
          " getPromotePiece " << b_king.getPromotePiece() << "\n";
     board.makeMove(b_king, false);
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     board.unmakeMove(b_king, false);
     outfile << "Black king move unmade\nAll pieces: ";
-    board.printBoardInfo(false);
+    board.printBitboards(false);
 
     std::string output = testing::internal::GetCapturedStdout();
     outfile << output;
@@ -345,26 +345,26 @@ TEST_F(ChessBoardTest, MakeMove2) {
     // Test position, lots of possible moves
     board.setupPositionFromFEN("1qrnb2k/5ppp/8/8/8/8/PPP5/K2BNRQ1 w - - 0 1");
     printBoard(board);
-    board.printBoardInfo(true);
+    board.printBitboards(true);
 
     DenseMove W_RookCapt(W_ROOK, BUTIL::F1, BUTIL::F7, D_PAWN);
     DenseMove B_KnightCapt(B_KNIGHT, BUTIL::D8, BUTIL::F7, D_ROOK);
 
     board.makeMove(W_RookCapt, false);
     printBoard(board);
-    board.printBoardInfo(true);
+    board.printBitboards(true);
 
     board.makeMove(B_KnightCapt, false);
     printBoard(board);
-    board.printBoardInfo(true);
+    board.printBitboards(true);
 
     board.unmakeMove(B_KnightCapt, false);
     printBoard(board);
-    board.printBoardInfo(true);
+    board.printBitboards(true);
 
     board.unmakeMove(W_RookCapt, false);
     printBoard(board);
-    board.printBoardInfo(true);
+    board.printBitboards(true);
 
     std::string output = testing::internal::GetCapturedStdout();
     outfile << output;
@@ -382,7 +382,7 @@ TEST_F(ChessBoardTest, MakeMove3) {
     // Test position, lots of possible moves
     board.setupPositionFromFEN("k7/pppq1Q2/5rr1/2p1p2b/1PnP2B1/5RR1/PPPN4/K7 w - - 0 1");
     printBoard(board);
-    board.printBoardInfo(true);
+    board.printBitboards(true);
 
     DenseMove W_PawnCapt1(W_PAWN, BUTIL::B4, BUTIL::C5, D_PAWN);
     DenseMove W_PawnCapt2(W_PAWN, BUTIL::D4, BUTIL::E5, D_PAWN);
@@ -401,19 +401,19 @@ TEST_F(ChessBoardTest, MakeMove3) {
 
     board.makeMove(W_PawnCapt1, false);
     printBoard(board);
-    board.printBoardInfo(true);
+    board.printBitboards(true);
 
     board.makeMove(B_KnightCapt, false);
     printBoard(board);
-    board.printBoardInfo(true);
+    board.printBitboards(true);
 
     board.unmakeMove(B_KnightCapt, false);
     printBoard(board);
-    board.printBoardInfo(true);
+    board.printBitboards(true);
 
     board.unmakeMove(W_RookCapt, false);
     printBoard(board);
-    board.printBoardInfo(true);
+    board.printBitboards(true);
 
     std::string output = testing::internal::GetCapturedStdout();
     outfile << output;

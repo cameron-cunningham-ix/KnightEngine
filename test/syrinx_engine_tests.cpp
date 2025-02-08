@@ -621,3 +621,60 @@ TEST_F(SyrinxTest, MateIn2Positions) {
     outfile.close();
     std::cout.rdbuf(coutBuf);
 }
+
+// Test positions from matein3.txt file
+TEST_F(SyrinxTest, MateIn3Positions) {
+    testing::internal::CaptureStdout();
+    std::ofstream outfile("TestOutput/SyrinxTest_MateIn3.txt");
+    std::streambuf* coutBuf = std::cout.rdbuf();
+    if (outfile.is_open()) {
+        outfile << "SyrinxTest_MateIn3.txt\n";
+        std::cout.rdbuf(outfile.rdbuf());
+    }
+
+    // Read the FEN positions from file
+    std::ifstream inFile("matein3.txt");
+    std::string fen;
+
+    if (!inFile.is_open()) {
+        std::cout << "Failed to open matein3.txt" << std::endl;
+        FAIL();
+    }
+
+    int positionNumber = 1;
+    while (std::getline(inFile, fen)) {
+        if (fen.empty()) continue;  // Skip empty lines
+
+        std::cout << "\nTesting position " << positionNumber << ":\n";
+        std::cout << "FEN: " << fen << "\n";
+
+        // Set up the position
+        board.setupPositionFromFEN(fen);
+        
+        // Print initial position
+        printBoard(board);
+        DenseMove bestMove;
+        // 5 iterations for M3
+        for (int i = 0; i < 5; i++) {
+            // Find best move
+            bestMove = engine->findBestMove(board, clock);
+            std::cout << "M3 Best move found: " << bestMove.toString(false) << "\n";
+            
+            // Make the move
+            board.makeMove(bestMove, false);
+            printBoard(board);
+        }
+
+        // Verify it's mate
+        EXPECT_TRUE(isCheckmate(board)) 
+            << "Position " << positionNumber << " is not mate after move " 
+            << bestMove.toString(false);
+
+        positionNumber++;
+    }
+
+    std::string output = testing::internal::GetCapturedStdout();
+    outfile << output;
+    outfile.close();
+    std::cout.rdbuf(coutBuf);
+}

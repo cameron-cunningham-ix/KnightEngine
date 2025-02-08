@@ -1,5 +1,12 @@
 # Syrinx Engine Changelog
 
+## Syrinx Engine V1.01
+- Changed Rook and King PSTs to try to promote
+castling more and avoid king moving early
+- Added airyKing penalty
+
+## Syrinx Engine V1.0
+
 
 
 ## Syrinx Engine V0.431

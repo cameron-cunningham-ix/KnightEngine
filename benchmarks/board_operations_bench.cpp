@@ -1,4 +1,4 @@
-#include "board_generation.hpp"
+#include "chess_board.hpp"
 #include "moves.hpp"
 #include <benchmark/benchmark.h>
 

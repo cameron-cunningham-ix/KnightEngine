@@ -1,7 +1,7 @@
 #pragma once
 
 #include "types.hpp"
-#include "board_generation.hpp"
+#include "chess_board.hpp"
 #include "chess_clock.hpp"
 #include <string>
 #include <memory>

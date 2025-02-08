@@ -88,8 +88,8 @@ message("CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
 
 # Create the chess engine library
 add_library(KnightEngine
-    src/board_generation.cpp
-    src/board_generation.hpp
+    src/chess_board.cpp
+    src/chess_board.hpp
     src/board_utility.hpp
     src/chess_clock.cpp
     src/chess_clock.hpp

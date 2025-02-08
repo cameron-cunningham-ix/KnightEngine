@@ -6,20 +6,16 @@
 #include <unordered_set>
 
 /// @brief Class representing a current state of a chess board, including game state and
-/// previous played moves. 
+/// previous played moves. It keeps track of all pieces on the board through several
+/// bitboard arrays; 7 for pieces (EMPTY + PBNRQK), 2 for each color.
+///
 /// 
 class ChessBoard 
 {
 public:
-    /// @brief Default constructor, sets standard position
     ChessBoard();
-    /// @brief Sets board and state to position defined by fen string
-    /// @param fen 
-    /// @note If FEN string is invalid, sets board to standard position
     void setupPositionFromFEN(const std::string &fen);
-    /// @return Returns FEN string of the current position of the board
     std::string getFEN();
-    /// @brief Prints FEN string of the current position to std::cout
     void printFEN();
     // Current board state
     GameState currentGameState;
@@ -51,8 +47,6 @@ public:
     U64 getBlackPieces() const;
     U64 getAllPieces() const;
     U64 getEmptySquares() const;
-    /// @param side 
-    /// @return 
     U64 getAttacksToKing(Color side) const;
     U64 getOrthogonalOpp(Color side) const;
     U64 getDiagonalOpp(Color side) const;
@@ -63,18 +57,13 @@ public:
     Color getSideToMove() const;
     Color getOppSide() const;
     
-    // Piece type getter
+    // Piece type getters
     PieceType getPieceAt(int index) const;
     DenseType getDenseTypeAt(int index) const;
 
-
-    // Whether current side to move is in check
     bool isInCheck() const;
-    // Whether 'side' is in check
     bool isSideInCheck(Color side) const;
-    // How many pieces are checking current side's king
     int getCheckCount() const;
-
 
     // Attack calculation methods
     U64 OppAttacksToSquare(int indexOfSquare, Color colorOfKing) const;
@@ -89,7 +78,7 @@ public:
     // Debug printing methods
     void printBB(int i);
     void printBB(U64 bitb);
-    void printBoardInfo(bool fullInfo = true);
+    void printBitboards(bool fullInfo = true);
     void printStateHistory();
 
 private:
@@ -119,6 +108,5 @@ private:
     void movePiece(int from, int to, PieceType piece);
     void removePiece(int square, PieceType piece);
     void addPiece(int square, PieceType piece);
-
     bool calculateIsInCheck();
 };

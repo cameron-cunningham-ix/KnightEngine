@@ -5,7 +5,8 @@
 #include <mutex>
 #include <atomic>
 
-// Time control structure to define various types of time controls
+/// @brief TimeControl struct represents a particular time control that
+/// a chess game can be played under. 
 struct TimeControl {
     std::chrono::milliseconds initialTime;      // Initial time allocated
     std::chrono::milliseconds increment;        // Time increment after each move
@@ -13,6 +14,12 @@ struct TimeControl {
     int movesUntilTimeControl;                  // Number of moves until next time control (-1 for no next control)
     bool isInfinite;                            // Flag for infinite time control
 
+    /// @brief Default constructor
+    /// @param initial 
+    /// @param inc 
+    /// @param del 
+    /// @param moves 
+    /// @param infinite 
     TimeControl(std::chrono::milliseconds initial = std::chrono::hours(1),
                std::chrono::milliseconds inc = std::chrono::seconds(0),
                std::chrono::milliseconds del = std::chrono::seconds(0),
@@ -23,11 +30,9 @@ struct TimeControl {
     std::string toString() const;
 };
 
+/// @brief 
 class ChessClock {
 private:
-    
-
-    // Time remaining for each player
     std::chrono::milliseconds whiteTimeRemaining;
     std::chrono::milliseconds blackTimeRemaining;
     

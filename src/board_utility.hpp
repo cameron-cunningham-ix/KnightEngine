@@ -1,16 +1,25 @@
 #include "types.hpp"
 
 /// @brief Board Utility class
+/// Contains bitmasks for files, ranks, as well as
+/// integer constants for each square in algebraic notation
+/// (A1, B2, etc)
 class BUTIL {
 public:
-
+    /// @param index 
+    /// @return Rank of index (horizontal rows)
     inline static const int indexToRank(int index) { return index / 8; }
-    inline static const int squareToFileIndex(int index) { return index % 8; }
+    /// @param index 
+    /// @return File of index (vertical columns)
+    inline static const int indexToFile(int index) { return index % 8; }
+    /// @param index 
+    /// @return Bitmask of index's rank
     inline static const U64 indexRankMask(int index) { return RankMask << ((index / 8)*8); }
+    /// @param index 
+    /// @return Bitmask of index's file
     inline static const U64 indexFileMask(int index) { return FileMask << (index % 8); }
 
     // Rank masks
-
 
     static const U64 RankMask = 0xFFULL;
     static const U64 Rank1 = 0xFFULL;
@@ -35,6 +44,8 @@ public:
     static const U64 FileH =    0x8080808080808080ULL;
 
     // Castling masks
+    // Specifically the bits inbetween the king and rook, used
+    // for detecting pieces or attacks in the way of castling
 
     static const U64 W_ShortCastleMask =    0x0000000000000060;
     static const U64 W_LongCastleMask =     0x000000000000000E;
