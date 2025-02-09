@@ -5,7 +5,7 @@
 #include <bitset>
 #include <unordered_set>
 
-/// @brief Class representing a current state of a chess board, including game state and
+/// @brief Current state of a chess board, including game state and
 /// previous played moves. It keeps track of all pieces on the board through several
 /// bitboard arrays; 7 for pieces (EMPTY + PBNRQK), 2 for each color.
 ///
@@ -24,7 +24,7 @@ public:
     // History of game states
     int plyIndex;               // Current ply; used to index into stateHistory and keyHistory
     std::array<GameState, MAX_PLY> stateHistory;
-    // Set of zobrist keys of actual positions, useful for repetition table
+    // Set of zobrist keys of actual positions, used for repetition table
     std::unordered_set<U64> keySet;
 
     // Bitboard getters
@@ -50,29 +50,34 @@ public:
     U64 getAttacksToKing(Color side) const;
     U64 getOrthogonalOpp(Color side) const;
     U64 getDiagonalOpp(Color side) const;
+
     // King square getters
+
     int getWhiteKingSquare() const;
     int getBlackKingSquare() const;
+
     // State getters
+
     Color getSideToMove() const;
     Color getOppSide() const;
     
     // Piece type getters
+
     PieceType getPieceAt(int index) const;
     DenseType getDenseTypeAt(int index) const;
+
+    // Attack calculation methods
 
     bool isInCheck() const;
     bool isSideInCheck(Color side) const;
     int getCheckCount() const;
-
-    // Attack calculation methods
     U64 OppAttacksToSquare(int indexOfSquare, Color colorOfKing) const;
     U64 calculateAttacksForSide(Color side) const;
 
     // Public board alteration methods
+
     void makeMove(DenseMove move, bool searching);
     void unmakeMove(DenseMove move, bool searching);
-
     U64 GenerateZobristKey();
 
     // Debug printing methods
@@ -89,9 +94,10 @@ private:
 
     // King squares - 0 = WHITE, 1 - BLACK for easy calculating
     int kingSquares[2];
-    int checkingCount;          // The number of pieces currently checking the current side's king
+    int checkingCount;          // The number of pieces checking the current side's king
 
     // Normal board initialization methods
+
     void initializeWhiteBB();
     void initializeBlackBB();
     void initializeEmptyBB();
@@ -105,6 +111,7 @@ private:
 
 
     // Private board alteration functions
+    
     void movePiece(int from, int to, PieceType piece);
     void removePiece(int square, PieceType piece);
     void addPiece(int square, PieceType piece);

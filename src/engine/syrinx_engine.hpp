@@ -95,7 +95,7 @@ private:
         -30,-40,-40,-50,-50,-40,-40,-30,
         -20,-30,-30,-40,-40,-30,-30,-20,
         -10,-20,-20,-20,-20,-20,-20,-10,
-          5,  5,  0,  0,  0,  0,  5,  5,
+        -10,-20,-20,-20,-20,-20,-20,-10,
          20, 30, 20,  0,  0, 10, 40, 20
     };
     // Pawns - Endgame
@@ -199,9 +199,9 @@ public:
 
     Syrinx() 
         : ChessEngineBase("Syrinx",
-                          "1.01",
+                          "1.03",
                           "Cameron Cunningham",
-                          6,
+                          8,
                           std::chrono::milliseconds(200),
                           std::chrono::milliseconds(20000)) {
             // Register all engine options
@@ -279,7 +279,9 @@ public:
         /// @todo Check what to do with score based on hash flag
         int score;
         DenseMove hashMove;
-        checkTT(board, depth, alpha, beta, score, hashMove);
+        if (checkTT(board, depth, alpha, beta, score, hashMove)) {
+            return score;
+        }
 
         // Generate and order moves
         int moveNum = 0;
@@ -754,7 +756,14 @@ private:
         entry->score = score;
         entry->flag = flag;
     }
-
+    /// @brief 
+    /// @param board 
+    /// @param depth 
+    /// @param alpha 
+    /// @param beta 
+    /// @param score 
+    /// @param hashMove 
+    /// @return 
     bool checkTT(ChessBoard& board, int depth, int alpha, int beta,
         int& score, DenseMove& hashMove) {
         TTEntry* entry = &transpositionTable[board.zobristKey % TT_SIZE];

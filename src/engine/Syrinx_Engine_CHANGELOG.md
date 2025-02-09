@@ -1,5 +1,15 @@
 # Syrinx Engine Changelog
 
+## Syrinx Engine V1.03
+- Doing alpha-beta cutoffs based on TT; fairly significant speedup
+
+
+## Syrinx Engine V1.02
+- Changed maximum search depth to 8
+- Changed king PST to try and discourage its attempts
+at early suicide by walking to castle square instead of castling
+
+
 ## Syrinx Engine V1.01
 - Changed Rook and King PSTs to try to promote
 castling more and avoid king moving early

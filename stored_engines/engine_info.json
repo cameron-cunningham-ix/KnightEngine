@@ -244,5 +244,17 @@
     "author": "Cameron Cunningham",
     "build_type": "_R",
     "stored_date": "2025-02-06 11:36:11"
+  },
+  "Syrinx 1.02 _R": {
+    "filename": "Syrinx_v1_02_R.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_R",
+    "stored_date": "2025-02-08 17:01:02"
+  },
+  "Syrinx 1.03 _R": {
+    "filename": "Syrinx_v1_03_R.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_R",
+    "stored_date": "2025-02-08 20:18:18"
   }
 }
