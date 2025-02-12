@@ -26,21 +26,23 @@ private:
     std::chrono::milliseconds prevDepthTime;
     DenseMove currentMove;
     int currentMoveNumber;
-    int totalPiecesWithoutPawns;
     // Transposition table
     // 44 million 24-byte entries = ~1 GB
     std::array<TTEntry, TT_SIZE> transpositionTable;
-
+    
     static constexpr int KM_PLY = 64;
     // Stores the two best non-capturing moves per ply
     DenseMove killerMoves[KM_PLY * 2];
-
+    
     // Masks of light and dark squares
     static constexpr U64 lightSquareMask = 0xAA55AA55AA55AA55;
     static constexpr U64 darkSquareMask =  0x55AA55AA55AA55AA;
     // Initial count of major pieces
     static constexpr int INIT_MAJ_MIN_PIECES = 14;
-
+    // Current count of major pieces
+    int totalPiecesWithoutPawns;
+    float earlygameLerp;
+    float endgameLerp;
 
 
      // Parameter values for evaluation
@@ -72,7 +74,7 @@ public:
 
     Syrinx() 
         : ChessEngineBase("Syrinx",
-                          "1.12",
+                          "1.14",
                           "Cameron Cunningham",
                           8,
                           std::chrono::milliseconds(200),
@@ -469,6 +471,16 @@ public:
             }
         }
 
+        // Get total piece count (not including pawns or kings)
+        // for endgame lerp
+        totalPiecesWithoutPawns = popcount(board.getAllPieces() & 
+                                        (~(board.getDenseSet(D_PAWN) | 
+                                         board.getDenseSet(D_KING))));
+        // Calculate 'distance' along early game to late game by taking
+        // current number of major and minor pieces and initial number of those pieces
+        earlygameLerp = (float)totalPiecesWithoutPawns/INIT_MAJ_MIN_PIECES;
+        endgameLerp = (float)(std::clamp(8 - totalPiecesWithoutPawns, 0, 8))/INIT_MAJ_MIN_PIECES;
+
         int score = 0;
 
         // Material count
@@ -529,8 +541,8 @@ private:
                 } else if (moves[i] == killerMoves[ply+1]) {
                     scored.score = KILLER_MOVE_SCORE - PRIORITY_SCORE;   // Second priority
                 }
+                /// @todo Add other scoring criteria here (history heuristic, etc.)
             }
-            /// @todo Add other scoring criteria here (killer moves, history heuristic, etc.)
             
             scoredMoves.push_back(scored);
         }
@@ -625,20 +637,12 @@ private:
             pieces = board.getBlackQueens();
             score += popcount(pieces) * params.queenValue;
         }
-        // Get total piece count (not including pawns or kings)
-        // for endgame lerp
-        totalPiecesWithoutPawns = popcount(board.getAllPieces() & 
-                                        (~(board.getDenseSet(D_PAWN) | 
-                                         board.getDenseSet(D_KING))));
+        
         return score;
     }
 
     int evaluatePositional(const ChessBoard& board, Color color) {
         int score = 0;
-        // Calculate 'distance' along early game to late game by taking
-        // current number of major and minor pieces and initial number of those pieces
-        float earlygameLerp = (float)totalPiecesWithoutPawns/INIT_MAJ_MIN_PIECES;
-        float endgameLerp = (float)(std::clamp(8 - totalPiecesWithoutPawns, 0, 8))/INIT_MAJ_MIN_PIECES;
 
         U64 pawns, pawnRef, knights, bishops, rooks, queens,
             attackingOppKing, attacksToKing;
@@ -737,6 +741,10 @@ private:
         while (rooks) {
             int square = std::countr_zero(rooks) ^ flip;
             score += rookSqTbEarly[square]*earlygameLerp + rookSqTbEnd[square]*endgameLerp;
+            // Open file bonus
+            int file = BUTIL::indexToFile(square);
+            if (!((BUTIL::FileMask << file) & occupancy)) score += params.rookOpenFileBonus;
+
             rooks &= rooks - 1;
         }
         // Queens
@@ -893,8 +901,8 @@ private:
        -30,-40,-40,-50,-50,-40,-40,-30,
        -20,-30,-30,-40,-40,-30,-30,-20,
        -10,-20,-20,-20,-20,-20,-20,-10,
-       -10,-20,-20,-20,-20,-20,-20,-10,
-        20, 30, 20,  0,  0, 10, 40, 20
+       -10,-25,-40,-40,-40,-40,-25,-10,
+        20, 30, 10,  0,  0, 10, 40, 20
    };
    // Pawns - Endgame
    static constexpr std::array<int, 64> pawnSqTbEnd = {
