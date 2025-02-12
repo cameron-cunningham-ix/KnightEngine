@@ -515,7 +515,7 @@ PieceType ChessBoard::getPieceAt(int index) const {
 DenseType ChessBoard::getDenseTypeAt(int index) const {
     // Check if index is valid
     if (index < 0 || index > 63) {
-        std::cerr << "ChessBoard getPieceAt Error: Invalid index " << index << " 1\n";
+        std::cerr << "ChessBoard getDenseTypeAt Error: Invalid index " << index << " 1\n";
         return DenseType::D_EMPTY;
     }
     // Check if the square is empty
@@ -546,7 +546,7 @@ DenseType ChessBoard::getDenseTypeAt(int index) const {
     // Reaching this point means there is an error in the bitboards,
     // specifically that this index is set in one of the color bitboards 
     // but not in any of the piece bitboards
-    std::cerr << "ChessBoard getPieceAt Error: Invalid piece at square " << index << " 2\n";
+    std::cerr << "ChessBoard getDenseTypeAt Error: Invalid piece at square " << index << " 2\n";
     return DenseType::D_EMPTY;
 }
 /// @brief 

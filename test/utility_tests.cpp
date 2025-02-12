@@ -675,6 +675,29 @@ TEST_F(UtilityTest, PerftD5CalcStandardPos6) {
     EXPECT_EQ(perft(board, 5, 5), 52710ULL);   // Depth 5
 }
 
+// Test perft function for correct en passant
+TEST_F(UtilityTest, PerftD1CalcPos7) {
+    board.setupPositionFromFEN("r1b2k1r/p1pn4/1p1p2Bp/3Nb3/2P1p2q/4B3/PP1Q1PPP/R4RK1 w - - 3 7");
+    EXPECT_EQ(perft(board, 1, 1), 48ULL);   // Depth 1
+}
+
+// Test perft function for correct en passant
+TEST_F(UtilityTest, PerftD2CalcPos7) {
+    board.setupPositionFromFEN("r1b2k1r/p1pn4/1p1p2Bp/3Nb3/2P1p2q/4B3/PP1Q1PPP/R4RK1 w - - 3 7");
+    EXPECT_EQ(perft(board, 2, 2), 1661ULL);   // Depth 2
+}
+
+// Test perft function for correct en passant
+TEST_F(UtilityTest, PerftD3CalcPos7) {
+    board.setupPositionFromFEN("r1b2k1r/p1pn4/1p1p2Bp/3Nb3/2P1p2q/4B3/PP1Q1PPP/R4RK1 w - - 3 7");
+    EXPECT_EQ(perft(board, 3, 3), 72708ULL);   // Depth 3
+}
+// Test perft function for correct en passant
+TEST_F(UtilityTest, PerftD4CalcPos7) {
+    board.setupPositionFromFEN("r1b2k1r/p1pn4/1p1p2Bp/3Nb3/2P1p2q/4B3/PP1Q1PPP/R4RK1 w - - 3 7");
+    EXPECT_EQ(perft(board, 4, 4), 2524066ULL);   // Depth 4
+}
+
 // // Test setBitsBetween function
 // TEST_F(UtilityTest, SetBitsBetween) {
 //     std::cout << std::bitset<64>(setBitsBetween(1, 7)) << "\n";

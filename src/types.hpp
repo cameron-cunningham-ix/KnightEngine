@@ -171,6 +171,12 @@ struct DenseMove {
         data &= ~moveMask_PromoTo;
         data |= (promoteTo << 22);
     }
+    /// @brief Setter for captured piece
+    /// @param pieceCapt 
+    void setCapture(DenseType pieceCapt) {
+        data &= ~moveMask_CaptType;
+        data |= (pieceCapt << 29);
+    }
     /// @brief 
     /// @param castle 
     void setCastle(bool castle) {

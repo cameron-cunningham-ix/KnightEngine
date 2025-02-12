@@ -265,6 +265,7 @@ void EnginePlayer::processCommand(const std::string& cmd) {
             std::string moveStr;
             while (iss >> moveStr) {
                 DenseMove move = uciToMove(moveStr, currentBoard);
+                std::cout << move.toString(false) << "\n";
                 currentBoard.makeMove(move, false);
             }
         }
@@ -344,6 +345,9 @@ DenseMove EnginePlayer::uciToMove(const std::string& uciMove,
     // Pawn moving to en passant square has to be capturing en passant
     if ((piece == W_PAWN || piece == B_PAWN) && to == board.currentGameState.enPassantSquare) {
         move.setEnPass(true);
+        // Need to set capture for en pass since the piece being captured is not on the square
+        // the pawn is traveling to
+        move.setCapture(D_PAWN);
     }
     
     return move;

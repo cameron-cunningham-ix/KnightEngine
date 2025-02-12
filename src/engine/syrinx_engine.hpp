@@ -31,145 +31,17 @@ private:
     // 44 million 24-byte entries = ~1 GB
     std::array<TTEntry, TT_SIZE> transpositionTable;
 
-    // Piece-Square tables
-    // Pawns - Early game
-    static constexpr std::array<int, 64> pawnSqTbEarly = {
-         0,  0,  0,  0,  0,  0,  0,  0,
-        50, 50, 50, 50, 50, 50, 50, 50,
-        20, 20, 25, 25, 25, 25, 20, 20,
-         5,  5, 10, 20, 20, 10,  5,  5,
-         0,  0,  0, 25, 25,  0,  0,  0,
-         5, -5,-10,  0,  0,-10, -5,  5,
-        15, 25, 15,-10,-10, 15, 25,  15,
-         0,  0,  0,  0,  0,  0,  0,  0
-    };
-    // Knights - Early game
-    static constexpr std::array<int, 64> knightSqTbEarly = {
-        -50,-40,-30,-30,-30,-30,-40,-50,
-        -40,-20,  0,  0,  0,  0,-20,-40,
-        -30,  0, 10, 15, 15, 10,  0,-30,
-        -30,  5, 15, 15, 15, 15,  5,-30,
-        -30,  0, 15, 15, 15, 15,  0,-30,
-        -30,  5, 10, 15, 15, 10,  5,-30,
-        -40,-20,  0,  5,  5,  0,-20,-40,
-        -50,-40,-30,-30,-30,-30,-40,-50
-    };
-    // Bishops - Early game
-    static constexpr std::array<int, 64> bishopSqTbEarly = {
-        -20,-10,-10,-10,-10,-10,-10,-20,
-        -10,  0,  0,  0,  0,  0,  0,-10,
-        -10,  0,  5, 10, 10,  5,  0,-10,
-        -10,  5,  5, 10, 10,  5,  5,-10,
-        -10,  0, 10, 10, 10, 10,  0,-10,
-        -10, 10, 10, 10, 10, 10, 10,-10,
-        -10,  5,  0,  0,  0,  0,  5,-10,
-        -20,-10,-10,-10,-10,-10,-10,-20
-    };
-    // Rooks - Early game
-    static constexpr std::array<int, 64> rookSqTbEarly = {
-         0,  0,  0,  5,  0, 10,  0,  0,
-         5, 10, 10, 10, 10, 10, 10,  5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-         0,  0,  0, 20,  5, 20,  0,  0
-    };
-    // Queens - Early game
-    static constexpr std::array<int, 64> queenSqTbEarly = {
-        -20,-10,-10, -5, -5,-10,-10,-20,
-        -10,  0,  0,  0,  0,  0,  0,-10,
-        -10,  0,  5,  5,  5,  5,  0,-10,
-         -5,  0,  5,  5,  5,  5,  0, -5,
-         -5,  0,  5,  5,  5,  5,  0, -5,
-        -10,  5,  5,  5,  5,  5,  0,-10,
-        -10,  0,  0,  0,  0,  0,  0,-10,
-        -20,-10,-10, -5, -5,-10,-10,-20
-    };
-    // King - Early game
-    static constexpr std::array<int, 64> kingSqTbEarly = {
-        -30,-40,-40,-50,-50,-40,-40,-30,
-        -30,-40,-40,-50,-50,-40,-40,-30,
-        -30,-40,-40,-50,-50,-40,-40,-30,
-        -30,-40,-40,-50,-50,-40,-40,-30,
-        -20,-30,-30,-40,-40,-30,-30,-20,
-        -10,-20,-20,-20,-20,-20,-20,-10,
-        -10,-20,-20,-20,-20,-20,-20,-10,
-         20, 30, 20,  0,  0, 10, 40, 20
-    };
-    // Pawns - Endgame
-    static constexpr std::array<int, 64> pawnSqTbEnd = {
-        0,  0,  0,  0,  0,  0,  0,  0,
-        80, 80, 80, 80, 80, 80, 80, 80,
-        50, 50, 50, 50, 50, 50, 50, 50,
-        30, 30, 30, 30, 30, 30, 30, 30,
-        15, 15, 15, 15, 15, 15, 15, 15,
-        10, 10, 10, 10, 10, 10, 10, 10,
-         5,  5,  5,  5,  5,  5,  5,  5,
-        0,  0,  0,  0,  0,  0,  0,  0
-    };
-    // Knights - Endgame
-    static constexpr std::array<int, 64> knightSqTbEnd = {
-        -40,-30,-20,-20,-20,-20,-30,-40,
-        -30,-20,  0,  0,  0,  0,-20,-30,
-        -20,  0, 10, 15, 15, 10,  0,-20,
-        -20,  5, 15, 20, 20, 15,  5,-20,
-        -20,  0, 15, 20, 20, 15,  0,-20,
-        -20,  5, 10, 15, 15, 10,  5,-20,
-        -30,-20,  0,  5,  5,  0,-20,-30,
-        -40,-30,-20,-20,-20,-20,-30,-40
-    };
-    // Bishops - Endgame
-    static constexpr std::array<int, 64> bishopSqTbEnd = {
-        -20,-10,-10,-10,-10,-10,-10,-20,
-        -10,  0,  0,  0,  0,  0,  0,-10,
-        -10,  0,  5, 10, 10,  5,  0,-10,
-        -10,  5,  5, 10, 10,  5,  5,-10,
-        -10,  0, 10, 10, 10, 10,  0,-10,
-        -10, 10, 10, 10, 10, 10, 10,-10,
-        -10,  5,  0,  0,  0,  0,  5,-10,
-        -20,-10,-10,-10,-10,-10,-10,-20
-    };
-    // Rooks - Endgame
-    static constexpr std::array<int, 64> rookSqTbEnd = {
-         0,  0,  0,  0,  0,  0,  0,  0,
-         5, 10, 10, 10, 10, 10, 10,  5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-         0,  0,  0,  5,  5,  0,  0,  0
-    };
-    // Queens - Endgame
-    static constexpr std::array<int, 64> queenSqTbEnd = {
-        -20,-10,-10, -5, -5,-10,-10,-20,
-        -10,  0,  0,  0,  0,  0,  0,-10,
-        -10,  0,  5,  5,  5,  5,  0,-10,
-         -5,  0,  5,  5,  5,  5,  0, -5,
-         -5,  0,  5,  5,  5,  5,  0, -5,
-        -10,  0,  5,  5,  5,  5,  0,-10,
-        -10,  0,  0,  0,  0,  0,  0,-10,
-        -20,-10,-10, -5, -5,-10,-10,-20
-    };
-    // King - Endgame
-    static constexpr std::array<int, 64> kingSqTbEnd = {
-        -50,-40,-30,-20,-20,-30,-40,-50,
-        -30,-20,-10,  0,  0,-10,-20,-30,
-        -30,-10, 20, 30, 30, 20,-10,-30,
-        -30,-10, 30, 40, 40, 30,-10,-30,
-        -30,-10, 30, 40, 40, 30,-10,-30,
-        -30,-10, 20, 30, 30, 20,-10,-30,
-        -30,-30,  0,  0,  0,  0,-30,-30,
-        -50,-30,-30,-30,-30,-30,-30,-50
-    };
+    static constexpr int KM_PLY = 64;
+    // Stores the two best non-capturing moves per ply
+    DenseMove killerMoves[KM_PLY * 2];
 
     // Masks of light and dark squares
     static constexpr U64 lightSquareMask = 0xAA55AA55AA55AA55;
     static constexpr U64 darkSquareMask =  0x55AA55AA55AA55AA;
     // Initial count of major pieces
     static constexpr int INIT_MAJ_MIN_PIECES = 14;
+
+
 
      // Parameter values for evaluation
     struct Parameters {
@@ -186,6 +58,7 @@ private:
         int airyKingPenalty = -10;
         int supportedPawnBonus = 90;
         int supportingPawnBonus = 15;
+        int passedPawnBonus = 30;
         int supportingPieceBonus = 15;
         int doubledPawnPenalty = -50;
         int isolatedPawnPenalty = -80;
@@ -199,7 +72,7 @@ public:
 
     Syrinx() 
         : ChessEngineBase("Syrinx",
-                          "1.03",
+                          "1.12",
                           "Cameron Cunningham",
                           8,
                           std::chrono::milliseconds(200),
@@ -218,6 +91,7 @@ public:
             registerOption(EngineOption::createSpin("AiryKingPenalty", -10, -100, 0));
             registerOption(EngineOption::createSpin("SupportedPawnBonus", 90, 0, 200));
             registerOption(EngineOption::createSpin("SupportingPawnBonus", 15, 0, 200));
+            registerOption(EngineOption::createSpin("PassedPawnBonus", 30, 0, 200));
             registerOption(EngineOption::createSpin("SupportingPieceBonus", 15, 0, 200));
             registerOption(EngineOption::createSpin("DoubledPawnPenalty", -50, -200, 0));
             registerOption(EngineOption::createSpin("IsolatedPawnPenalty", -80, -200, 0));
@@ -243,6 +117,7 @@ public:
         else if (option.name == "AiryKingPenalty") params.airyKingPenalty = value;
         else if (option.name == "SupportedPawnBonus") params.supportedPawnBonus = value;
         else if (option.name == "SupportingPawnBonus") params.supportingPawnBonus = value;
+        else if (option.name == "PassedPawnBonus") params.passedPawnBonus = value;
         else if (option.name == "SupportingPieceBonus") params.supportingPieceBonus = value;
         else if (option.name == "DoubledPawnPenalty") params.doubledPawnPenalty = value;
         else if (option.name == "IsolatedPawnPenalty") params.isolatedPawnPenalty = value;
@@ -261,28 +136,27 @@ public:
     /// @return Evaluation score relative to current depth's side (positive better, negative worse)
     int alphaBeta(ChessBoard& board, int depth, int alpha, int beta, int ply) {
         
-        Color sideToMove = board.getSideToMove();
         if (depth <= 0 || !isSearching) {
-            return (sideToMove == WHITE ? evaluatePosition(board) : -evaluatePosition(board));
+            return quiescenceSearch(board, alpha, beta);
         }
-
+        
         // Check for repetition and 50-move rule
         if (ply > 0) {
             // If the 50-move rule is reached in this position, or it has occured once on the actual board, return 0
             if (board.currentGameState.halfMoveClock >= 100 ||
                 board.keySet.find(board.zobristKey) != board.keySet.end()) {
-                return 0;
+                    return 0;
+                }
             }
-        }
-
-        // Check transposition table
-        /// @todo Check what to do with score based on hash flag
-        int score;
-        DenseMove hashMove;
-        if (checkTT(board, depth, alpha, beta, score, hashMove)) {
-            return score;
-        }
-
+            
+            // Check transposition table
+            /// @todo Check what to do with score based on hash flag
+            int score;
+            DenseMove hashMove;
+            if (checkTT(board, depth, alpha, beta, score, hashMove)) {
+                return score;
+            }
+            
         // Generate and order moves
         int moveNum = 0;
         std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generatePsuedoMoves(board, moveNum);
@@ -291,6 +165,7 @@ public:
         bool noLegalMoves = true;
         DenseMove bestMove;
         int flag = TTEntry::ALPHA;
+        Color sideToMove = board.getSideToMove();
 
         // Search through ordered moves
         for (int i = 0; i < moveNum; i++) {
@@ -308,6 +183,13 @@ public:
 
             // Beta cutoff
             if (eval >= beta) {
+                // Store move as a killer move if it's not a capture
+                if (!moves[i].isCapture()) {
+                    if (killerMoves[ply] != moves[i]) {
+                        killerMoves[ply+1] = killerMoves[ply];  // Shift previous killer move
+                        killerMoves[ply] = moves[i];
+                    }
+                }
                 flag = TTEntry::BETA;
                 RecordTTEntry(board, moves[i], depth, beta, flag);
                 return beta;
@@ -333,6 +215,120 @@ public:
         RecordTTEntry(board, bestMove, depth, alpha, flag);
         return alpha;
     }
+    /// @brief 
+    /// @param board 
+    /// @param alpha 
+    /// @param beta 
+    /// @return 
+    int quiescenceSearch(ChessBoard& board, int alpha, int beta) {
+        nodeCount++;  // Track nodes searched
+    
+        // Static evaluation at the root of quiescence search
+        int standPat = evaluatePosition(board);
+        
+        // Beta cutoff - if the current position is already too good
+        if (standPat >= beta) {
+            return beta; // Cutoff
+        }
+        
+        // Update alpha if the standing evaluation is better
+        if (standPat > alpha) {
+            alpha = standPat;
+        }
+
+        Color sideToMove = board.getSideToMove();
+        // Generate capture moves only
+        int moveNum = 0;
+        std::array<DenseMove, MAX_MOVES> captureMoves = MoveGenerator::generateCaptureMoves(board, moveNum);
+    
+        // Order captures using MVV-LVA heuristic
+        orderCaptures(captureMoves, moveNum);
+    
+        for (int i = 0; i < moveNum; i++) {
+            board.makeMove(captureMoves[i], true);
+    
+            // Skip illegal moves (e.g., moving into check)
+            if (board.isSideInCheck(sideToMove)) {
+                board.unmakeMove(captureMoves[i], true);
+                continue;
+            }
+
+            // SEE Pruning: Skip bad captures
+            if (staticExchangeEvaluation(board, captureMoves[i].getTo(), sideToMove) < 0) {
+                board.unmakeMove(captureMoves[i], true);
+                continue;
+            }
+    
+            // Recursively evaluate captures
+            int score = -quiescenceSearch(board, -beta, -alpha);
+            board.unmakeMove(captureMoves[i], true);
+    
+            // Beta cutoff
+            if (score >= beta) {
+                return beta;  // Prune the remaining captures
+            }
+    
+            // Update alpha
+            if (score > alpha) {
+                alpha = score;
+            }
+        }
+    
+        return alpha;
+    }
+    /// @brief 
+    /// @param board 
+    /// @param square 
+    /// @param sideToMove 
+    /// @return 
+    int staticExchangeEvaluation(const ChessBoard& board, int square, Color sideToMove) {
+        U64 attackers = board.OppAttacksToSquare(square, sideToMove);
+        
+        // If no attackers, there's no exchange happening
+        if (attackers == 0) return 0;
+    
+        // Get the piece on the target square (the initial victim)
+        PieceType victim = board.getPieceAt(square);
+        int gain = getPieceValue(victim);
+        
+        // Store attackers in a local bitboard for modification
+        U64 mutableAttackers = attackers;
+        Color currentTurn = sideToMove;
+    
+        int pieceExchanges[32]; // Stack to store exchange sequence
+        int depth = 0;
+        pieceExchanges[depth++] = gain;
+    
+        // Keep swapping turns and resolving exchanges
+        while (mutableAttackers) {
+            int attackerSquare = std::countr_zero(mutableAttackers);
+            mutableAttackers &= mutableAttackers - 1; // Remove attacker from set
+    
+            PieceType attacker = board.getPieceAt(attackerSquare);
+            int attackerValue = getPieceValue(attacker);
+    
+            // Calculate net gain if the attacker captures
+            gain = attackerValue - gain;
+            
+            // If net gain is negative, stop
+            if (gain < 0) break;
+    
+            // Store the exchange
+            pieceExchanges[depth++] = gain;
+    
+            // Flip turn (next attacker belongs to the opponent)
+            currentTurn = (currentTurn == WHITE) ? BLACK : WHITE;
+        }
+    
+        // Find the best exchange sequence
+        while (--depth > 0) {
+            pieceExchanges[depth - 1] = std::min(-pieceExchanges[depth], pieceExchanges[depth - 1]);
+        }
+    
+        return pieceExchanges[0];
+    }
+    
+    
 
     bool keepSearching(ChessClock& clock) const {
         // If clock is set to infinite, always keep searching
@@ -343,14 +339,15 @@ public:
                             clock.getBlackTime();
         
         // Estimate time for next depth based on previous depth
-        // Each depth typically takes ~4-5x longer than the previous
-        auto estimatedNextDepthTime = prevDepthTime * 5;
+        // Each depth typically takes ~4-5x longer than the previous,
+        // but some cases 10x, so plan for that
+        auto estimatedNextDepthTime = prevDepthTime * 10;
 
         // Leave some buffer time for move selection and communication
         auto bufferTime = std::chrono::milliseconds(20);
 
-        // Don't use more than 20% of remaining time on one move
-        auto maxTimeForMove = remainingTime / 5;
+        // Don't use more than 10% of remaining time on one move
+        auto maxTimeForMove = remainingTime / 10;
 
         return estimatedNextDepthTime + bufferTime < maxTimeForMove;
     }
@@ -371,7 +368,6 @@ public:
         // Generate and order moves
         int moveNum = 0;
         std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
-        Color sideToMove = board.getSideToMove();
 
         // Iterative deepening
         for (int currDepth = MIN_DEPTH; currDepth <= actualDepth && isSearching; currDepth++) {
@@ -483,7 +479,8 @@ public:
         score += evaluatePositional(board, WHITE);
         score -= evaluatePositional(board, BLACK);
 
-        return score;
+        //Adjust the score based on current side to move
+        return (board.getSideToMove() == WHITE) ? score: -score;
     }
 
 private:
@@ -504,6 +501,8 @@ private:
     // Score values for different move types
     static constexpr int HASH_MOVE_SCORE = 1000000;
     static constexpr int CAPTURE_BASE_SCORE = 100000;
+    static constexpr int KILLER_MOVE_SCORE = 90000;
+    static constexpr int PRIORITY_SCORE = 10000;
         
     // Orders moves based on various heuristics including PV
     void orderMoves(std::array<DenseMove, MAX_MOVES>& moves, int& moveCount, int ply, DenseMove hashMove) {
@@ -523,6 +522,13 @@ private:
                 scored.score = CAPTURE_BASE_SCORE + 
                     getPieceValue(moves[i].getCaptPiece()) * 10 - 
                     getPieceValue(moves[i].getPieceType());
+            } else {
+                // Check for killer moves
+                if (moves[i] == killerMoves[ply]) {
+                    scored.score = KILLER_MOVE_SCORE;   // Higher priority than normal moves
+                } else if (moves[i] == killerMoves[ply+1]) {
+                    scored.score = KILLER_MOVE_SCORE - PRIORITY_SCORE;   // Second priority
+                }
             }
             /// @todo Add other scoring criteria here (killer moves, history heuristic, etc.)
             
@@ -537,6 +543,33 @@ private:
             moves[i] = scoredMoves[i].move;
         }
     }
+    /// @brief 
+    /// @param moves 
+    /// @param moveCount 
+    void orderCaptures(std::array<DenseMove, MAX_MOVES>& moves, int moveCount) {
+        std::vector<ScoredMove> scoredMoves;
+        scoredMoves.reserve(moveCount);
+    
+        for (int i = 0; i < moveCount; i++) {
+            DenseMove move = moves[i];
+            int score = 0;
+    
+            if (move.isCapture()) {
+                score = getPieceValue(move.getCaptPiece()) * 10 - getPieceValue(move.getPieceType());
+            }
+    
+            scoredMoves.emplace_back(move, score);
+        }
+    
+        // Sort captures in descending order
+        std::sort(scoredMoves.begin(), scoredMoves.end());
+    
+        // Copy back to original moves array
+        for (int i = 0; i < moveCount; i++) {
+            moves[i] = scoredMoves[i].move;
+        }
+    }
+    
 
     // Helper to get piece values for MVV/LVA scoring
     int getPieceValue(PieceType piece) const {
@@ -665,6 +698,12 @@ private:
                 score += params.isolatedPawnPenalty;
             }
 
+            // Passed pawn bonus
+            U64 enemyPawns = color == WHITE ? board.getBlackPawns() : board.getWhitePawns();
+            if (!(adjacentFiles & enemyPawns)) {
+                score += params.passedPawnBonus;
+            }
+
             // If this pawn is supporting another pawn
             U64 supports = color == WHITE ? ATKMASK_WPAWN[square] & pawnRef :
                                             ATKMASK_BPAWN[square] & pawnRef;
@@ -678,8 +717,7 @@ private:
             int square = std::countr_zero(knights) ^ flip;
             // Add score from piece-square table
             // Lerp from early to endgame based on piece count
-            score +=  knightSqTbEarly[square]*(earlygameLerp) +
-                knightSqTbEnd[square]*(endgameLerp);
+            score += knightSqTbEarly[square]*earlygameLerp + knightSqTbEnd[square]*endgameLerp;
             knights &= knights - 1;
         }
         // Bishops
@@ -692,27 +730,23 @@ private:
             int square = std::countr_zero(bishops) ^ flip;
             // Add score from piece-square table
             // Lerp from early to endgame based on piece count
-            score +=  bishopSqTbEarly[square]*(earlygameLerp) +
-                bishopSqTbEnd[square]*(endgameLerp);
+            score +=  bishopSqTbEarly[square]*earlygameLerp + bishopSqTbEnd[square]*endgameLerp;
             bishops &= bishops - 1;
         }
         // Rooks
         while (rooks) {
             int square = std::countr_zero(rooks) ^ flip;
-            score += rookSqTbEarly[square]*(earlygameLerp) +
-                rookSqTbEnd[square]*(endgameLerp);
+            score += rookSqTbEarly[square]*earlygameLerp + rookSqTbEnd[square]*endgameLerp;
             rooks &= rooks - 1;
         }
         // Queens
         while (queens) {
             int square = std::countr_zero(queens) ^ flip;
-            score += queenSqTbEarly[square]*(earlygameLerp) +
-                queenSqTbEnd[square]*(endgameLerp);
+            score += queenSqTbEarly[square]*earlygameLerp + queenSqTbEnd[square]*endgameLerp;
             queens &= queens - 1;
         }
         // King
-        score += kingSqTbEarly[kingSquare]*(earlygameLerp) +
-            kingSqTbEnd[kingSquare]*(endgameLerp);
+        score += kingSqTbEarly[kingSquare]*earlygameLerp + kingSqTbEnd[kingSquare]*endgameLerp;
         kingSquare ^= flip;
         // Give bonus for king behind pawns
         U64 kingShield = ATKMASK_KING[kingSquare] & pawnRef;
@@ -794,4 +828,138 @@ private:
         }
         return false;
     }
+
+    // Piece-Square tables
+    // Pawns - Early game
+    static constexpr std::array<int, 64> pawnSqTbEarly = {
+        0,  0,  0,  0,  0,  0,  0,  0,
+       50, 50, 50, 50, 50, 50, 50, 50,
+       20, 20, 25, 25, 25, 25, 20, 20,
+        5,  5, 10, 20, 20, 10,  5,  5,
+        0,  0,  0, 25, 25,  0,  0,  0,
+        5, -5,-10,  0,  0,-10, -5,  5,
+       15, 25, 15,-10,-10, 15, 25,  15,
+        0,  0,  0,  0,  0,  0,  0,  0
+   };
+   // Knights - Early game
+   static constexpr std::array<int, 64> knightSqTbEarly = {
+       -50,-40,-30,-30,-30,-30,-40,-50,
+       -40,-20,  0,  0,  0,  0,-20,-40,
+       -30,  0, 10, 15, 15, 10,  0,-30,
+       -30,  5, 15, 15, 15, 15,  5,-30,
+       -30,  0, 15, 15, 15, 15,  0,-30,
+       -30,  5, 10, 15, 15, 10,  5,-30,
+       -40,-20,  0,  5,  5,  0,-20,-40,
+       -50,-40,-30,-30,-30,-30,-40,-50
+   };
+   // Bishops - Early game
+   static constexpr std::array<int, 64> bishopSqTbEarly = {
+       -20,-10,-10,-10,-10,-10,-10,-20,
+       -10,  0,  0,  0,  0,  0,  0,-10,
+       -10,  0,  5, 10, 10,  5,  0,-10,
+       -10,  5,  5, 10, 10,  5,  5,-10,
+       -10,  0, 10, 10, 10, 10,  0,-10,
+       -10, 10, 10, 10, 10, 10, 10,-10,
+       -10,  5,  0,  0,  0,  0,  5,-10,
+       -20,-10,-10,-10,-10,-10,-10,-20
+   };
+   // Rooks - Early game
+   static constexpr std::array<int, 64> rookSqTbEarly = {
+        0,  0,  0,  5,  0, 10,  0,  0,
+        5, 10, 10, 10, 10, 10, 10,  5,
+       -5,  0,  0,  0,  0,  0,  0, -5,
+       -5,  0,  0,  0,  0,  0,  0, -5,
+       -5,  0,  0,  0,  0,  0,  0, -5,
+       -5,  0,  0,  0,  0,  0,  0, -5,
+       -5,  0,  0,  0,  0,  0,  0, -5,
+        0,  0,  0, 20,  5, 20,  0,  0
+   };
+   // Queens - Early game
+   static constexpr std::array<int, 64> queenSqTbEarly = {
+       -20,-10,-10, -5, -5,-10,-10,-20,
+       -10,  0,  0,  0,  0,  0,  0,-10,
+       -10,  0,  5,  5,  5,  5,  0,-10,
+        -5,  0,  5,  5,  5,  5,  0, -5,
+        -5,  0,  5,  5,  5,  5,  0, -5,
+       -10,  5,  5,  5,  5,  5,  0,-10,
+       -10,  0,  0,  0,  0,  0,  0,-10,
+       -20,-10,-10, -5, -5,-10,-10,-20
+   };
+   // King - Early game
+   static constexpr std::array<int, 64> kingSqTbEarly = {
+       -30,-40,-40,-50,-50,-40,-40,-30,
+       -30,-40,-40,-50,-50,-40,-40,-30,
+       -30,-40,-40,-50,-50,-40,-40,-30,
+       -30,-40,-40,-50,-50,-40,-40,-30,
+       -20,-30,-30,-40,-40,-30,-30,-20,
+       -10,-20,-20,-20,-20,-20,-20,-10,
+       -10,-20,-20,-20,-20,-20,-20,-10,
+        20, 30, 20,  0,  0, 10, 40, 20
+   };
+   // Pawns - Endgame
+   static constexpr std::array<int, 64> pawnSqTbEnd = {
+       0,  0,  0,  0,  0,  0,  0,  0,
+     120,120,120,120,120,120,120,120,
+       80, 80, 80, 80, 80, 80, 80, 80,
+       50, 50, 50, 50, 50, 50, 50, 50,
+       30, 30, 30, 30, 30, 30, 30, 30,
+       10, 10, 10, 10, 10, 10, 10, 10,
+        5,  5,  5,  5,  5,  5,  5,  5,
+       0,  0,  0,  0,  0,  0,  0,  0
+   };
+   // Knights - Endgame
+   static constexpr std::array<int, 64> knightSqTbEnd = {
+       -40,-30,-20,-20,-20,-20,-30,-40,
+       -30,-20,  0,  0,  0,  0,-20,-30,
+       -20,  0, 10, 15, 15, 10,  0,-20,
+       -20,  5, 15, 20, 20, 15,  5,-20,
+       -20,  0, 15, 20, 20, 15,  0,-20,
+       -20,  5, 10, 15, 15, 10,  5,-20,
+       -30,-20,  0,  5,  5,  0,-20,-30,
+       -40,-30,-20,-20,-20,-20,-30,-40
+   };
+   // Bishops - Endgame
+   static constexpr std::array<int, 64> bishopSqTbEnd = {
+       -20,-10,-10,-10,-10,-10,-10,-20,
+       -10,  0,  0,  0,  0,  0,  0,-10,
+       -10,  0,  5, 10, 10,  5,  0,-10,
+       -10,  5,  5, 10, 10,  5,  5,-10,
+       -10,  0, 10, 10, 10, 10,  0,-10,
+       -10, 10, 10, 10, 10, 10, 10,-10,
+       -10,  5,  0,  0,  0,  0,  5,-10,
+       -20,-10,-10,-10,-10,-10,-10,-20
+   };
+   // Rooks - Endgame
+   static constexpr std::array<int, 64> rookSqTbEnd = {
+        0,  0,  0,  0,  0,  0,  0,  0,
+        5, 10, 10, 10, 10, 10, 10,  5,
+       -5,  0,  0,  0,  0,  0,  0, -5,
+       -5,  0,  0,  0,  0,  0,  0, -5,
+       -5,  0,  0,  0,  0,  0,  0, -5,
+       -5,  0,  0,  0,  0,  0,  0, -5,
+       -5,  0,  0,  0,  0,  0,  0, -5,
+        0,  0,  0,  5,  5,  0,  0,  0
+   };
+   // Queens - Endgame
+   static constexpr std::array<int, 64> queenSqTbEnd = {
+       -20,-10,-10, -5, -5,-10,-10,-20,
+       -10,  0,  0,  0,  0,  0,  0,-10,
+       -10,  0,  5,  5,  5,  5,  0,-10,
+        -5,  0,  5,  5,  5,  5,  0, -5,
+        -5,  0,  5,  5,  5,  5,  0, -5,
+       -10,  0,  5,  5,  5,  5,  0,-10,
+       -10,  0,  0,  0,  0,  0,  0,-10,
+       -20,-10,-10, -5, -5,-10,-10,-20
+   };
+   // King - Endgame
+   static constexpr std::array<int, 64> kingSqTbEnd = {
+       -50,-40,-30,-20,-20,-30,-40,-50,
+       -30,-20,-10,  0,  0,-10,-20,-30,
+       -30,-10, 20, 30, 30, 20,-10,-30,
+       -30,-10, 30, 40, 40, 30,-10,-30,
+       -30,-10, 30, 40, 40, 30,-10,-30,
+       -30,-10, 20, 30, 30, 20,-10,-30,
+       -30,-30,  0,  0,  0,  0,-30,-30,
+       -50,-30,-30,-30,-30,-30,-30,-50
+   };
 };

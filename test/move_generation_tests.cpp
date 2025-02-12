@@ -1,5 +1,6 @@
 #include "../src/moves.hpp"
 #include "../src/pext_bitboard.hpp"
+#include "../src/board_utility.hpp"
 #include <gtest/gtest.h>
 #include <algorithm>
 
@@ -87,6 +88,29 @@ TEST_F(MoveGenerationTest, NotStalemate) {
     EXPECT_EQ(moveNum, 3);
 }
 
+TEST_F(MoveGenerationTest, Illegal1) {
+    board.setupPositionFromFEN("r1br4/p1p3k1/1p5p/2p1b2q/2P1B3/4NR2/PP4PP/R3Q1K1 w - - 4 13");
+    int moveNum = 0;
+    moves = MoveGenerator::generateLegalMoves(board, moveNum);
+
+    EXPECT_FALSE(containsMove(moves, BUTIL::F4, BUTIL::E5));
+}
+
+TEST_F(MoveGenerationTest, Illegal2) {
+    board.setupPositionFromFEN("3r4/1ppk1rb1/3p2pp/n2Pp3/4P2P/2P2pP1/PP1N1P1R/4R1K1 b - - 0 23");
+    
+    board.makeMove(DenseMove(B_PAWN, BUTIL::C7, BUTIL::C5), false);
+    board.makeMove(DenseMove(W_PAWN, BUTIL::D5, BUTIL::C6, D_PAWN, false, true), false);
+    board.makeMove(DenseMove(B_KNIGHT, BUTIL::A5, BUTIL::C6, D_PAWN), false);
+    board.makeMove(DenseMove(W_PAWN, BUTIL::B2, BUTIL::B4), false);
+    board.makeMove(DenseMove(B_ROOK, BUTIL::F7, BUTIL::E7), false);
+    
+    int moveNum = 0;
+    moves = MoveGenerator::generatePsuedoMoves(board, moveNum);
+
+    EXPECT_FALSE(containsMove(moves, BUTIL::B4, BUTIL::C5));
+}
+
 
 
 // Test en passant generation
@@ -122,7 +146,4 @@ TEST_F(MoveGenerationTest, EnPassantMoves) {
     EXPECT_TRUE(containsMove(moves, 29, 22));
 }
 
-// // Test attack masks
-// TEST_F(MoveGenerationTest, AttackMask) {
 
-// }

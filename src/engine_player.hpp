@@ -87,4 +87,7 @@ public:
     
     // Engine-specific methods
     void setSearchDepth(int depth) { engine->setSearchDepth(depth); }
+
+    // Debugging methods
+    void printBoard() { currentBoard.printBitboards(); }
 };

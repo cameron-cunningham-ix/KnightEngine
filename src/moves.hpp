@@ -17,7 +17,8 @@ private:
     static void generateCastlingMoves(const ChessBoard& board, std::array<DenseMove, MAX_MOVES>& moves, int& moveNum);
     static void generatePieceMoves(const ChessBoard &board, std::array<DenseMove, MAX_MOVES>& moves, int& moveNum);
     
-public:
+    public:
+    static std::array<DenseMove, MAX_MOVES> generateCaptureMoves(const ChessBoard &board, int& moveNum);
     static std::array<DenseMove, MAX_MOVES> generatePsuedoMoves(const ChessBoard &board, int& moveNum);
     static std::array<DenseMove, MAX_MOVES> generateLegalMoves(ChessBoard &board, int& moveNum);
 };
