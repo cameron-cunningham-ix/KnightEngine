@@ -86,25 +86,6 @@ class EngineEvaluator:
             print(f"Error extracting parameters: {e}")
             return []
 
-    def create_engine_config(self, params: Dict[str, float], idx: int) -> List[str]:
-        config = ["-engine", f"name=Engine{idx}", f"cmd=\"{self.engine_path}\""]
-        for name, value in params.items():
-            config.append(f"option.{name}={value}")
-        return config
-
-    def run_tournament(self, configs: List[Dict[str, float]], games_per_encounter: int = 10) -> List[float]:
-        cmd = [
-            self.cutechess_cli, "-tournament", "round-robin", "-games", str(games_per_encounter), "-concurrency", "2", "-each", "tc=40/20+0.01", "proto=uci"
-        ]
-        for i, params in enumerate(configs):
-            cmd.extend(self.create_engine_config(params, i))
-        try:
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-            return self.parse_tournament_results(result.stdout)
-        except subprocess.CalledProcessError as e:
-            print(f"Tournament failed: {e}")
-            return [0.0] * len(configs)
-
     def parse_tournament_results(self, output: str) -> List[float]:
         lines = output.strip().split('\n')
         rankings_start = next((i for i, line in enumerate(lines) if line.startswith("Rank Name")), -1)
@@ -123,6 +104,32 @@ class EngineEvaluator:
             i += 1
         return scores
 
+    def run_tournament(self, configs: List[Dict[str, float]], games_per_encounter: int = 10) -> List[float]:
+        output_file = "engine_tuning_results.txt"
+        with open(output_file, "a") as f:
+            f.write("\n=== Engine Configurations ===\n")
+            for i, params in enumerate(configs):
+                f.write(f"Engine{i}\n")
+                for name, value in params.items():
+                    f.write(f"{name} = {value}\n")
+            f.write("\n=== Tournament Results ===\n")
+        
+        cmd = [
+            self.cutechess_cli, "-tournament", "round-robin", "-games", str(games_per_encounter),
+            "-concurrency", "1", "-each", "tc=40/20+0.01", "proto=uci", "-pgnout", "engine_tuning_results.pgn",
+            "-openings", "file=D:/dev/SoftDevProjects/GitHub/KnightEngine/meta/2500_positions.epd", "format=epd", "order=random"
+        ]
+        for i, params in enumerate(configs):
+            cmd.extend(["-engine", f"name=Engine{i}", f"cmd=\"{self.engine_path}\""] + [f"option.{name}={value}" for name, value in params.items()])
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            with open(output_file, "a") as f:
+                f.write(result.stdout)
+            return self.parse_tournament_results(result.stdout)
+        except subprocess.CalledProcessError as e:
+            print(f"Tournament failed: {e}")
+            return [0.0] * len(configs)
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("engine_path", type=str, help="Path to the engine executable")
@@ -133,8 +140,8 @@ def main():
     parameters = evaluator.parameters
     pbil = PBIL(parameters)
     
-    for generation in range(100):
-        population = pbil.generate_population(3)
+    for generation in range(1):
+        population = pbil.generate_population(5)
         configurations = [pbil.decode_individual(ind) for ind in population]
         fitness_scores = evaluator.run_tournament(configurations)
         sorted_indices = np.argsort(fitness_scores)[::-1]

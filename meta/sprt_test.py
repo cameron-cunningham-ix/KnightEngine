@@ -22,7 +22,7 @@ def run_sprt_test(engine1_path, engine2_path, cutechess_cli_path, elo0=5, elo1=1
         "-each", "tc=40/10+0.1", "proto=uci",  # 40 moves in 10s with 0.1s increment, UCI
         "-tournament", "gauntlet",
         "-games", str(games),
-        "-concurrency", "4",  # Adjust based on your CPU
+        "-concurrency", "2",  # Adjust based on your CPU
         "-sprt", f"elo0={elo0}", f"elo1={elo1}", f"alpha={alpha}", f"beta={beta}",
         "-ratinginterval", "10",
         "-outcomeinterval", "10",
