@@ -74,7 +74,7 @@ public:
 
     Syrinx() 
         : ChessEngineBase("Syrinx",
-                          "1.22",
+                          "1.23",
                           "Cameron Cunningham",
                           8,
                           std::chrono::milliseconds(200),
@@ -136,59 +136,66 @@ public:
     /// @param beta 
     /// @param ply 
     /// @return Evaluation score relative to current depth's side (positive better, negative worse)
-    int alphaBeta(ChessBoard& board, int depth, int alpha, int beta, int ply) {
-        
+    int alphaBeta(ChessBoard& board, int depth, int alpha, int beta, int ply, bool isPV) {
         if (depth <= 0 || !isSearching) {
             return quiescenceSearch(board, alpha, beta);
         }
-        
+    
         // Check for repetition and 50-move rule
-        if (ply > 0) {
-            // If the 50-move rule is reached in this position, or it has occured once on the actual board, return 0
-            if (board.currentGameState.halfMoveClock >= 100 ||
-                board.keySet.find(board.zobristKey) != board.keySet.end()) {
-                    return 0;
-            }
+        if (ply > 0 && (board.currentGameState.halfMoveClock >= 100 ||
+                        board.keySet.find(board.zobristKey) != board.keySet.end())) {
+            return 0;
         }
-            
+    
         // Check transposition table
-        /// @todo Check what to do with score based on hash flag
         int score;
         DenseMove hashMove;
         if (checkTT(board, depth, alpha, beta, score, hashMove)) {
             return score;
         }
-        
+    
         // Generate and order moves
         int moveNum = 0;
         std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generatePsuedoMoves(board, moveNum);
         orderMoves(moves, moveNum, ply, hashMove);
-        
+    
         bool noLegalMoves = true;
         DenseMove bestMove;
         int flag = TTEntry::ALPHA;
         Color sideToMove = board.getSideToMove();
-
-        // Search through ordered moves
+        bool firstMove = true;  // Track if it's the first move for PVS
+    
         for (int i = 0; i < moveNum; i++) {
             board.makeMove(moves[i], true);
-
+    
             // Skip illegal moves
             if (board.isSideInCheck(sideToMove)) {
                 board.unmakeMove(moves[i], true);
                 continue;
             }
             noLegalMoves = false;
-
-            int eval = -alphaBeta(board, depth - 1, -beta, -alpha, ply + 1);
+    
+            int eval;
+    
+            if (firstMove) {
+                // Search first move with normal alpha-beta window
+                eval = -alphaBeta(board, depth - 1, -beta, -alpha, ply + 1, isPV);
+                firstMove = false;
+            } else {
+                // Principal Variation Search (PVS)
+                eval = -alphaBeta(board, depth - 1, -alpha - 1, -alpha, ply + 1, false);
+                if (eval > alpha && eval < beta) {
+                    eval = -alphaBeta(board, depth - 1, -beta, -alpha, ply + 1, true);  // Re-search
+                }
+            }
+    
             board.unmakeMove(moves[i], true);
-
+    
             // Beta cutoff
             if (eval >= beta) {
-                // Store move as a killer move if it's not a capture
                 if (!moves[i].isCapture()) {
                     if (killerMoves[ply] != moves[i]) {
-                        killerMoves[ply+1] = killerMoves[ply];  // Shift previous killer move
+                        killerMoves[ply + 1] = killerMoves[ply];  // Shift previous killer move
                         killerMoves[ply] = moves[i];
                     }
                 }
@@ -196,27 +203,24 @@ public:
                 RecordTTEntry(board, moves[i], depth, beta, flag);
                 return beta;
             }
-            // Update best score
+    
             if (eval > alpha) {
                 alpha = eval;
                 bestMove = moves[i];
                 flag = TTEntry::EXACT;
             }
         }
-
+    
         // Handle checkmate/stalemate
         if (noLegalMoves) {
-            if (board.isSideInCheck(sideToMove)) {
-                // If the current side to move is in checkmate, 
-                return -params.mateScore + ply;
-            }
-            return 0;  // Stalemate
+            return board.isSideInCheck(sideToMove) ? -params.mateScore + ply : 0;
         }
-
-        // Store position in transposition table
+    
+        // Store best move in transposition table
         RecordTTEntry(board, bestMove, depth, alpha, flag);
         return alpha;
     }
+    
     /// @brief 
     /// @param board 
     /// @param alpha 
@@ -356,63 +360,78 @@ public:
     DenseMove findBestMove(ChessBoard& board, ChessClock& clock, int maxDepth = -1) {
         startSearch();
         searchStartTime = std::chrono::steady_clock::now();
-        prevDepthTime = std::chrono::milliseconds(0);   // Reset any previous time
-        
+        prevDepthTime = std::chrono::milliseconds(0);  // Reset previous depth time
+    
         nodeCount = 0;
         currentMoveNumber = 0;
-
+    
         int actualDepth = (maxDepth > 0) ? maxDepth : searchDepth;
         DenseMove bestMoveOverall;
         int bestScoreOverall = 0;
         const int MIN_DEPTH = 2;
-
+    
         // Generate and order moves
         int moveNum = 0;
         std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generateLegalMoves(board, moveNum);
-
-        // Iterative deepening
+    
+        // Iterative Deepening Loop
         for (int currDepth = MIN_DEPTH; currDepth <= actualDepth && isSearching; currDepth++) {
             nodeCount = 0;
             currentMoveNumber = 0;
             clock.updateTime();
-            // If we're using too much time, stop iterating
+    
+            // Stop search if time is running out
             if (currDepth > MIN_DEPTH && !keepSearching(clock)) {
                 break;
             }
-
-            // Get move from transposition table if available
+    
+            // Retrieve principal variation move from the transposition table
             TTEntry* entry = &transpositionTable[board.zobristKey % TT_SIZE];
             DenseMove hashMove;
             if (entry->key == board.zobristKey) {
                 hashMove = entry->bestMove;
             }
-
+    
             int alpha = INF_NEG;
             int beta = INF_POS;
             DenseMove bestMove;
             int bestScore = INF_NEG;
-
+            bool firstMove = true;
+    
             orderMoves(moves, moveNum, 0, hashMove);
-
+    
             // Search each move
             for (int i = 0; i < moveNum; i++) {
                 currentMoveNumber = i + 1;
                 currentMove = moves[i];
-
+    
                 sendInfo(std::format("currmove {} currmovenumber {}", 
-                                   currentMove.toAlgebraic(), currentMoveNumber));
-
+                                       currentMove.toAlgebraic(), currentMoveNumber));
+    
                 board.makeMove(moves[i], true);
-                int score = -alphaBeta(board, currDepth - 1, -beta, -alpha, 1);
+                int score;
+    
+                if (firstMove) {
+                    // First move uses a full window search
+                    score = -alphaBeta(board, currDepth - 1, -beta, -alpha, 1, true);
+                    firstMove = false;
+                } else {
+                    // All other moves use PVS
+                    score = -alphaBeta(board, currDepth - 1, -alpha - 1, -alpha, 1, false);
+                    if (score > alpha && score < beta) {
+                        score = -alphaBeta(board, currDepth - 1, -beta, -alpha, 1, true); // Re-search
+                    }
+                }
+    
                 board.unmakeMove(moves[i], true);
-
+    
                 // Update best move if better score found
                 if (score > bestScore) {
                     bestScore = score;
                     bestMove = moves[i];
-
+    
                     if (score > alpha) alpha = score;
-
+    
                     auto moveTime = std::chrono::duration_cast<std::chrono::milliseconds>(
                         std::chrono::steady_clock::now() - searchStartTime).count();
                     
@@ -427,12 +446,12 @@ public:
                     sendInfo(infoStr);
                 }
             }
-
+    
             // Store best move for this iteration
             RecordTTEntry(board, bestMove, currDepth, bestScore, TTEntry::EXACT);
             bestMoveOverall = bestMove;
             bestScoreOverall = bestScore;
-
+    
             // Log iteration completion
             auto totalTime = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::steady_clock::now() - searchStartTime);
@@ -444,14 +463,16 @@ public:
                 iterStr += std::format(", nps: {}", nps);
             }
             sendInfo(iterStr);
+            
             // Update how long this depth took
             prevDepthTime = totalTime;
         }
-
+    
         this->bestMove = bestMoveOverall;
         endSearch();
         return bestMoveOverall;
     }
+    
 
 
     /// @brief Called at the terminal nodes of alphaBeta function.
