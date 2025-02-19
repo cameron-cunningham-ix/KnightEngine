@@ -200,7 +200,7 @@ void EnginePlayer::processCommand(const std::string& cmd) {
             auto it = searchParams.find("depth");
             if (it != searchParams.end()) {
                 if (it->second == "infinite") {
-                    engine->setSearchDepth(128);   // Very large depth
+                    engine->setSearchDepth(64);   // Very large depth
                 } 
                 // If not infinite, there should only be digits
                 else if (it->second.find_first_not_of("0123456789") == std::string::npos) {

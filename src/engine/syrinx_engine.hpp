@@ -38,6 +38,9 @@ private:
     static constexpr int HISTORY_MAX = 65536;
     // Keeps history of moves that have caused good beta cutoffs in the search tree
     int historyTable[2][6][64] = {0};   // Indexed by [Color][PieceType][DestinationSquare]
+
+    static constexpr int NULL_MOVE_R = 2;
+    static constexpr int NULL_MOVE_MIN_DEPTH = 3;
     
     // Masks of light and dark squares
     static constexpr U64 lightSquareMask = 0xAA55AA55AA55AA55;
@@ -79,7 +82,7 @@ public:
 
     Syrinx() 
         : ChessEngineBase("Syrinx",
-                          "1.24",
+                          "1.3",
                           "Cameron Cunningham",
                           8,
                           std::chrono::milliseconds(200),
@@ -164,6 +167,18 @@ public:
         DenseMove hashMove;
         if (checkTT(board, depth, alpha, beta, score, hashMove)) {
             return score;
+        }
+
+        // === NULL MOVE PRUNING ===
+        if (!isPV && depth >= NULL_MOVE_MIN_DEPTH && !board.isSideInCheck(board.getSideToMove())) {
+            board.makeNullMove(); // Skip turn
+            int nullDepth = depth - NULL_MOVE_R - 1;
+            int nullScore = -alphaBeta(board, nullDepth, -beta, -beta + 1, ply + 1, false);
+            board.unmakeNullMove();
+
+            if (nullScore >= beta) {
+                return beta; // Fail-hard cutoff
+            }
         }
     
         // Generate and order moves

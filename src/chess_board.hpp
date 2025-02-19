@@ -78,6 +78,8 @@ public:
 
     void makeMove(DenseMove move, bool searching);
     void unmakeMove(DenseMove move, bool searching);
+    void makeNullMove();
+    void unmakeNullMove();
     U64 GenerateZobristKey();
 
     // Debug printing methods
