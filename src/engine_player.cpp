@@ -67,6 +67,7 @@ void EnginePlayer::setOption(const std::string &name, const std::string &value) 
 
 void EnginePlayer::uciNewGame() {
     engine->resetSearchDepth();  // Reset to default depth
+    engine->clearForNewGame();
     // Reset any engine-specific state
     currentClock = ChessClock();
     currentClock.setInfinite(true);

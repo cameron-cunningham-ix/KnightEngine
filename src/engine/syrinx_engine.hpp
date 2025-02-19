@@ -33,6 +33,11 @@ private:
     static constexpr int KM_PLY = 64;
     // Stores the two best non-capturing moves per ply
     DenseMove killerMoves[KM_PLY * 2];
+
+    //
+    static constexpr int HISTORY_MAX = 65536;
+    // Keeps history of moves that have caused good beta cutoffs in the search tree
+    int historyTable[2][6][64] = {0};   // Indexed by [Color][PieceType][DestinationSquare]
     
     // Masks of light and dark squares
     static constexpr U64 lightSquareMask = 0xAA55AA55AA55AA55;
@@ -74,7 +79,7 @@ public:
 
     Syrinx() 
         : ChessEngineBase("Syrinx",
-                          "1.23",
+                          "1.24",
                           "Cameron Cunningham",
                           8,
                           std::chrono::milliseconds(200),
@@ -101,6 +106,13 @@ public:
             registerOption(EngineOption::createSpin("CheckingBonus", 300, 1, 5000));
             registerOption(EngineOption::createSpin("BishopPairBonus", 150, 1, 300));
             registerOption(EngineOption::createSpin("RookOpenFileBonus", 250, 1, 500));
+    }
+    // Reset the game-based search histories
+    // Note: We don't have to reset transposition table, since if we transpose
+    // into the same position in a different game, we'll be able to use the same move and score
+    void clearForNewGame() {
+        std::fill_n(&historyTable[0][0][0], 2*6*64, 0);
+        std::fill(std::begin(killerMoves), std::end(killerMoves), DenseMove());
     }
 
     // Handle option changes by updating corresponding parameter
@@ -178,26 +190,43 @@ public:
             int eval;
     
             if (firstMove) {
-                // Search first move with normal alpha-beta window
                 eval = -alphaBeta(board, depth - 1, -beta, -alpha, ply + 1, isPV);
                 firstMove = false;
             } else {
-                // Principal Variation Search (PVS)
-                eval = -alphaBeta(board, depth - 1, -alpha - 1, -alpha, ply + 1, false);
+                // Late Move Reduction
+                // Essentially, if the move is 'less important' to fully check, we can
+                // reduce the depth (and therefore branching factor)
+                int reduction = 0;
+                if (depth >= 3 && !moves[i].isCapture() && !board.isSideInCheck(sideToMove) &&
+                !board.isSideInCheck((Color)!sideToMove) && moves[i] != killerMoves[ply] && 
+                moves[i] != killerMoves[ply + 1]) {
+                    reduction = std::min(2, depth / 2); // Reduce depth slightly for late moves
+                }
+            
+                eval = -alphaBeta(board, depth - 1 - reduction, -alpha - 1, -alpha, ply + 1, false);
+            
                 if (eval > alpha && eval < beta) {
                     eval = -alphaBeta(board, depth - 1, -beta, -alpha, ply + 1, true);  // Re-search
                 }
             }
+            
     
             board.unmakeMove(moves[i], true);
     
             // Beta cutoff
             if (eval >= beta) {
                 if (!moves[i].isCapture()) {
+                    // Update killer moves
                     if (killerMoves[ply] != moves[i]) {
                         killerMoves[ply + 1] = killerMoves[ply];  // Shift previous killer move
                         killerMoves[ply] = moves[i];
                     }
+                    // History update for quites moves that cause beta cutoffs
+                    int piece = moves[i].getDenseType() - 1;
+                    int color = moves[i].getColor();
+                    int to = moves[i].getTo();
+                    historyTable[color][piece][to] += (1 << depth); // Reward deeper cutoffs more
+                    historyTable[color][piece][to] = std::min(historyTable[color][piece][to], HISTORY_MAX);
                 }
                 flag = TTEntry::BETA;
                 RecordTTEntry(board, moves[i], depth, beta, flag);
@@ -218,6 +247,15 @@ public:
     
         // Store best move in transposition table
         RecordTTEntry(board, bestMove, depth, alpha, flag);
+
+        // Fail Low: Reduce history score if no move improved alpha
+        if (!bestMove.isCapture() && flag == TTEntry::ALPHA) {
+            int piece = bestMove.getDenseType() - 1;
+            int color = bestMove.getColor();
+            int to = bestMove.getTo();
+            historyTable[color][piece][to] -= (1 << depth) / 2;  // Penalize ineffective quiet moves
+            historyTable[color][piece][to] = std::max(historyTable[color][piece][to], 0);  // Prevent negatives
+        }
         return alpha;
     }
     
@@ -333,8 +371,6 @@ public:
         return pieceExchanges[0];
     }
     
-    
-
     bool keepSearching(ChessClock& clock) const {
         // If clock is set to infinite, always keep searching
         if (clock.isInfinite()) return true;
@@ -551,7 +587,14 @@ private:
                 } else if (moves[i] == killerMoves[ply+1]) {
                     scored.score = KILLER_MOVE_SCORE - PRIORITY_SCORE;   // Second priority
                 }
-                /// @todo Add other scoring criteria here (history heuristic, etc.)
+                // Check and order moves by history
+                if (moves[i] != hashMove) {
+                    int piece = moves[i].getDenseType() - 1;
+                    int color = moves[i].getColor();
+                    int to = moves[i].getTo();
+                    scored.score = historyTable[color][piece][to];  // Use history heuristic score
+                }
+                
             }
             
             scoredMoves.push_back(scored);

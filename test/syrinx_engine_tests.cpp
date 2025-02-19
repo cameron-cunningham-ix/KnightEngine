@@ -593,6 +593,8 @@ TEST_F(SyrinxTest, MateIn2Positions) {
 
         // Set up the position
         board.setupPositionFromFEN(fen);
+        // Clear for new game / position
+        engine->clearForNewGame();
         
         // Print initial position
         printBoard(board);
@@ -650,6 +652,8 @@ TEST_F(SyrinxTest, MateIn3Positions) {
 
         // Set up the position
         board.setupPositionFromFEN(fen);
+        // Clear for new game / position
+        engine->clearForNewGame();
         
         // Print initial position
         printBoard(board);

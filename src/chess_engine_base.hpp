@@ -53,6 +53,9 @@ public:
     // Optional evaluation function that engines can override
     virtual int evaluatePosition(const ChessBoard& board) = 0;
 
+    // 
+    virtual void clearForNewGame() {};
+
     // Common functionality that engines might want to override
     virtual void stopSearch() { isSearching = false; }
     virtual void setSearchDepth(int depth) { searchDepth = depth; }
