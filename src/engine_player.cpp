@@ -265,7 +265,6 @@ void EnginePlayer::processCommand(const std::string& cmd) {
             std::string moveStr;
             while (iss >> moveStr) {
                 DenseMove move = uciToMove(moveStr, currentBoard);
-                std::cout << move.toString(false) << "\n";
                 currentBoard.makeMove(move, false);
             }
         }

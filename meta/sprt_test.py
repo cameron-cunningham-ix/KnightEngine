@@ -45,8 +45,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run SPRT test between two chess engines.")
     parser.add_argument("engine1", help="Path to the first chess engine.")
     parser.add_argument("engine2", help="Path to the second chess engine.")
+    parser.add_argument("games", help="Maximum number of games to play")
     parser.add_argument("--cutechess", default="cutechess-cli", help="Path to cutechess-cli executable.")
     
     args = parser.parse_args()
     
-    run_sprt_test(args.engine1, args.engine2, args.cutechess)
+    run_sprt_test(args.engine1, args.engine2, args.cutechess, games=args.games)

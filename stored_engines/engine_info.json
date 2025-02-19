@@ -286,5 +286,41 @@
     "author": "Cameron Cunningham",
     "build_type": "_R",
     "stored_date": "2025-02-11 23:58:16"
+  },
+  "Syrinx 1.15 _R": {
+    "filename": "Syrinx_v1_15_R.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_R",
+    "stored_date": "2025-02-13 13:54:11"
+  },
+  "Syrinx 1.16 _R": {
+    "filename": "Syrinx_v1_16_R.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_R",
+    "stored_date": "2025-02-14 01:03:56"
+  },
+  "Syrinx 1.17 _R": {
+    "filename": "Syrinx_v1_17_R.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_R",
+    "stored_date": "2025-02-16 01:13:39"
+  },
+  "Syrinx 1.18 _R": {
+    "filename": "Syrinx_v1_18_R.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_R",
+    "stored_date": "2025-02-16 02:06:59"
+  },
+  "Syrinx 1.19 _R": {
+    "filename": "Syrinx_v1_19_R.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_R",
+    "stored_date": "2025-02-16 02:13:53"
+  },
+  "Syrinx 1.21 _R": {
+    "filename": "Syrinx_v1_21_R.exe",
+    "author": "Cameron Cunningham",
+    "build_type": "_R",
+    "stored_date": "2025-02-18 22:37:04"
   }
 }

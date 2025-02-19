@@ -74,33 +74,33 @@ public:
 
     Syrinx() 
         : ChessEngineBase("Syrinx",
-                          "1.14",
+                          "1.22",
                           "Cameron Cunningham",
                           8,
                           std::chrono::milliseconds(200),
                           std::chrono::milliseconds(20000)) {
             // Register all engine options
-            registerOption(EngineOption::createSpin("PawnValue", 100, 10, 1000));
-            registerOption(EngineOption::createSpin("KnightValue", 320, 10, 1000));
-            registerOption(EngineOption::createSpin("BishopValue", 330, 10, 1000));
-            registerOption(EngineOption::createSpin("RookValue", 500, 20, 1500));
-            registerOption(EngineOption::createSpin("QueenValue", 900, 30, 2000));
-            registerOption(EngineOption::createSpin("KingValue", 2000, 100, 5000));
+            registerOption(EngineOption::createSpin("PawnValue", 100, 10, 300));
+            registerOption(EngineOption::createSpin("KnightValue", 320, 100, 500));
+            registerOption(EngineOption::createSpin("BishopValue", 330, 110, 510));
+            registerOption(EngineOption::createSpin("RookValue", 500, 500, 800));
+            registerOption(EngineOption::createSpin("QueenValue", 900, 810, 1500));
+            registerOption(EngineOption::createSpin("KingValue", 2000, 2000, 5000));
 
             registerOption(EngineOption::createSpin("MateScore", 100000, 50000, 200000));
-            registerOption(EngineOption::createSpin("RestrictKingBonus", 10, 0, 500));
-            registerOption(EngineOption::createSpin("KingShieldBonus", 50, 0, 300));
-            registerOption(EngineOption::createSpin("AiryKingPenalty", -10, -100, 0));
-            registerOption(EngineOption::createSpin("SupportedPawnBonus", 90, 0, 200));
-            registerOption(EngineOption::createSpin("SupportingPawnBonus", 15, 0, 200));
-            registerOption(EngineOption::createSpin("PassedPawnBonus", 30, 0, 200));
-            registerOption(EngineOption::createSpin("SupportingPieceBonus", 15, 0, 200));
-            registerOption(EngineOption::createSpin("DoubledPawnPenalty", -50, -200, 0));
-            registerOption(EngineOption::createSpin("IsolatedPawnPenalty", -80, -200, 0));
-            registerOption(EngineOption::createSpin("CheckedPenalty", -300, -5000, 0));
-            registerOption(EngineOption::createSpin("CheckingBonus", 300, 0, 5000));
-            registerOption(EngineOption::createSpin("BishopPairBonus", 150, 0, 300));
-            registerOption(EngineOption::createSpin("RookOpenFileBonus", 250, 0, 500));
+            registerOption(EngineOption::createSpin("RestrictKingBonus", 10, 1, 100));
+            registerOption(EngineOption::createSpin("KingShieldBonus", 50, 1, 300));
+            registerOption(EngineOption::createSpin("AiryKingPenalty", -10, -100, -1));
+            registerOption(EngineOption::createSpin("SupportedPawnBonus", 90, 1, 200));
+            registerOption(EngineOption::createSpin("SupportingPawnBonus", 15, 1, 200));
+            registerOption(EngineOption::createSpin("PassedPawnBonus", 30, 1, 200));
+            registerOption(EngineOption::createSpin("SupportingPieceBonus", 15, 1, 200));
+            registerOption(EngineOption::createSpin("DoubledPawnPenalty", -50, -200, -1));
+            registerOption(EngineOption::createSpin("IsolatedPawnPenalty", -80, -200, -1));
+            registerOption(EngineOption::createSpin("CheckedPenalty", -300, -5000, -1));
+            registerOption(EngineOption::createSpin("CheckingBonus", 300, 1, 5000));
+            registerOption(EngineOption::createSpin("BishopPairBonus", 150, 1, 300));
+            registerOption(EngineOption::createSpin("RookOpenFileBonus", 250, 1, 500));
     }
 
     // Handle option changes by updating corresponding parameter
@@ -148,17 +148,17 @@ public:
             if (board.currentGameState.halfMoveClock >= 100 ||
                 board.keySet.find(board.zobristKey) != board.keySet.end()) {
                     return 0;
-                }
             }
+        }
             
-            // Check transposition table
-            /// @todo Check what to do with score based on hash flag
-            int score;
-            DenseMove hashMove;
-            if (checkTT(board, depth, alpha, beta, score, hashMove)) {
-                return score;
-            }
-            
+        // Check transposition table
+        /// @todo Check what to do with score based on hash flag
+        int score;
+        DenseMove hashMove;
+        if (checkTT(board, depth, alpha, beta, score, hashMove)) {
+            return score;
+        }
+        
         // Generate and order moves
         int moveNum = 0;
         std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generatePsuedoMoves(board, moveNum);
@@ -248,15 +248,14 @@ public:
     
         for (int i = 0; i < moveNum; i++) {
             board.makeMove(captureMoves[i], true);
-    
-            // Skip illegal moves (e.g., moving into check)
-            if (board.isSideInCheck(sideToMove)) {
+            // SEE Pruning: Skip bad captures
+            if (staticExchangeEvaluation(board, captureMoves[i].getTo(), sideToMove) < 0) {
                 board.unmakeMove(captureMoves[i], true);
                 continue;
             }
-
-            // SEE Pruning: Skip bad captures
-            if (staticExchangeEvaluation(board, captureMoves[i].getTo(), sideToMove) < 0) {
+    
+            // Skip illegal moves (e.g., moving into check)
+            if (board.isSideInCheck(sideToMove)) {
                 board.unmakeMove(captureMoves[i], true);
                 continue;
             }
@@ -461,16 +460,7 @@ public:
     /// @return 
     int evaluatePosition(const ChessBoard& board) override {
         nodeCount++;
-        // Send node count every 60K nodes
-        if (nodeCount % 60000 == 0) {
-            auto time = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now() - searchStartTime).count();
-            if (time > 0) {
-                long long nps = (nodeCount * 1000) / time;
-                sendInfo(std::format("nodes {} nps {}", nodeCount, nps));
-            }
-        }
-
+        
         // Get total piece count (not including pawns or kings)
         // for endgame lerp
         totalPiecesWithoutPawns = popcount(board.getAllPieces() & 
@@ -484,8 +474,7 @@ public:
         int score = 0;
 
         // Material count
-        score += countMaterial(board, WHITE);
-        score -= countMaterial(board, BLACK);
+        score += countMaterial(board);
 
         // Positional evaluation
         score += evaluatePositional(board, WHITE);
@@ -600,43 +589,42 @@ private:
         std::cout << "info " << info << std::endl;
     }
 
-    int countMaterial(const ChessBoard& board, Color color) {
+    int countMaterial(const ChessBoard& board) {
         int score = 0;
         U64 pieces;
 
-        if (color == WHITE) {
-            // Pawns
-            pieces = board.getWhitePawns();
-            score += popcount(pieces) * params.pawnValue;
-            // Knights
-            pieces = board.getWhiteKnights();
-            score += popcount(pieces) * params.knightValue;
-            // Bishops
-            pieces = board.getWhiteBishops();
-            score += popcount(pieces) * params.bishopValue;
-            // Rooks 
-            pieces = board.getWhiteRooks();
-            score += popcount(pieces) * params.rookValue;
-            // Queens
-            pieces = board.getWhiteQueens();
-            score += popcount(pieces) * params.queenValue;
-        } else {
-            // Pawns
-            pieces = board.getBlackPawns();
-            score += popcount(pieces) * params.pawnValue;
-            // Knights
-            pieces = board.getBlackKnights();
-            score += popcount(pieces) * params.knightValue;
-            // Bishops
-            pieces = board.getBlackBishops();
-            score += popcount(pieces) * params.bishopValue;
-            // Rooks 
-            pieces = board.getBlackRooks();
-            score += popcount(pieces) * params.rookValue;
-            // Queens
-            pieces = board.getBlackQueens();
-            score += popcount(pieces) * params.queenValue;
-        }
+        // White
+        // Pawns
+        pieces = board.getWhitePawns();
+        score += popcount(pieces) * params.pawnValue;
+        // Knights
+        pieces = board.getWhiteKnights();
+        score += popcount(pieces) * params.knightValue;
+        // Bishops
+        pieces = board.getWhiteBishops();
+        score += popcount(pieces) * params.bishopValue;
+        // Rooks 
+        pieces = board.getWhiteRooks();
+        score += popcount(pieces) * params.rookValue;
+        // Queens
+        pieces = board.getWhiteQueens();
+        score += popcount(pieces) * params.queenValue;
+        // Black
+        // Pawns
+        pieces = board.getBlackPawns();
+        score -= popcount(pieces) * params.pawnValue;
+        // Knights
+        pieces = board.getBlackKnights();
+        score -= popcount(pieces) * params.knightValue;
+        // Bishops
+        pieces = board.getBlackBishops();
+        score -= popcount(pieces) * params.bishopValue;
+        // Rooks 
+        pieces = board.getBlackRooks();
+        score -= popcount(pieces) * params.rookValue;
+        // Queens
+        pieces = board.getBlackQueens();
+        score -= popcount(pieces) * params.queenValue;
         
         return score;
     }
@@ -644,9 +632,8 @@ private:
     int evaluatePositional(const ChessBoard& board, Color color) {
         int score = 0;
 
-        U64 pawns, pawnRef, knights, bishops, rooks, queens,
-            attackingOppKing, attacksToKing;
-        int kingSquare, oppKingIndex;
+        U64 pawns, pawnRef, knights, bishops, rooks, queens;
+        int kingSquare;
         // Flip is 0 for WHITE, and 56 (111000) for BLACK. This enables being able to flip the indicies for
         // black by XORing to get the correct PST score and not have to store extra tables for black.
         int flip;
@@ -661,9 +648,6 @@ private:
             rooks = board.getWhiteRooks();
             queens = board.getWhiteRooks();
             kingSquare = board.getWhiteKingSquare();
-            attacksToKing = board.OppAttacksToSquare(kingSquare, WHITE);
-            oppKingIndex = board.getBlackKingSquare();
-            attackingOppKing = board.OppAttacksToSquare(oppKingIndex, BLACK);
         } else {
             flip = 56;
             pawns = board.getBlackPawns();
@@ -673,9 +657,6 @@ private:
             rooks = board.getBlackRooks();
             queens = board.getBlackRooks();
             kingSquare = board.getBlackKingSquare() ^ flip;
-            attacksToKing = board.OppAttacksToSquare(kingSquare, BLACK);
-            oppKingIndex = board.getWhiteKingSquare();
-            attackingOppKing = board.OppAttacksToSquare(oppKingIndex, WHITE);
         }
         while (pawns) {
             int square = std::countr_zero(pawns) ^ flip;
@@ -704,6 +685,8 @@ private:
 
             // Passed pawn bonus
             U64 enemyPawns = color == WHITE ? board.getBlackPawns() : board.getWhitePawns();
+            // Include the pawn's own file in to make sure its a fully passed pawn
+            adjacentFiles |= BUTIL::FileMask << file;
             if (!(adjacentFiles & enemyPawns)) {
                 score += params.passedPawnBonus;
             }
@@ -760,24 +743,6 @@ private:
         U64 kingShield = ATKMASK_KING[kingSquare] & pawnRef;
         if (popcount(kingShield) >= 2 && (kingSquare < 8 || kingSquare >= 56)) {
             score += params.kingShieldBonus;
-        }
-        // Give penalty for 'airy' king (empty squares to king)
-        U64 kingAir = (PEXT::getRookAttacks(kingSquare, occupancy) |
-                       PEXT::getBishopAttacks(kingSquare, occupancy));
-        if (popcount(kingAir) > 12) {
-            score += params.airyKingPenalty;
-        }
-
-        // Evaluate attacks to opposite king
-        if (attackingOppKing) {
-            // Using popcount means double checks should be worth more
-            score += params.checkingBonus * popcount(attackingOppKing);
-        }
-
-        // Evaluate attacks to own king
-        // Discourage getting checked
-        if (attacksToKing) {
-            score += params.checkedPenalty * popcount(attacksToKing);
         }
 
         return score;
