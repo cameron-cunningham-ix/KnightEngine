@@ -37,11 +37,8 @@ private:
     //
     static constexpr int HISTORY_MAX = 65536;
     // Keeps history of moves that have caused good beta cutoffs in the search tree
-    int historyTable[2][6][64] = {0};   // Indexed by [Color][PieceType][DestinationSquare]
+    int historyTable[2][64][64] = {0};   // Indexed by [Color][From][To]
 
-    static constexpr int NULL_MOVE_R = 2;
-    static constexpr int NULL_MOVE_MIN_DEPTH = 3;
-    
     // Masks of light and dark squares
     static constexpr U64 lightSquareMask = 0xAA55AA55AA55AA55;
     static constexpr U64 darkSquareMask =  0x55AA55AA55AA55AA;
@@ -82,7 +79,7 @@ public:
 
     Syrinx() 
         : ChessEngineBase("Syrinx",
-                          "1.3",
+                          "1.25",
                           "Cameron Cunningham",
                           8,
                           std::chrono::milliseconds(200),
@@ -114,7 +111,7 @@ public:
     // Note: We don't have to reset transposition table, since if we transpose
     // into the same position in a different game, we'll be able to use the same move and score
     void clearForNewGame() {
-        std::fill_n(&historyTable[0][0][0], 2*6*64, 0);
+        std::fill_n(&historyTable[0][0][0], 2*64*64, 0);
         std::fill(std::begin(killerMoves), std::end(killerMoves), DenseMove());
     }
 
@@ -143,6 +140,23 @@ public:
         else if (option.name == "BishopPairBonus") params.bishopPairBonus = value;
         else if (option.name == "RookOpenFileBonus") params.rookOpenFileBonus = value;
     }
+    /// @brief Updates the history heuristic table value for a given element.
+    /// From CPW.
+    /// @param sideToMove 
+    /// @param from 
+    /// @param to 
+    /// @param bonus 
+    void historyTableUpdate(Color sideToMove, int from, int to, int bonus) {
+        int clampedBonus = std::clamp(bonus, -HISTORY_MAX, HISTORY_MAX);
+        historyTable[sideToMove][from][to]  += clampedBonus
+            - (historyTable[sideToMove][from][to] * abs(clampedBonus) / HISTORY_MAX);
+    }
+    /// @brief 
+    /// @param depth 
+    /// @return 
+    int calculateHistBonus(int depth) {
+        return depth*depth;
+    }
 
     /// @brief Alpha Beta pruning function
     /// @param board 
@@ -168,22 +182,12 @@ public:
         if (checkTT(board, depth, alpha, beta, score, hashMove)) {
             return score;
         }
-
-        // === NULL MOVE PRUNING ===
-        if (!isPV && depth >= NULL_MOVE_MIN_DEPTH && !board.isSideInCheck(board.getSideToMove())) {
-            board.makeNullMove(); // Skip turn
-            int nullDepth = depth - NULL_MOVE_R - 1;
-            int nullScore = -alphaBeta(board, nullDepth, -beta, -beta + 1, ply + 1, false);
-            board.unmakeNullMove();
-
-            if (nullScore >= beta) {
-                return beta; // Fail-hard cutoff
-            }
-        }
     
         // Generate and order moves
         int moveNum = 0;
+        int quietNum = 0;
         std::array<DenseMove, MAX_MOVES> moves = MoveGenerator::generatePsuedoMoves(board, moveNum);
+        std::array<DenseMove, MAX_MOVES> quietsSearched = {0};
         orderMoves(moves, moveNum, ply, hashMove);
     
         bool noLegalMoves = true;
@@ -224,7 +228,6 @@ public:
                     eval = -alphaBeta(board, depth - 1, -beta, -alpha, ply + 1, true);  // Re-search
                 }
             }
-            
     
             board.unmakeMove(moves[i], true);
     
@@ -237,11 +240,20 @@ public:
                         killerMoves[ply] = moves[i];
                     }
                     // History update for quites moves that cause beta cutoffs
-                    int piece = moves[i].getDenseType() - 1;
-                    int color = moves[i].getColor();
+                    int bonus = calculateHistBonus(depth);
+                    Color color = moves[i].getColor();
+                    int from = moves[i].getFrom();
                     int to = moves[i].getTo();
-                    historyTable[color][piece][to] += (1 << depth); // Reward deeper cutoffs more
-                    historyTable[color][piece][to] = std::min(historyTable[color][piece][to], HISTORY_MAX);
+                    historyTableUpdate(color, from, to, bonus);
+
+                    // Penalize any other quiet moves searched that didn't cause beta cutoff
+                    for (int j = 0; j < quietNum; j++) {
+                        if (quietsSearched[j] == moves[i]) continue;
+                        Color color = quietsSearched[j].getColor();
+                        int from = quietsSearched[j].getFrom();
+                        int to = quietsSearched[j].getTo();
+                        historyTableUpdate(color, from, to, -bonus);
+                    }
                 }
                 flag = TTEntry::BETA;
                 RecordTTEntry(board, moves[i], depth, beta, flag);
@@ -253,6 +265,11 @@ public:
                 bestMove = moves[i];
                 flag = TTEntry::EXACT;
             }
+            // If this was a quiet move, add it to quietsSearched
+            if (!moves[i].isCapture()) {
+                quietsSearched[quietNum] = moves[i];
+                quietNum++;
+            }
         }
     
         // Handle checkmate/stalemate
@@ -262,15 +279,6 @@ public:
     
         // Store best move in transposition table
         RecordTTEntry(board, bestMove, depth, alpha, flag);
-
-        // Fail Low: Reduce history score if no move improved alpha
-        if (!bestMove.isCapture() && flag == TTEntry::ALPHA) {
-            int piece = bestMove.getDenseType() - 1;
-            int color = bestMove.getColor();
-            int to = bestMove.getTo();
-            historyTable[color][piece][to] -= (1 << depth) / 2;  // Penalize ineffective quiet moves
-            historyTable[color][piece][to] = std::max(historyTable[color][piece][to], 0);  // Prevent negatives
-        }
         return alpha;
     }
     

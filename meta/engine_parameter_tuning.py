@@ -1,3 +1,6 @@
+## Running the script:
+#
+
 import subprocess
 import random
 import json

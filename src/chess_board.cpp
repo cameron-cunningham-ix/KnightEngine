@@ -891,19 +891,6 @@ void ChessBoard::unmakeMove(DenseMove move, bool searching) {
         }
     }
 }
-/// @brief 
-void ChessBoard::makeNullMove() {
-    currentGameState.halfMoveClock++;
-    currentGameState.sideToMove = (currentGameState.sideToMove == WHITE) ? BLACK : WHITE;
-    zobristKey ^= Zobrist::zobristSideToMove; // Flip side in Zobrist hash
-}
-/// @brief 
-void ChessBoard::unmakeNullMove() {
-    currentGameState.halfMoveClock--;
-    currentGameState.sideToMove = (currentGameState.sideToMove == WHITE) ? BLACK : WHITE;
-    zobristKey ^= Zobrist::zobristSideToMove; // Flip side in Zobrist hash
-}
-
 /// @brief Generates a Zobrist key for the current board position.
 /// (See zobrist.hpp for more details about Zobrist hashing)
 /// This function is much slower than the incremental updates to the key

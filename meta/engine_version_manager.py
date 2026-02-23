@@ -1,3 +1,6 @@
+## Running the script:
+# py engine_version_manager.py
+
 import os
 import subprocess
 import shutil
