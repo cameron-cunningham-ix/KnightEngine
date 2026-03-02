@@ -19,6 +19,7 @@
 !stored_engines/**
 !uci/
 !uci/**
+!README.md
 
 # Ignore build directories anywhere
 **/build/
